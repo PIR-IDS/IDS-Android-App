@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">IDS App</string>
     <string name="text_main">Bonjour le Monde !</string>
+    <string name="bluetooth_connect">Connexion à l\'IDS via Bluetooth</string>
+    <string name="bluetooth_error">Le bluetooth n\'est pas supporté sur cet appareil</string>
 </resources>
