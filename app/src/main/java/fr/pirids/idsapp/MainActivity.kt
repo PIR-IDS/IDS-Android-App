@@ -11,8 +11,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val value = Javanese()
-        Thread({ value.main() }).start()
+        val value = IzlyApi()
+        Thread({ println(value.GetTransactionList()) }).start()
 
 
       /*  var et_user_name = findViewById(R.id.et_user_name) as EditText

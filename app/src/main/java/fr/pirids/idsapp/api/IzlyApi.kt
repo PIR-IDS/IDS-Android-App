@@ -1,6 +1,7 @@
 package fr.pirids.idsapp
 
 
+import fr.pirids.idsapp.api.Api
 import fr.pirids.idsapp.utils.Constants
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException
@@ -10,13 +11,12 @@ import java.time.LocalDate
 import java.util.*
 
 
-class Javanese {
+class IzlyApi : Api {
 
     var timeOfeachAction: LinkedList<Long> = LinkedList<Long>()
 
+    override fun GetTransactionList(): LinkedList<Long> {
 
-
-    fun main() {
         val connexionTest = Jsoup.connect("https://mon-espace.izly.fr/Home/Logon").execute()
 
         timeOfeachAction =  LinkedList<Long>()
@@ -124,9 +124,7 @@ class Javanese {
                 if (history.toString().contains("You have made a payment to")) {
                     var date = history.select(".operation-date").toString().substringAfter('>')
                         .substringBefore('<')
-                    if (date.length < 25) {
-                        date = "yesterday at 17h25"
-                        //todo: traiter le cas ou c'est today et yesterday
+                    if (date.length < 25) {                        //todo: traiter le cas ou c'est today et yesterday
                         var day = date.substringBefore(' ')
                         date = date.substringAfter(" ").replace(" ", "").substringAfter("at")
                         val hour = date.substringBefore('h')
@@ -177,7 +175,7 @@ class Javanese {
             index += 1
         }
 
-    println(timeOfeachAction)
+        return timeOfeachAction
     }
 }
 
