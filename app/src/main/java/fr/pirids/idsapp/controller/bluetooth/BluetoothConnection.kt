@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.os.Handler
 import android.util.Log
 import android.widget.Button
@@ -20,8 +19,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import fr.pirids.idsapp.R
+import java.nio.charset.StandardCharsets
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 
 private const val SCAN_BLUETOOTH_REQUEST_CODE = 1
@@ -40,7 +40,25 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     lateinit var timeService: BluetoothGattService
 
+    lateinit var walletService: BluetoothGattService
+
+    lateinit var walletOutCharacteristic: BluetoothGattCharacteristic
+
+    lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
+
+    val CCCD_UUID : String = "00002902-0000-1000-8000-00805f9b34fb"
+
     val SCAN_PERIOD : Long = 10000
+
+    val TIME_SERVICE_UUID : String = "00001805-0000-1000-8000-00805f9b34fb"
+
+    val WALLET_SERVICE_UUID : String = "D70C4BB1-98E4-4EBF-9EA5-F9898690D428"
+
+    val DATE_SERVICE_UUID : String = "00002a2b-0000-1000-8000-00805f9b34fb"
+
+    val WALLET_OUT_UUID : String = "00002AE2-0000-1000-8000-00805f9b34fb"
+
+    val WHEN_WALLET_OUT_UUID : String = "00002AED-0000-1000-8000-00805f9b34fb"
 
     var resultLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -169,6 +187,7 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
+
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             val deviceAddress = gatt.device.address
@@ -191,21 +210,130 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
             }
         }
 
+
+        @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             with(gatt) {
                 Log.w("BluetoothGattCallback", "Discovered ${services.size} services for ${device.address}")
                 printGattTable()
 
-                timeService = bluetoothGatt.getService(UUID.fromString("00001805-0000-1000-8000-00805f9b34fb"))
+                timeService = bluetoothGatt.getService(UUID.fromString(TIME_SERVICE_UUID))
                 Log.i("time", "Time service found $timeService")
 
                 val currentTimeMillis = System.currentTimeMillis()
                 Log.i("time", currentTimeMillis.toString())
 
-                val dateServiceUUID = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb")
+                Log.i("BluetoothGattCallback", "semaphore ok")
+
+                val dateServiceUUID = UUID.fromString(DATE_SERVICE_UUID)
                 val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
-                writeCharacteristic(timeCharacteristic, currentTimeMillis.toString().toByteArray())
+                if (!timeCharacteristic.isWritable()) {
+                    Log.i("BluetoothGattCallback", "not writable")
+                }
+                timeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                timeCharacteristic.value = currentTimeMillis.toString().toByteArray()
+                val result = writeCharacteristic(timeCharacteristic)
+
+                Log.i("BluetoothGattCallback", "write result=$result")
             }
+        }
+
+        @SuppressLint("MissingPermission")
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?
+        ) {
+            with(characteristic) {
+                //Log.i("BluetoothGattCallback", "Characteristic ${this?.uuid} changed | value: ${this?.value}")
+                gatt?.readCharacteristic(whenWalletOutCharacteristic)
+            }
+        }
+
+        @SuppressLint("MissingPermission")
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            Log.i("BluetoothGattCallback", "ack received")
+            walletService = bluetoothGatt.getService(UUID.fromString(WALLET_SERVICE_UUID))
+            val walletOutCharacteristicUUID = UUID.fromString(WALLET_OUT_UUID)
+            walletOutCharacteristic = walletService.getCharacteristic(walletOutCharacteristicUUID)
+
+            val whenWalletOutCharacteristicUUID = UUID.fromString(WHEN_WALLET_OUT_UUID)
+            whenWalletOutCharacteristic = walletService.getCharacteristic(whenWalletOutCharacteristicUUID)
+
+            enableNotifications(walletOutCharacteristic)
+
+            super.onCharacteristicWrite(gatt, characteristic, status)
+        }
+
+        @SuppressLint("MissingPermission")
+        fun writeDescriptor(descriptor: BluetoothGattDescriptor, payload: ByteArray) {
+            bluetoothGatt?.let { gatt ->
+                descriptor.value = payload
+                gatt.writeDescriptor(descriptor)
+            } ?: error("Not connected to a BLE device!")
+        }
+
+        @SuppressLint("MissingPermission")
+        fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
+            val cccdUuid = UUID.fromString(CCCD_UUID)
+            val payload = when {
+                characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                else -> {
+                    Log.e("ConnectionManager", "${characteristic.uuid} doesn't support notifications/indications")
+                    return
+                }
+            }
+
+            characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                if (bluetoothGatt?.setCharacteristicNotification(characteristic, true) == false) {
+                    Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
+                    return
+                }
+                writeDescriptor(cccDescriptor, payload)
+            } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
+        }
+
+        @SuppressLint("MissingPermission")
+        fun disableNotifications(characteristic: BluetoothGattCharacteristic) {
+            if (!characteristic.isNotifiable() && !characteristic.isIndicatable()) {
+                Log.e("ConnectionManager", "${characteristic.uuid} doesn't support indications/notifications")
+                return
+            }
+
+            val cccdUuid = UUID.fromString(CCCD_UUID)
+            characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                if (bluetoothGatt?.setCharacteristicNotification(characteristic, false) == false) {
+                    Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
+                    return
+                }
+                writeDescriptor(cccDescriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+            } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
+        }
+
+        fun BluetoothGattCharacteristic.isIndicatable(): Boolean =
+            containsProperty(BluetoothGattCharacteristic.PROPERTY_INDICATE)
+
+        fun BluetoothGattCharacteristic.isNotifiable(): Boolean =
+            containsProperty(BluetoothGattCharacteristic.PROPERTY_NOTIFY)
+
+        fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean =
+            properties and property != 0
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            Log.i("BluetoothGattCallback", "Characteristic read callback")
+            val stringValue = characteristic?.value?.let { String(it, StandardCharsets.UTF_8) }
+            Log.i("BluetoothGattCallback", "whenWalletOut date=$stringValue")
+            val dateTime = LocalDateTime.parse(stringValue!!.dropLast(1)).atZone(ZoneId.of("UTC"))
+            val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
+            activity.runOnUiThread { Toast.makeText(activity, "Wallet out at $localDateTime", Toast.LENGTH_SHORT).show() }
         }
     }
 
@@ -235,25 +363,6 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean {
         return properties and property != 0
-    }
-
-    @SuppressLint("MissingPermission")
-    fun writeCharacteristic(characteristic: BluetoothGattCharacteristic, payload: ByteArray) {
-        val writeType = when {
-            characteristic.isWritable() -> BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            characteristic.isWritableWithoutResponse() -> {
-                BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
-            }
-            else -> error("Characteristic ${characteristic.uuid} cannot be written to")
-        }
-
-        bluetoothGatt.let { gatt ->
-            characteristic.writeType = writeType
-            characteristic.value = payload
-            gatt.writeCharacteristic(characteristic)
-        }
-
-        Log.i("Characteristic", "Sent datetime")
     }
 
     // TODO

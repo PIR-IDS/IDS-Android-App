@@ -15,20 +15,32 @@
         tools:ignore="MissingConstraints">
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/remote_service_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Button"
+            android:text="Connect to remote service"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="32dp"
+            android:onClick="startServiceActivity"/>
+
+        <Spinner
+            android:id="@+id/remote_service_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:spinnerMode="dropdown"/>
 
         <Button
             android:id="@+id/ids_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:text="IDS"
+            android:layout_marginEnd="32dp"
+            android:text="Configure IDS device"
+            android:textAlignment="center"
             app:icon="@android:drawable/ic_menu_manage" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
