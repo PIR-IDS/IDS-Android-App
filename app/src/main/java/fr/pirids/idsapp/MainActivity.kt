@@ -10,8 +10,8 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         val value = Javanese()
-        print("yo1\n\n\n")
         Thread({ value.main() }).start()
 
 
