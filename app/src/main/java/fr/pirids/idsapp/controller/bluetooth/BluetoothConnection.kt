@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.util.Log
 import android.widget.Button
@@ -24,9 +25,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-private const val SCAN_BLUETOOTH_REQUEST_CODE = 1
-private const val LOCATION_PERMISSION_REQUEST_CODE = 2
-private const val CONNECT_BLUETOOTH_REQUEST_CODE = 3
+private const val BLUETOOTH_REQUEST_CODE = 1
 
 class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity, var buttonScanLE : Button, var buttonConnect : Button) {
 
@@ -67,81 +66,41 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         }
     }
 
-    private fun requestPermission(permissionName: String, permissionRequestCode: Int) {
-        ActivityCompat.requestPermissions(activity, arrayOf(permissionName), permissionRequestCode)
-    }
-
-    private fun showExplanation(
-        title: String,
-        message: String,
-        permission: String,
-        permissionRequestCode: Int
-    ) {
-        val builder: android.app.AlertDialog.Builder = android.app.AlertDialog.Builder(mContext)
-        builder.setTitle(title)
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok,
-                DialogInterface.OnClickListener { dialog, id ->
-                    requestPermission(
-                        permission,
-                        permissionRequestCode
+    val isBluetoothGranted
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            mContext.hasPermission(Manifest.permission.BLUETOOTH_SCAN) && mContext.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            mContext.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                mContext.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) && (
+                    Build.VERSION.SDK_INT > Build.VERSION_CODES.R || (
+                            mContext.hasPermission(Manifest.permission.BLUETOOTH_ADMIN) && mContext.hasPermission(Manifest.permission.BLUETOOTH)
                     )
-                })
-        builder.create().show()
-    }
+            )
+        }
 
     public fun setUpBT() {
-        val context = Context.BLUETOOTH_SERVICE;
-        var bluetoothManager = mContext.getSystemService(context) as BluetoothManager
-        bluetoothAdapter = bluetoothManager.adapter
-        if (bluetoothAdapter == null) {
-            afficherToast("err bluetooth adapter")
-        }
-
-        // enabling bt
-        if (!bluetoothAdapter?.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            resultLauncher.launch(enableBtIntent)
-        }
-
-        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-
-        buttonScanLE.isEnabled = true
+        requestBluetooth()
     }
 
     fun Context.hasPermission(permissionType: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, permissionType) ==
-                PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED
     }
 
-    val isBluetoothScanGranted
-        get() = mContext.hasPermission(Manifest.permission.BLUETOOTH_SCAN)
-
-    val isBluetoothConnectGranted
-        get() = mContext.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
-
-    val isLocationPermissionGranted
-        get() = mContext.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-
-    private fun requestLocationPermission() {
-        if (!isLocationPermissionGranted) {
-            //showExplanation("Location permission required", "Starting from Android M (6.0), the system requires apps to be granted " +
-                    //"location access in order to scan for BLE devices.", Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_REQUEST_CODE)
-            requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_REQUEST_CODE)
-        }
-    }
-
-    private fun requestBluetoothScan() {
-        if (!isBluetoothScanGranted) {
-            //showExplanation("Bluetooth Scan permission required", "", Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
-            requestPermission(Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
-        }
-    }
-
-    private fun requestBluetoothConnect() {
-        if (!isBluetoothConnectGranted) {
-            //showExplanation("Bluetooth connect permission", "", Manifest.permission.BLUETOOTH_CONNECT, CONNECT_BLUETOOTH_REQUEST_CODE)
-            requestPermission(Manifest.permission.BLUETOOTH_CONNECT, CONNECT_BLUETOOTH_REQUEST_CODE)
+    private fun requestBluetooth() {
+        if(!isBluetoothGranted) {
+            val permissions: MutableList<String> = ArrayList<String>()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+            } else {
+                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+                    permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+                    permissions.add(Manifest.permission.BLUETOOTH)
+                }
+            }
+            ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), BLUETOOTH_REQUEST_CODE)
         }
     }
 
@@ -167,21 +126,15 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
     }
 
     public fun scanLE() {
-        requestLocationPermission()
-        requestBluetoothScan()
-        requestBluetoothConnect()
+        requestBluetooth()
         /*val filter = ScanFilter.Builder().setServiceUuid(
             ParcelUuid.fromString()
         )*/
         if (!scanning) {
             handler.postDelayed({
                 scanning = false
-                if (ActivityCompat.checkSelfPermission(
-                        activity,
-                        Manifest.permission.BLUETOOTH_SCAN
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    requestPermission(Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
+                if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                    requestBluetooth()
                 }
                 bluetoothLeScanner.stopScan(leScanCallback)
             }, SCAN_PERIOD)
@@ -394,5 +347,35 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     fun afficherToast(message: String) {
         Toast.makeText(mContext, message, Toast.LENGTH_LONG).show()
+    }
+
+    fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            BLUETOOTH_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                    Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
+
+                    val context = Context.BLUETOOTH_SERVICE;
+                    val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
+                    bluetoothAdapter = bluetoothManager.adapter
+
+                    // enabling bt
+                    if (!bluetoothAdapter.isEnabled) {
+                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                        resultLauncher.launch(enableBtIntent)
+                    }
+
+                    bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+
+                    buttonScanLE.isEnabled = true
+                } else {
+                    Log.i("BluetoothGattDiscoverServices", "Bluetooth permission not granted")
+                }
+            }
+        }
     }
 }

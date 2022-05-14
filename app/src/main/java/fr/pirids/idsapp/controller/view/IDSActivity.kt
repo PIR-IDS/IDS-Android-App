@@ -3,10 +3,11 @@ package fr.pirids.idsapp.controller.view
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import androidx.core.app.ActivityCompat
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 
-class IDSActivity : AppCompatActivity() {
+class IDSActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
     lateinit var buttonSetupBt : Button
     lateinit var buttonScan : Button
@@ -32,5 +33,10 @@ class IDSActivity : AppCompatActivity() {
         buttonConnect.isEnabled = false
 
         bluetoothConnection = BluetoothConnection(this, this, buttonScan, buttonConnect)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        bluetoothConnection.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }
