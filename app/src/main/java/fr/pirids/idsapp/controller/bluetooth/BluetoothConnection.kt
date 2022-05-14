@@ -125,20 +125,23 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     private fun requestLocationPermission() {
         if (!isLocationPermissionGranted) {
-            showExplanation("Location permission required", "Starting from Android M (6.0), the system requires apps to be granted " +
-                    "location access in order to scan for BLE devices.", Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_REQUEST_CODE)
+            //showExplanation("Location permission required", "Starting from Android M (6.0), the system requires apps to be granted " +
+                    //"location access in order to scan for BLE devices.", Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_REQUEST_CODE)
+            requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_PERMISSION_REQUEST_CODE)
         }
     }
 
     private fun requestBluetoothScan() {
         if (!isBluetoothScanGranted) {
-            showExplanation("Bluetooth Scan permission required", "", Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
+            //showExplanation("Bluetooth Scan permission required", "", Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
+            requestPermission(Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
         }
     }
 
     private fun requestBluetoothConnect() {
         if (!isBluetoothConnectGranted) {
-            showExplanation("Bluetooth connect permission", "", Manifest.permission.BLUETOOTH_CONNECT, CONNECT_BLUETOOTH_REQUEST_CODE)
+            //showExplanation("Bluetooth connect permission", "", Manifest.permission.BLUETOOTH_CONNECT, CONNECT_BLUETOOTH_REQUEST_CODE)
+            requestPermission(Manifest.permission.BLUETOOTH_CONNECT, CONNECT_BLUETOOTH_REQUEST_CODE)
         }
     }
 
@@ -163,7 +166,6 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         }
     }
 
-    @SuppressLint("MissingPermission")
     public fun scanLE() {
         requestLocationPermission()
         requestBluetoothScan()
@@ -174,6 +176,13 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         if (!scanning) {
             handler.postDelayed({
                 scanning = false
+                if (ActivityCompat.checkSelfPermission(
+                        activity,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermission(Manifest.permission.BLUETOOTH_SCAN, SCAN_BLUETOOTH_REQUEST_CODE)
+                }
                 bluetoothLeScanner.stopScan(leScanCallback)
             }, SCAN_PERIOD)
             scanning = true
@@ -209,7 +218,6 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
                 bluetoothGatt.close()
             }
         }
-
 
         @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
