@@ -79,7 +79,11 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         }
 
     public fun setUpBT() {
-        requestBluetooth()
+        if(!isBluetoothGranted) {
+            requestBluetooth()
+        } else {
+            enableScan()
+        }
     }
 
     fun Context.hasPermission(permissionType: String): Boolean {
@@ -349,6 +353,22 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         Toast.makeText(mContext, message, Toast.LENGTH_LONG).show()
     }
 
+    private fun enableScan() {
+        val context = Context.BLUETOOTH_SERVICE;
+        val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
+        bluetoothAdapter = bluetoothManager.adapter
+
+        // enabling bt
+        if (!bluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            resultLauncher.launch(enableBtIntent)
+        }
+
+        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+
+        buttonScanLE.isEnabled = true
+    }
+
     fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -358,20 +378,7 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
             BLUETOOTH_REQUEST_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
-
-                    val context = Context.BLUETOOTH_SERVICE;
-                    val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
-                    bluetoothAdapter = bluetoothManager.adapter
-
-                    // enabling bt
-                    if (!bluetoothAdapter.isEnabled) {
-                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                        resultLauncher.launch(enableBtIntent)
-                    }
-
-                    bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-
-                    buttonScanLE.isEnabled = true
+                    enableScan()
                 } else {
                     Log.i("BluetoothGattDiscoverServices", "Bluetooth permission not granted")
                 }
