@@ -33,11 +33,20 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher_background"
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.IDSApp">
+        <activity
+            android:name=".controller.view.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".controller.view.IzlyActivity"
             android:exported="false"
@@ -46,15 +55,6 @@
         <activity
             android:name=".controller.view.IDSActivity"
             android:exported="false" />
-        <activity
-            android:name=".controller.view.MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
     </application>
 
 </manifest>
