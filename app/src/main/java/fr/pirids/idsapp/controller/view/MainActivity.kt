@@ -1,30 +1,19 @@
 package fr.pirids.idsapp.controller.view
 
-import android.Manifest
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.location.LocationManager
 import android.os.Bundle
-import android.provider.Settings
 import android.view.View
-import android.widget.*
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 
 
 class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
-
-    private val REQUEST_CODE_ENABLE_BT: Int = 1
 
     lateinit var currentSelectedService : String
 
