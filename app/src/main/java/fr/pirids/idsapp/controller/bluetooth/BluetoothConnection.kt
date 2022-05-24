@@ -16,6 +16,7 @@ import android.os.Handler
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -27,7 +28,7 @@ import java.util.*
 
 private const val BLUETOOTH_REQUEST_CODE = 1
 
-class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity, var buttonScanLE : Button, var buttonConnect : Button) {
+class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity) {
 
     lateinit var bluetoothAdapter: BluetoothAdapter
 
@@ -59,10 +60,12 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     val WHEN_WALLET_OUT_UUID : String = "00002AED-0000-1000-8000-00805f9b34fb"
 
-    var resultLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            // There are no request codes
-            val data: Intent? = result.data
+    public fun setUpBT() {
+        if(!isBluetoothGranted) {
+            requestBluetooth()
+        }
+        if (enableScan()) {
+            scanLE()
         }
     }
 
@@ -77,18 +80,6 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
                     )
             )
         }
-
-    public fun setUpBT() {
-        if(!isBluetoothGranted) {
-            requestBluetooth()
-        } else {
-            enableScan()
-        }
-    }
-
-    fun Context.hasPermission(permissionType: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED
-    }
 
     private fun requestBluetooth() {
         if(!isBluetoothGranted) {
@@ -108,32 +99,34 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         }
     }
 
-    var scanning = false
-    val handler = Handler()
-
-    private val leScanCallback: ScanCallback = object : ScanCallback() {
-
-        @SuppressLint("MissingPermission")
-        override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            if (result != null) {
-                with(result.device) {
-                    //afficherToast("Found BLE device with name: ${name ?: "No name"}, address: $address")
-                    if (name == "PIR-IDS") {
-                        //afficherToast("Found BLE device with name: ${name ?: "No name"}, address: $address")
-                        buttonConnect.isEnabled = true
-                        scanning = false
-                        idsDevice = this
-                    }
-                }
-            }
+    var resultLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            //val data: Intent? = result.data
+            bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+            scanLE()
         }
+    }
+
+    private fun enableScan(): Boolean {
+        val context = Context.BLUETOOTH_SERVICE;
+        val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
+        bluetoothAdapter = bluetoothManager.adapter
+
+        // enabling bt
+        if (!bluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            resultLauncher.launch(enableBtIntent)
+        } else {
+            bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+
+            return true
+        }
+
+        return false
     }
 
     public fun scanLE() {
         requestBluetooth()
-        /*val filter = ScanFilter.Builder().setServiceUuid(
-            ParcelUuid.fromString()
-        )*/
         if (!scanning) {
             handler.postDelayed({
                 scanning = false
@@ -144,12 +137,54 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
             }, SCAN_PERIOD)
             scanning = true
             bluetoothLeScanner.startScan(leScanCallback)
-            afficherToast("scanning for LE devices")
+            Log.d("Scan", "LE scan started 2")
         } else {
             scanning = false
             bluetoothLeScanner.stopScan(leScanCallback)
-            afficherToast("stopping LE devices scan")
         }
+    }
+
+    var scanning = false
+
+    val handler = Handler()
+    private val leScanCallback: ScanCallback = object : ScanCallback() {
+
+        @SuppressLint("MissingPermission")
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            if (result != null) {
+                with(result.device) {
+                    //afficherToast("Found BLE device with name: ${name ?: "No name"}, address: $address")
+                    if (name == "PIR-IDS") {
+                        //afficherToast("Found BLE device with name: ${name ?: "No name"}, address: $address")
+                        scanning = false
+                        idsDevice = this
+
+                        Log.d("Scan", "PIR-IDS Detected")
+                        // connect
+                        connect()
+                    }
+                }
+            }
+        }
+    }
+
+    // TODO
+    @SuppressLint("MissingPermission")
+    fun connect() {
+        bluetoothGatt = idsDevice.connectGatt(mContext, false, gattCallback)
+
+        //afficherToast("device connected" + bluetoothGatt.device)
+
+
+        // connect to time service
+
+        // send date before discovering service
+        //val dateServiceUUID = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb")
+        //val currentTimeMillis = System.currentTimeMillis()
+        //val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
+        //writeCharacteristic(timeCharacteristic, currentTimeMillis.toString().toByteArray())
+
+        //Log.i("BluetoothGattDiscoverServices", "Discovering gatt services")
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
@@ -302,6 +337,10 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         }
     }
 
+    fun Context.hasPermission(permissionType: String): Boolean {
+        return ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED
+    }
+
     private fun BluetoothGatt.printGattTable() {
         if (services.isEmpty()) {
             Log.i("printGattTable", "No service and characteristic available, call discoverServices() first?")
@@ -328,45 +367,6 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean {
         return properties and property != 0
-    }
-
-    // TODO
-    @SuppressLint("MissingPermission")
-    fun connect() {
-        bluetoothGatt = idsDevice.connectGatt(mContext, false, gattCallback)
-
-        //afficherToast("device connected" + bluetoothGatt.device)
-
-
-        // connect to time service
-
-        // send date before discovering service
-        //val dateServiceUUID = UUID.fromString("00002a2b-0000-1000-8000-00805f9b34fb")
-        //val currentTimeMillis = System.currentTimeMillis()
-        //val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
-        //writeCharacteristic(timeCharacteristic, currentTimeMillis.toString().toByteArray())
-
-        //Log.i("BluetoothGattDiscoverServices", "Discovering gatt services")
-    }
-
-    fun afficherToast(message: String) {
-        Toast.makeText(mContext, message, Toast.LENGTH_LONG).show()
-    }
-
-    private fun enableScan() {
-        val context = Context.BLUETOOTH_SERVICE;
-        val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
-        bluetoothAdapter = bluetoothManager.adapter
-
-        // enabling bt
-        if (!bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            resultLauncher.launch(enableBtIntent)
-        }
-
-        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-
-        buttonScanLE.isEnabled = true
     }
 
     fun onRequestPermissionsResult(

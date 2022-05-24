@@ -54,9 +54,6 @@
             android:exported="false"
             android:label="@string/title_activity_izly"
             android:theme="@style/Theme.IDSApp.NoActionBar" />
-        <activity
-            android:name=".controller.view.IDSActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

@@ -39,8 +39,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="32dp"
-            android:text="Configure IDS device"
+            android:text="Connect IDS device"
             android:textAlignment="center"
-            app:icon="@android:drawable/ic_menu_manage" />
+            app:icon="@android:drawable/stat_sys_data_bluetooth" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

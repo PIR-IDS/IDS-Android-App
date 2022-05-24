@@ -15,9 +15,11 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import fr.pirids.idsapp.R
+import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 
 
 class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
@@ -33,6 +35,8 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
     //val text = findViewById<TextView>(R.id.textView)
 
     private lateinit var bluetoothAdapter: BluetoothAdapter
+
+    private val bluetoothConnection = BluetoothConnection(this, this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,8 +61,13 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
         buttonIDS = findViewById(R.id.ids_button)
         buttonIDS.setOnClickListener {
+            /*
             val intent = Intent(this, IDSActivity::class.java)
             startActivity(intent)
+            */
+
+            //val bluetoothConnection = BluetoothConnection(this, this)
+            bluetoothConnection.setUpBT()
         }
     }
 
