@@ -4,7 +4,7 @@ package fr.pirids.idsapp
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : AppCompatActivity() {
+class IzlyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
