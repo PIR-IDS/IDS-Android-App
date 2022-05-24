@@ -1,36 +1,32 @@
-package fr.pirids.idsapp
+package fr.pirids.idsapp.controller.view
 
 
 import android.os.Bundle
+import android.util.Log
+import android.widget.Button
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import fr.pirids.idsapp.R
+import fr.pirids.idsapp.controller.api.IzlyApi
 
 class IzlyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_izly)
 
-        val value = IzlyApi()
-        Thread({ println(value.GetTransactionList()) }).start()
-
-
-      /*  var et_user_name = findViewById(R.id.et_user_name) as EditText
-        var et_password = findViewById(R.id.et_password) as EditText
-        var btn_reset = findViewById(R.id.btn_reset) as Button
-        var btn_submit = findViewById(R.id.btn_submit) as Button
-
-        btn_reset.setOnClickListener {
-            et_user_name.setText("")
-            et_password.setText("")
+        findViewById<Button>(R.id.izly_connect_button).setOnClickListener {
+            val value = IzlyApi()
+            Thread {
+                Log.d("IZLY",
+                    value.getTransactionList(
+                        findViewById<EditText>(R.id.izly_phone_input).text.toString(),
+                        findViewById<EditText>(R.id.izly_password_input).text.toString()
+                    ).toString()
+                )
+            }.start()
         }
 
-
-        btn_submit.setOnClickListener {
-            val user_name = et_user_name.text;
-            //val password = et_password.text;
-           //Toast.makeText(this@MainActivity, user_name, Toast.LENGTH_LONG).show()
-            Log.d("username",user_name.toString())
-        }*/
     }
 }

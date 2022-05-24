@@ -1,8 +1,6 @@
-package fr.pirids.idsapp
+package fr.pirids.idsapp.controller.api
 
 
-import fr.pirids.idsapp.api.Api
-import fr.pirids.idsapp.utils.Constants
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
@@ -15,7 +13,7 @@ class IzlyApi : Api {
 
     var timeOfeachAction: LinkedList<Long> = LinkedList<Long>()
 
-    override fun GetTransactionList(): LinkedList<Long> {
+    override fun getTransactionList(number: String, password: String): LinkedList<Long> {
 
         val connexionTest = Jsoup.connect("https://mon-espace.izly.fr/Home/Logon").execute()
 
@@ -31,8 +29,8 @@ class IzlyApi : Api {
 
         val connexionFirst2 = Jsoup.connect("https://mon-espace.izly.fr/Home/Logon")
             .data("__RequestVerificationToken",requested_token.toString() )
-            .data("username", Constants.NUM.toString())
-            .data("password", Constants.MDP.toString())
+            .data("username", number)
+            .data("password", password)
             .data("ReturnUrl", "/History/")
             //.data("ReturnUrl", "/")
             .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
@@ -74,8 +72,8 @@ class IzlyApi : Api {
         while (!succes) {
             try {
                 val connexionSecond = Jsoup.connect("https://mon-espace.izly.fr/History?page=1")
-                    .data("username", Constants.NUM.toString())
-                    .data("password", Constants.MDP.toString())
+                    .data("username", number)
+                    .data("password", password)
                     .cookie(".ASPXAUTH", cookiesFirst.toString())
                     .cookie("ASP.NET_SessionId", cookiesSecond.toString())
                     .cookie("_culture", "en-US")
