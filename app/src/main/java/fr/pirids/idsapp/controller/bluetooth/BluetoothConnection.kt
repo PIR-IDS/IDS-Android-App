@@ -60,9 +60,8 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
     public fun setUpBT() {
         if(!isBluetoothGranted) {
             requestBluetooth()
-        }
-        if (enableScan()) {
-            scanLE()
+        } else {
+            enableScan()
         }
     }
 
@@ -98,13 +97,12 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     var resultLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            //val data: Intent? = result.data
             bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
             scanLE()
         }
     }
 
-    private fun enableScan(): Boolean {
+    private fun enableScan() {
         val context = Context.BLUETOOTH_SERVICE;
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
@@ -115,15 +113,11 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
             resultLauncher.launch(enableBtIntent)
         } else {
             bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-
-            return true
+            scanLE()
         }
-
-        return false
     }
 
     public fun scanLE() {
-        requestBluetooth()
         if (!scanning) {
             handler.postDelayed({
                 scanning = false

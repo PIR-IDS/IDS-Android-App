@@ -9,11 +9,12 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 
 
-class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
+class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
     lateinit var currentSelectedService : String
 
@@ -74,5 +75,10 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     override fun onNothingSelected(p0: AdapterView<*>?) {
         buttonRemoteService.isEnabled = false
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        bluetoothConnection.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }
