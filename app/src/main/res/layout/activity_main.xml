@@ -4,59 +4,43 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".controller.view.MainActivity">
 
     <LinearLayout
-        android:id="@+id/ll_main_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:background="#444444"
-        android:padding="25dp"
-        android:orientation="vertical">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="25dp"
-            android:textColor="#6dffbf"
-            android:padding="30dp"
-            android:text="Login"/>
+        android:layout_width="409dp"
+        android:layout_height="729dp"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="1dp"
+        tools:ignore="MissingConstraints">
 
-        <EditText
-            android:id="@+id/et_user_name"
+        <Button
+            android:id="@+id/remote_service_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
-            android:textAlignment="center"
-            android:textColor="#6bfff7"
-            android:textColorHint="#52afaa" />
-        <EditText
-            android:id="@+id/et_password"
-            android:hint="Password"
-            android:textColor="#6bfff7"
-            android:textColorHint="#52afaa"
-            android:textAlignment="center"
-            android:inputType="textPassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-        <LinearLayout
+            android:text="Connect to remote service"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:onClick="startServiceActivity"/>
+
+        <Spinner
+            android:id="@+id/remote_service_spinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="25dp"
-            android:orientation="horizontal">
-            <Button
-                android:id="@+id/btn_reset"
-                android:text="Reset"
-                android:textAllCaps="false"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:id="@+id/btn_submit"
-                android:text="Submit"
-                android:textAllCaps="false"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:spinnerMode="dropdown"/>
+
+        <Button
+            android:id="@+id/ids_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:text="Connect IDS device"
+            android:textAlignment="center"
+            app:icon="@android:drawable/stat_sys_data_bluetooth" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
