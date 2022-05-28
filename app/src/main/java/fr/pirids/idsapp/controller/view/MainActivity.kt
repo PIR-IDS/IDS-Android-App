@@ -21,7 +21,10 @@ import androidx.core.os.postDelayed
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.*
 
 
@@ -36,6 +39,8 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
     lateinit var serviceSpinner : Spinner
 
     val currentTime = System.currentTimeMillis()
+
+    lateinit var notifBuilder : NotificationCompat.Builder
 
     var intrusion : Boolean = false
 
@@ -86,103 +91,105 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
 
         serviceSpinner.onItemSelectedListener = this
 
+        buttonStartDetection = findViewById<Button>(R.id.start_detection_button)
+        buttonStopDetection = findViewById<Button>(R.id.stop_detection_button)
+
         buttonIDS = findViewById(R.id.ids_button)
         buttonIDS.setOnClickListener {
             bluetoothConnection.setUpBT()
             isIDSConnected = true
             if (isServiceConnected) {
-                findViewById<Button>(R.id.start_detection_button).isEnabled = true
+                buttonStartDetection.isEnabled = true
             }
         }
 
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "IDS"
-            val descriptionText = "Intrusion detected"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val name = "IDS"
+        val descriptionText = "Intrusion detected"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+            description = descriptionText
         }
+        // Register the channel with the system
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
 
-        val handler = Handler(Looper.getMainLooper())
+        val mainHandler = Handler(Looper.getMainLooper())
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
+        val fullScreenIntent = Intent(this, AlertNotificationActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val fullScreenPendingIntent = PendingIntent.getActivity(this, 1, fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
         // notification push
-        var builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        notifBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("IDS detected an intrusion")
-            .setContentText("")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentTitle(resources.getString(R.string.alert_notify))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setContentIntent(pendingIntent)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
 
-        lateinit var loopingThd : Runnable
-        loopingThd = Runnable {
-            //Log.d("DETECTION", "walletOut times: ${bluetoothConnection.whenWalletOutArray}")
+        val loopingThd : Runnable
+        loopingThd = object : Runnable {
+            override fun run() {
+                //Log.d("DETECTION", "walletOut times: ${bluetoothConnection.whenWalletOutArray}")
 
-            // detection
-            // non opti ?
-            idsWalletOutTimeArray = bluetoothConnection.whenWalletOutArray
-            Log.d("DETECTION", "walletout times: $idsWalletOutTimeArray")
+                //triggerNotification(System.currentTimeMillis())
+                // detection
+                // non opti ?
+                idsWalletOutTimeArray = bluetoothConnection.whenWalletOutArray
+                Log.d("DETECTION", "walletout times: $idsWalletOutTimeArray")
 
-            //serviceTransactionsTime = izly.getTransactionList(serviceCredentials.get(0), serviceCredentials.get(1))
-            Thread {
-                serviceTransactionsTime = izly.getTransactionList(serviceCredentials[0], serviceCredentials[1])
-                Log.d("DETECTION","IZLY transactions: $serviceTransactionsTime")
-            }.start()
+                //serviceTransactionsTime = izly.getTransactionList(serviceCredentials.get(0), serviceCredentials.get(1))
+                Thread {
+                    serviceTransactionsTime =
+                        izly.getTransactionList(serviceCredentials[0], serviceCredentials[1])
+                    Log.d("DETECTION", "IZLY transactions: $serviceTransactionsTime")
+                }.start()
 
-            // checking
-            serviceTransactionsTime.forEach { serviceTime ->
-                if (serviceTime > currentTime || isDebug) {
-                    intrusion = true
-                    isDebug = false
-                    // see below
-                    idsWalletOutTimeArray.forEach { idsTime ->
-                        var idsDate = idsTime.toInstant().toEpochMilli()
-                        val diff = Math.abs(serviceTime - idsDate)
-                        if (diff < TIME_TOL) {
-                            intrusion = false
+                // checking
+                serviceTransactionsTime.forEach { serviceTime ->
+                    if (serviceTime > currentTime || isDebug) {
+                        intrusion = true
+                        isDebug = false
+                        // see below
+                        idsWalletOutTimeArray.forEach { idsTime ->
+                            val idsDate = idsTime.toInstant().toEpochMilli()
+                            val diff = Math.abs(serviceTime - idsDate)
+                            if (diff < TIME_TOL) {
+                                intrusion = false
+                            }
                         }
-                    }
 
-                    if (intrusion) {
-                        with(NotificationManagerCompat.from(this)) {
-                            // notificationId is a unique int for each notification that you must define
-                            notify(notificationId, builder.setContentText("at $serviceTime").build())
-                            notificationId++
+                        if (intrusion) {
+                            triggerNotification(serviceTime)
                         }
                     }
                 }
+                mainHandler.postDelayed(this, CHECKING_DELAY_MILLIS)
             }
-
-            handler.postDelayed(loopingThd, CHECKING_DELAY_MILLIS)
         }
 
-        buttonStartDetection = findViewById<Button>(R.id.start_detection_button)
-        buttonStopDetection = findViewById<Button>(R.id.stop_detection_button)
-
         buttonStartDetection.setOnClickListener {
-
             if (currentSelectedService.equals("IZLY")) {
                 buttonStopDetection.isEnabled = true
                 buttonStartDetection.isEnabled = false
-
-                loopingThd.run()
+                mainHandler.post(loopingThd)
             }
         }
 
         buttonStopDetection.setOnClickListener {
-            handler.removeCallbacks(loopingThd)
+            mainHandler.removeCallbacks(loopingThd)
             buttonStartDetection.isEnabled = true
             buttonStopDetection.isEnabled = false
         }
@@ -197,6 +204,18 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
             if (isIDSConnected) {
                 findViewById<Button>(R.id.start_detection_button).isEnabled = true
             }
+        }
+    }
+
+    private fun triggerNotification(serviceTime: Long) {
+        val time = Instant.ofEpochMilli(serviceTime).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
+        with(NotificationManagerCompat.from(this)) {
+            // notificationId is a unique int for each notification that you must define
+            notify(
+                notificationId,
+                notifBuilder.setContentText("at $time").build()
+            )
+            notificationId++
         }
     }
 

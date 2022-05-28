@@ -1,6 +1,7 @@
 package fr.pirids.idsapp.controller.api
 
 
+import android.util.Log
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
@@ -12,6 +13,8 @@ import java.util.*
 class IzlyApi : Api {
 
     var timeOfeachAction: LinkedList<Long> = LinkedList<Long>()
+
+    val MAX_RETRIES = 50
 
     override fun getTransactionList(number: String, password: String): LinkedList<Long> {
 
@@ -69,7 +72,9 @@ class IzlyApi : Api {
 
         //FIXME: se deconnecter apres avoir realiser la connexion
         var succes: Boolean = false
-        while (!succes) {
+        var cpt_err = 0
+        while (!succes && cpt_err < MAX_RETRIES) {
+            cpt_err++
             try {
                 val connexionSecond = Jsoup.connect("https://mon-espace.izly.fr/History?page=1")
                     .data("username", number)
@@ -106,15 +111,16 @@ class IzlyApi : Api {
                 succes = !succes
                 Thread.sleep(1_000)
             } catch (e: HttpStatusException) {
-                println(" Http 500 erreur !")
+                Log.d("IZLY", e.toString())
             }
         }
-        println("succes")
+        Log.d("IZLY", "succes")
         succes = false
         var nbrAction = 0
         var index = 1
-        while (!succes) {
-
+        cpt_err = 0
+        while (!succes && cpt_err < MAX_RETRIES) {
+            cpt_err++
             val history = document.select(".list-group.list-group-flush li:nth-child($index)")
             if (history.toString() == "") {
                 succes = !succes
@@ -123,7 +129,7 @@ class IzlyApi : Api {
                     var date = history.select(".operation-date").toString().substringAfter('>')
                         .substringBefore('<')
                     if (date.length < 25) {                        //todo: traiter le cas ou c'est today et yesterday
-                        var day = date.substringBefore(' ')
+                        val day = date.substringBefore(' ')
                         date = date.substringAfter(" ").replace(" ", "").substringAfter("at")
                         val hour = date.substringBefore('h')
                         val minute = date.substringAfter('h')
@@ -184,7 +190,7 @@ class IzlyApi : Api {
        .execute()
    val document = connexion.parse()
    val element = document.select(".nav-item.nav-link.mb-4.py-0")
-   println(document.toString())*/
+   Log.d("IZLY", document.toString())*/
 
 
 /*
@@ -195,7 +201,7 @@ class IzlyApi : Api {
 
         // convert page to generated HTML and convert to document
         var doc = Jsoup.parse(myPage.asXml())
-        println(doc.toString())*/
+        Log.d("IZLY", doc.toString())*/
 
 
 
