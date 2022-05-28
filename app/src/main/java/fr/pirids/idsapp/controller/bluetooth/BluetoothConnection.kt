@@ -20,10 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.nio.charset.StandardCharsets
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -47,7 +44,7 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
 
-    var whenWalletOutArray = mutableListOf<OffsetDateTime>()
+    var whenWalletOutArray = mutableListOf<ZonedDateTime>()
 
     val CCCD_UUID : String = "00002902-0000-1000-8000-00805f9b34fb"
 
@@ -63,7 +60,7 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     val WHEN_WALLET_OUT_UUID : String = "00002AED-0000-1000-8000-00805f9b34fb"
 
-    val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSX")
+    //val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSX")
 
     public fun setUpBT() {
         if(!isBluetoothGranted) {
@@ -332,13 +329,16 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
             val time = characteristic?.getStringValue(0)
 
             // ex 2022-05-28T12:50:59.000Z
-            var utcTime = OffsetDateTime.parse(time, formatter)
-            utcTime = utcTime.withOffsetSameInstant(ZoneOffset.UTC)
+            //var utcTime = OffsetDateTime.parse(time, formatter)
+            //utcTime = utcTime.withOffsetSameInstant(ZoneOffset.UTC)
 
-            Log.d("IDS_wallet", time.toString())
-            Log.d("IDS_wallet time", utcTime.toString())
+            //Log.d("IDS_wallet", time.toString())
+            //Log.d("IDS_wallet time", utcTime.toString())
 
-            whenWalletOutArray.add(utcTime)
+            val dateTime = LocalDateTime.parse(characteristic?.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
+            val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
+
+            whenWalletOutArray.add(localDateTime)
             //Log.i("BluetoothGattCallback", "whenWalletOut date=$stringValue")
             //val dateTime = LocalDateTime.parse(stringValue!!.dropLast(1)).atZone(ZoneId.of("UTC"))
             //val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())

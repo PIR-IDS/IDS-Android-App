@@ -21,10 +21,7 @@ import androidx.core.os.postDelayed
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.time.*
 import java.util.*
 
 
@@ -47,7 +44,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
     var isDebug : Boolean = true
 
     var serviceTransactionsTime = mutableListOf<Long>()
-    var idsWalletOutTimeArray = mutableListOf<OffsetDateTime>()
+    var idsWalletOutTimeArray = mutableListOf<ZonedDateTime>()
 
     val izly = IzlyApi()
 
@@ -119,8 +116,10 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
         val mainHandler = Handler(Looper.getMainLooper())
 
         val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
+        intent.setAction(Intent.ACTION_MAIN)
+        intent.addCategory(Intent.CATEGORY_LAUNCHER)
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val fullScreenIntent = Intent(this, AlertNotificationActivity::class.java).apply {
@@ -162,9 +161,9 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
                     if (serviceTime > currentTime || isDebug) {
                         intrusion = true
                         isDebug = false
-                        // see below
                         idsWalletOutTimeArray.forEach { idsTime ->
                             val idsDate = idsTime.toInstant().toEpochMilli()
+                            Log.d("DETECTION", "ids time $idsDate")
                             val diff = Math.abs(serviceTime - idsDate)
                             if (diff < TIME_TOL) {
                                 intrusion = false
