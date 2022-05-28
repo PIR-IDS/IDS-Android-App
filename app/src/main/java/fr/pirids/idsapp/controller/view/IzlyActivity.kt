@@ -1,6 +1,8 @@
 package fr.pirids.idsapp.controller.view
 
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -16,6 +18,15 @@ class IzlyActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_izly)
 
+        findViewById<Button>(R.id.izly_connect_button).setOnClickListener() {
+            val resultIntent = Intent()
+            resultIntent.putExtra("phone_number", findViewById<EditText>(R.id.izly_phone_input).text.toString())
+            resultIntent.putExtra("password", findViewById<EditText>(R.id.izly_password_input).text.toString())
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish()
+        }
+
+        /*
         findViewById<Button>(R.id.izly_connect_button).setOnClickListener {
             val value = IzlyApi()
             Thread {
@@ -27,6 +38,7 @@ class IzlyActivity : AppCompatActivity() {
                 )
             }.start()
         }
+        */
 
     }
 }

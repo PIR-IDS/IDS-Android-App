@@ -42,5 +42,24 @@
             android:text="Connect IDS device"
             android:textAlignment="center"
             app:icon="@android:drawable/stat_sys_data_bluetooth" />
+
+        <Button
+            android:id="@+id/start_detection_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:enabled="false"
+            android:text="Start detection" />
+
+        <Button
+            android:id="@+id/stop_detection_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="32dp"
+            android:enabled="false"
+            android:text="Stop detection" />
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

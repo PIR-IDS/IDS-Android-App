@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.icu.util.TimeUnit
 import android.os.Build
 import android.os.Handler
 import android.util.Log
@@ -20,7 +21,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 private const val BLUETOOTH_REQUEST_CODE = 1
@@ -43,6 +47,8 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
 
     lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
 
+    var whenWalletOutArray = mutableListOf<OffsetDateTime>()
+
     val CCCD_UUID : String = "00002902-0000-1000-8000-00805f9b34fb"
 
     val SCAN_PERIOD : Long = 10000
@@ -56,6 +62,8 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
     val WALLET_OUT_UUID : String = "00002AE2-0000-1000-8000-00805f9b34fb"
 
     val WHEN_WALLET_OUT_UUID : String = "00002AED-0000-1000-8000-00805f9b34fb"
+
+    val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSX")
 
     public fun setUpBT() {
         if(!isBluetoothGranted) {
@@ -320,11 +328,21 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
             status: Int
         ) {
             Log.i("BluetoothGattCallback", "Characteristic read callback")
-            val stringValue = characteristic?.value?.let { String(it, StandardCharsets.UTF_8) }
-            Log.i("BluetoothGattCallback", "whenWalletOut date=$stringValue")
-            val dateTime = LocalDateTime.parse(stringValue!!.dropLast(1)).atZone(ZoneId.of("UTC"))
-            val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
-            activity.runOnUiThread { Toast.makeText(activity, "Wallet out at $localDateTime", Toast.LENGTH_SHORT).show() }
+            //val stringValue = characteristic?.value?.let { String(it, StandardCharsets.UTF_8) }
+            val time = characteristic?.getStringValue(0)
+
+            // ex 2022-05-28T12:50:59.000Z
+            var utcTime = OffsetDateTime.parse(time, formatter)
+            utcTime = utcTime.withOffsetSameInstant(ZoneOffset.UTC)
+
+            Log.d("IDS_wallet", time.toString())
+            Log.d("IDS_wallet time", utcTime.toString())
+
+            whenWalletOutArray.add(utcTime)
+            //Log.i("BluetoothGattCallback", "whenWalletOut date=$stringValue")
+            //val dateTime = LocalDateTime.parse(stringValue!!.dropLast(1)).atZone(ZoneId.of("UTC"))
+            //val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
+            //activity.runOnUiThread { Toast.makeText(activity, "Wallet out at $localDateTime", Toast.LENGTH_SHORT).show() }
         }
     }
 

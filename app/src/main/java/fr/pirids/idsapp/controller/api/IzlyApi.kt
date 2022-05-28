@@ -23,12 +23,12 @@ class IzlyApi : Api {
         val cookie_3 = connexionTest.cookie("ApplicationGatewayAffinityCORS")
         val cookie_4 = connexionTest.cookie("ASP.NET_SessionId")
         val document_test = connexionTest.parse()
-        var requested_token = document_test.select("input[name=\"__RequestVerificationToken\"]").toString()
+        var requested_token = document_test.select("input[name=\"__RequestVerificationToken\"]")?.toString() ?: ""
         requested_token = requested_token.substringAfter("value=").replace("\"", "").replace(">","")
 
 
         val connexionFirst2 = Jsoup.connect("https://mon-espace.izly.fr/Home/Logon")
-            .data("__RequestVerificationToken",requested_token.toString() )
+            .data("__RequestVerificationToken", requested_token)
             .data("username", number)
             .data("password", password)
             .data("ReturnUrl", "/History/")
@@ -38,10 +38,10 @@ class IzlyApi : Api {
             .header("Accept-Language", "en-US,en;q=0.5")
             .header("Connection", "keep-alive")
             .header("Content-Type","application/x-www-form-urlencoded")
-            .header("Cookie","ApplicationGatewayAffinityCORS=" + cookie_3.toString() + "; " +
-                    "ApplicationGatewayAffinity=" + cookie_2.toString() + "; "+
-                    "ASP.NET_SessionId=" + cookie_4.toString() + "; "+
-                    "__RequestVerificationToken" + cookie_1.toString() )
+            .header("Cookie","ApplicationGatewayAffinityCORS=" + (cookie_3?.toString() ?: "") + "; " +
+                    "ApplicationGatewayAffinity=" + (cookie_2?.toString() ?: "") + "; "+
+                    "ASP.NET_SessionId=" + (cookie_4?.toString() ?: "") + "; "+
+                    "__RequestVerificationToken" + (cookie_1?.toString() ?: "") )
             .header("Host", "mon-espace.izly.fr")
             .header("Origin", "https://mon-espace.izly.fr")
             .header("Referer", "https://mon-espace.izly.fr/Home/Logon?ReturnUrl=%2f")
@@ -54,10 +54,10 @@ class IzlyApi : Api {
                 "User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"
             )
-            .cookie("__RequestVerificationToken", cookie_1.toString())
-            .cookie("ApplicationGatewayAffinity", cookie_2.toString())
-            .cookie("ApplicationGatewayAffinityCORS", cookie_3.toString())
-            .cookie("ASP.NET_SessionId", cookie_4.toString())
+            .cookie("__RequestVerificationToken", cookie_1?.toString() ?: "")
+            .cookie("ApplicationGatewayAffinity", cookie_2?.toString() ?: "")
+            .cookie("ApplicationGatewayAffinityCORS", cookie_3?.toString() ?: "")
+            .cookie("ASP.NET_SessionId", cookie_4?.toString() ?: "")
             .method(Connection.Method.POST)
 
         val connexionFirst = connexionFirst2.execute()
@@ -74,8 +74,8 @@ class IzlyApi : Api {
                 val connexionSecond = Jsoup.connect("https://mon-espace.izly.fr/History?page=1")
                     .data("username", number)
                     .data("password", password)
-                    .cookie(".ASPXAUTH", cookiesFirst.toString())
-                    .cookie("ASP.NET_SessionId", cookiesSecond.toString())
+                    .cookie(".ASPXAUTH", cookiesFirst?.toString() ?: "")
+                    .cookie("ASP.NET_SessionId", cookiesSecond?.toString() ?: "")
                     .cookie("_culture", "en-US")
                     .header("Accept", "text/html, */*; q=0.01")
                     .header(
