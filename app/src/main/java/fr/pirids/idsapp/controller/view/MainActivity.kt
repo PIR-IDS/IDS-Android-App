@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
 
     var intrusion : Boolean = false
 
-    var isDebug : Boolean = true
+    var isDebug : Boolean = false
 
     var serviceTransactionsTime = mutableListOf<Long>()
     var idsWalletOutTimeArray = mutableListOf<ZonedDateTime>()
