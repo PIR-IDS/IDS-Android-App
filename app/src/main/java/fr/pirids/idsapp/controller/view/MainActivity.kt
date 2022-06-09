@@ -21,6 +21,7 @@ import androidx.core.os.postDelayed
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
+import java.sql.Timestamp
 import java.time.*
 import java.util.*
 
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
     lateinit var buttonIDS : Button
     lateinit var buttonRemoteService : Button
     lateinit var buttonStartDetection : Button
+    lateinit var buttonTest : Button
     lateinit var buttonStopDetection : Button
     lateinit var serviceSpinner : Spinner
 
@@ -90,6 +92,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
 
         buttonStartDetection = findViewById<Button>(R.id.start_detection_button)
         buttonStopDetection = findViewById<Button>(R.id.stop_detection_button)
+        buttonTest = findViewById<Button>(R.id.test_button)
 
         buttonIDS = findViewById(R.id.ids_button)
         buttonIDS.setOnClickListener {
@@ -151,8 +154,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
 
                 //serviceTransactionsTime = izly.getTransactionList(serviceCredentials.get(0), serviceCredentials.get(1))
                 Thread {
-                    serviceTransactionsTime =
-                        izly.getTransactionList(serviceCredentials[0], serviceCredentials[1])
+                    serviceTransactionsTime.addAll(izly.getTransactionList(serviceCredentials[0], serviceCredentials[1]))
                     Log.d("DETECTION", "IZLY transactions: $serviceTransactionsTime")
                 }.start()
 
@@ -191,6 +193,9 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
             mainHandler.removeCallbacks(loopingThd)
             buttonStartDetection.isEnabled = true
             buttonStopDetection.isEnabled = false
+        }
+        buttonTest.setOnClickListener {
+            serviceTransactionsTime.add(System.currentTimeMillis())
         }
     }
 
