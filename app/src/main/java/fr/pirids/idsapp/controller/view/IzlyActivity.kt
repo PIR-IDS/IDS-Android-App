@@ -25,20 +25,5 @@ class IzlyActivity : AppCompatActivity() {
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
         }
-
-        /*
-        findViewById<Button>(R.id.izly_connect_button).setOnClickListener {
-            val value = IzlyApi()
-            Thread {
-                Log.d("IZLY",
-                    value.getTransactionList(
-                        findViewById<EditText>(R.id.izly_phone_input).text.toString(),
-                        findViewById<EditText>(R.id.izly_password_input).text.toString()
-                    ).toString()
-                )
-            }.start()
-        }
-        */
-
     }
 }

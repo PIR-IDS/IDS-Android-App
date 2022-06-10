@@ -40,17 +40,18 @@
 
     <application
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.IDSApp">
-        <activity
-            android:name=".controller.view.AlertNotificationActivity"
-            android:exported="false" />
+        android:theme="@style/Theme.IDSApp"
+        tools:targetApi="31">
         <activity
             android:name=".controller.view.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.IDSApp.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -62,6 +63,9 @@
             android:exported="false"
             android:label="@string/title_activity_izly"
             android:theme="@style/Theme.IDSApp.NoActionBar" />
+        <activity
+            android:name=".controller.view.AlertNotificationActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

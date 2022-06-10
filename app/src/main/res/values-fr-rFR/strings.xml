@@ -4,4 +4,8 @@
     <string name="text_main">Bonjour le Monde !</string>
     <string name="bluetooth_connect">Connexion à l\'IDS via Bluetooth</string>
     <string name="bluetooth_error">Le bluetooth n\'est pas supporté sur cet appareil</string>
+
+    <string name="tab_text_services">Mes Services</string>
+    <string name="tab_text_devices">Mes Appareils</string>
+    <string name="tab_text_network">Mon Réseau</string>
 </resources>

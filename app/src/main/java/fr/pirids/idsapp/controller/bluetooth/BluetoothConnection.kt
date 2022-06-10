@@ -346,6 +346,7 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
         }
     }
 
+    // TODO: refactor this in extension file
     fun Context.hasPermission(permissionType: String): Boolean {
         return ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED
     }

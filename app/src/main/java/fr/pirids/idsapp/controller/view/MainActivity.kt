@@ -17,16 +17,27 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.os.postDelayed
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
-import java.sql.Timestamp
 import java.time.*
 import java.util.*
+import android.os.Bundle
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.tabs.TabLayout
+import android.view.Menu
+import android.view.MenuItem
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayoutMediator
+import fr.pirids.idsapp.ui.main.SectionsPagerAdapter
+import fr.pirids.idsapp.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, ActivityCompat.OnRequestPermissionsResultCallback {
+
+    private lateinit var binding: ActivityMainBinding
 
     lateinit var currentSelectedService : String
 
@@ -50,8 +61,6 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
 
     val izly = IzlyApi()
 
-    //val text = findViewById<TextView>(R.id.textView)
-
     private lateinit var bluetoothAdapter: BluetoothAdapter
 
     private val bluetoothConnection = BluetoothConnection(this, this)
@@ -71,8 +80,23 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
+        val sectionsPagerAdapter = SectionsPagerAdapter(this, this)
+        val viewPager: ViewPager2 = binding.viewPager
+        viewPager.adapter = sectionsPagerAdapter
+        val tabs: TabLayout = binding.tabs
+        TabLayoutMediator(tabs, viewPager) { tab, position ->
+            tab.text = sectionsPagerAdapter.getPageTitle(position)
+        }.attach()
+
+        val fab: FloatingActionButton = binding.fab
+        fab.setOnClickListener { view ->
+            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show()
+        }
+/*
         buttonRemoteService = findViewById(R.id.remote_service_button)
 
         serviceSpinner = findViewById(R.id.remote_service_spinner)
@@ -196,9 +220,9 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
         }
         buttonTest.setOnClickListener {
             serviceTransactionsTime.add(System.currentTimeMillis())
-        }
+        }*/
     }
-
+/*
     val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
         if (result.resultCode == Activity.RESULT_OK) {
             serviceCredentials.add(result.data?.getStringExtra("phone_number").toString())
@@ -210,7 +234,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
             }
         }
     }
-
+*/
     private fun triggerNotification(serviceTime: Long) {
         val time = Instant.ofEpochMilli(serviceTime).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
         with(NotificationManagerCompat.from(this)) {
@@ -222,7 +246,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
             notificationId++
         }
     }
-
+/*
     fun startServiceActivity(view: View) {
         if (currentSelectedService.equals("IZLY")) {
             val intent = Intent(this@MainActivity, IzlyActivity::class.java)
@@ -230,7 +254,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Ac
             resultLauncher.launch(intent)
         }
     }
-
+*/
     override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
         currentSelectedService = p0?.getItemAtPosition(p2) as String
         buttonRemoteService.isEnabled = true
