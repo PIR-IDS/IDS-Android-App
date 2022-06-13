@@ -1,29 +1,26 @@
-package fr.pirids.idsapp.controller.view
+package fr.pirids.idsapp.ui.main
 
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import fr.pirids.idsapp.R
-import fr.pirids.idsapp.controller.api.IzlyApi
 
-class IzlyActivity : AppCompatActivity() {
+class IzlyActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_izly)
+        setContent {
 
-        findViewById<Button>(R.id.izly_connect_button).setOnClickListener() {
+        }
+
+        /*findViewById<Button>(R.id.izly_connect_button).setOnClickListener() {
             val resultIntent = Intent()
             resultIntent.putExtra("phone_number", findViewById<EditText>(R.id.izly_phone_input).text.toString())
             resultIntent.putExtra("password", findViewById<EditText>(R.id.izly_password_input).text.toString())
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
-        }
+        }*/
     }
 }

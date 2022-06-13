@@ -184,28 +184,6 @@ class IzlyApi : Api {
 }
 
 
-/*
-   val connexion = Jsoup.connect("")
-       .method(Connection.Method.POST)
-       .execute()
-   val document = connexion.parse()
-   val element = document.select(".nav-item.nav-link.mb-4.py-0")
-   Log.d("IZLY", document.toString())*/
-
-
-/*
-        val webClient = WebClient()
-        val myPage: HtmlPage = webClient.getPage("https://www.google.fr/")
-
-        // convert page to generated HTML and convert to document
-
-        // convert page to generated HTML and convert to document
-        var doc = Jsoup.parse(myPage.asXml())
-        Log.d("IZLY", doc.toString())*/
-
-
-
-
 
 
 

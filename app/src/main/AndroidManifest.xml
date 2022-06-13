@@ -43,15 +43,16 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
+        android:logo="@drawable/ids_logo"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.IDSApp"
         tools:targetApi="31">
         <activity
-            android:name=".controller.view.MainActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.IDSApp.NoActionBar">
+            android:theme="@style/Theme.IDSApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -59,12 +60,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".controller.view.IzlyActivity"
+            android:name=".ui.main.IzlyActivity"
             android:exported="false"
-            android:label="@string/title_activity_izly"
-            android:theme="@style/Theme.IDSApp.NoActionBar" />
+            android:label="@string/title_activity_izly"/>
         <activity
-            android:name=".controller.view.AlertNotificationActivity"
+            android:name=".ui.notifications.AlertNotificationActivity"
             android:exported="false" />
     </application>
 

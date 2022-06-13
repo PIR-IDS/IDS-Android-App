@@ -15,8 +15,8 @@ import android.os.Build
 import android.os.Handler
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.nio.charset.StandardCharsets
@@ -24,9 +24,7 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-private const val BLUETOOTH_REQUEST_CODE = 1
-
-class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity) {
+class BluetoothConnection(var mContext: Context, var activity: ComponentActivity) {
 
     lateinit var bluetoothAdapter: BluetoothAdapter
 
@@ -59,6 +57,8 @@ class BluetoothConnection(var mContext: Context, var activity: AppCompatActivity
     val WALLET_OUT_UUID : String = "00002AE2-0000-1000-8000-00805f9b34fb"
 
     val WHEN_WALLET_OUT_UUID : String = "00002AED-0000-1000-8000-00805f9b34fb"
+
+    private val BLUETOOTH_REQUEST_CODE = 1
 
     //val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSX")
 
