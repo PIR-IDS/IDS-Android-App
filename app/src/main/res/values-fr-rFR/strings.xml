@@ -16,4 +16,6 @@
     <string name="izly_description">izly desc</string>
     <string name="add_service">Ajouter un Service</string>
     <string name="add_device">Ajouter un Appareil</string>
+    <string name="settings">Paramètres</string>
+    <string name="notifications">Notifications</string>
 </resources>

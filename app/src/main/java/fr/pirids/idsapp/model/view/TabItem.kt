@@ -7,16 +7,15 @@ import androidx.compose.material.icons.outlined.DevicesOther
 import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavHostController
 import fr.pirids.idsapp.R
 
-import fr.pirids.idsapp.ui.main.DevicesScreen
-import fr.pirids.idsapp.ui.main.NetworkScreen
-import fr.pirids.idsapp.ui.main.ServicesScreen
+import fr.pirids.idsapp.ui.views.DevicesScreen
+import fr.pirids.idsapp.ui.views.NetworkScreen
+import fr.pirids.idsapp.ui.views.ServicesScreen
 
-typealias ComposableFun = @Composable () -> Unit
-
-sealed class TabItem(var icon: ImageVector, @StringRes var title: Int, var screen: ComposableFun) {
-    object Services : TabItem(Icons.Outlined.AccountBalanceWallet, R.string.tab_text_services, { ServicesScreen() })
-    object Devices : TabItem(Icons.Outlined.DevicesOther, R.string.tab_text_devices, { DevicesScreen() })
-    object Network : TabItem(Icons.Outlined.Sensors, R.string.tab_text_network, { NetworkScreen() })
+sealed class TabItem(var icon: ImageVector, @StringRes var title: Int, var screen: @Composable (navController: NavHostController) -> Unit) {
+    object Services : TabItem(Icons.Outlined.AccountBalanceWallet, R.string.tab_text_services, { ServicesScreen(it) })
+    object Devices : TabItem(Icons.Outlined.DevicesOther, R.string.tab_text_devices, { DevicesScreen(it) })
+    object Network : TabItem(Icons.Outlined.Sensors, R.string.tab_text_network, { NetworkScreen(it) })
 }

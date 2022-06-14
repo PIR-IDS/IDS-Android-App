@@ -50,22 +50,14 @@
         android:theme="@style/Theme.IDSApp"
         tools:targetApi="31">
         <activity
-            android:name=".ui.main.MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.IDSApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.main.IzlyActivity"
-            android:exported="false"
-            android:label="@string/title_activity_izly"/>
-        <activity
-            android:name=".ui.notifications.AlertNotificationActivity"
-            android:exported="false" />
     </application>
 
 </manifest>
