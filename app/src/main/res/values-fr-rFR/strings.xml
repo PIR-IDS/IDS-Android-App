@@ -18,4 +18,8 @@
     <string name="add_device">Ajouter une Sonde</string>
     <string name="settings">Paramètres</string>
     <string name="notifications">Notifications</string>
+    <string name="username">Identifiant</string>
+    <string name="password">Mot de passe</string>
+    <string name="login">Connexion</string>
+    <string name="not_found">Introuvable !</string>
 </resources>

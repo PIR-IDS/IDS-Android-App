@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.model.items.Service
+import fr.pirids.idsapp.model.items.ServiceId
 import fr.pirids.idsapp.model.navigation.NavRoutes
 import java.time.Instant
 import java.time.ZoneId
@@ -236,8 +237,7 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
         navController.navigate(NavRoutes.AddService.route)
     }
 
-    fun showService(navController: NavHostController, service: Service) {
-
-        navController.navigate(NavRoutes.Service.route)
+    fun showService(navController: NavHostController, service: ServiceId) {
+        navController.navigate(NavRoutes.Service.route + "/" + service.ordinal)
     }
 }

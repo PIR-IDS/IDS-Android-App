@@ -185,7 +185,7 @@ fun ServicesScreen(navController: NavHostController) {
                             .clickable(
                                 enabled = true,
                                 onClickLabel = it.name,
-                                onClick = { HomeViewController.showService(navController, it)}
+                                onClick = { HomeViewController.showService(navController, it.id)}
                             )
                     )
                 }

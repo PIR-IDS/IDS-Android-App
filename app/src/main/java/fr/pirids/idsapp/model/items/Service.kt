@@ -13,5 +13,6 @@ data class Service(val id: ServiceId, val name: String, @StringRes val descripti
         val list = listOf(
             Service(ServiceId.IZLY, "IZLY", R.string.izly_description, R.drawable.izly_logo)
         )
+        fun get(id: ServiceId) = list.first { it.id == id }
     }
 }
