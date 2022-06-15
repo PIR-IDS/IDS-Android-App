@@ -11,13 +11,14 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavHostController
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
+import fr.pirids.idsapp.model.items.Service
 import fr.pirids.idsapp.model.navigation.NavRoutes
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
-object MainViewController /*: ActivityCompat.OnRequestPermissionsResultCallback, AdapterView.OnItemSelectedListener*/ {
+object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback, AdapterView.OnItemSelectedListener*/ {
 
     lateinit var currentSelectedService : String
 
@@ -232,6 +233,11 @@ object MainViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
     }
 */
     fun addService(navController: NavHostController) {
-        navController.navigate(NavRoutes.Izly.route)
+        navController.navigate(NavRoutes.AddService.route)
+    }
+
+    fun showService(navController: NavHostController, service: Service) {
+
+        navController.navigate(NavRoutes.Service.route)
     }
 }

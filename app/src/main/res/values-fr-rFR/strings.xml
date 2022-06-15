@@ -10,12 +10,12 @@
     <string name="title_activity_alert_notification">AlertNotificationActivity</string>
     <string name="alert_notify">L\'IDS a détecté une intrusion !</string>
     <string name="tab_text_services">Mes Services</string>
-    <string name="tab_text_devices">Mes Appareils</string>
+    <string name="tab_text_devices">Mes Sondes</string>
     <string name="tab_text_network">Mon Réseau</string>
     <string name="logo">Logo</string>
     <string name="izly_description">izly desc</string>
     <string name="add_service">Ajouter un Service</string>
-    <string name="add_device">Ajouter un Appareil</string>
+    <string name="add_device">Ajouter une Sonde</string>
     <string name="settings">Paramètres</string>
     <string name="notifications">Notifications</string>
 </resources>

@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.ui.notifications
+package fr.pirids.idsapp.ui.views.notifications
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text

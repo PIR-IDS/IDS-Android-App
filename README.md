@@ -64,6 +64,7 @@ This code will be used in order to receive the anomalies detected by the Arduino
 ### Built With
 * [Kotlin](https://kotlinlang.org/)
 * [Android](https://developer.android.com/)
+* [Jetpack Compose](https://developer.android.com/jetpack/compose/)
 
 <!-- GETTING STARTED -->
 ## Getting Started

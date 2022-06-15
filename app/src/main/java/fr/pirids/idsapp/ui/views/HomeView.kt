@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalAnimationApi::class)
+
 package fr.pirids.idsapp.ui.views
 
 import android.util.Log
+import androidx.compose.animation.ExperimentalAnimationApi
 import fr.pirids.idsapp.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,10 +28,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.flowlayout.FlowRow
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.*
-import fr.pirids.idsapp.controller.view.MainViewController
+import fr.pirids.idsapp.controller.view.HomeViewController
 import fr.pirids.idsapp.model.items.Device
 import fr.pirids.idsapp.model.items.Service
 import fr.pirids.idsapp.model.view.TabItem
@@ -52,11 +55,10 @@ fun HomeView(navController: NavHostController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    HomeView(navController = rememberNavController())
+    HomeView(navController = rememberAnimatedNavController())
 }
 
 @Composable
@@ -91,7 +93,7 @@ fun TopBar(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun TopBarPreview() {
-    TopBar(navController = rememberNavController())
+    TopBar(navController = rememberAnimatedNavController())
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -183,9 +185,7 @@ fun ServicesScreen(navController: NavHostController) {
                             .clickable(
                                 enabled = true,
                                 onClickLabel = it.name,
-                                onClick = {
-                                    Log.i("MainActivity", "Clicked on ${it.name}")
-                                }
+                                onClick = { HomeViewController.showService(navController, it)}
                             )
                     )
                 }
@@ -205,7 +205,7 @@ fun ServicesScreen(navController: NavHostController) {
                         .clickable(
                             enabled = true,
                             onClickLabel = stringResource(id = R.string.add_service),
-                            onClick = { MainViewController.addService(navController) }
+                            onClick = { HomeViewController.addService(navController) }
                         )
                 )
             }
@@ -216,7 +216,7 @@ fun ServicesScreen(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun ServicesScreenPreview() {
-    ServicesScreen(navController = rememberNavController())
+    ServicesScreen(navController = rememberAnimatedNavController())
 }
 
 @Composable
@@ -294,7 +294,7 @@ fun DevicesScreen(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun DevicesScreenPreview() {
-    DevicesScreen(navController = rememberNavController())
+    DevicesScreen(navController = rememberAnimatedNavController())
 }
 
 @Composable
@@ -321,5 +321,5 @@ fun NetworkScreen(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun NetworkScreenPreview() {
-    NetworkScreen(navController = rememberNavController())
+    NetworkScreen(navController = rememberAnimatedNavController())
 }

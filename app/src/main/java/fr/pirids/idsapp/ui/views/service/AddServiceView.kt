@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 
 @Composable
-fun IzlyView(navController: NavHostController) {
+fun AddServiceView(navController: NavHostController) {
     Text("Izly")
 
     /*findViewById<Button>(R.id.izly_connect_button).setOnClickListener() {
