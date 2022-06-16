@@ -1,5 +1,6 @@
 package fr.pirids.idsapp.controller.view
 
+import androidx.navigation.NavHostController
 import fr.pirids.idsapp.model.items.Device
 import fr.pirids.idsapp.model.items.Service
 
@@ -22,4 +23,6 @@ object ServiceViewController {
     )
 
     fun getProbesList(service: Service): List<Device> = service.compatibleDevices
+
+    fun closeModal(navController: NavHostController) = navController.popBackStack()
 }

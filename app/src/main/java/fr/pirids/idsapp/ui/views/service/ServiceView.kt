@@ -12,6 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +38,6 @@ import fr.pirids.idsapp.controller.view.ServiceViewController
 import fr.pirids.idsapp.model.items.Device
 import fr.pirids.idsapp.model.items.DeviceId
 import fr.pirids.idsapp.model.items.Service
-import fr.pirids.idsapp.ui.views.TopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +72,31 @@ fun ServiceView(navController: NavHostController, service: Service) {
 @Composable
 fun ServiceViewPreview() {
     ServiceView(navController = rememberAnimatedNavController(), Service.list.first())
+}
+
+@Composable
+fun TopBar(navController: NavHostController) {
+    TopAppBar(
+        title = {},
+        navigationIcon = {
+            IconButton(
+                onClick = { ServiceViewController.closeModal(navController) }
+            ) {
+                Icon(
+                    Icons.Outlined.Close,
+                    contentDescription = stringResource(id = R.string.close)
+                )
+            }
+        },
+        backgroundColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TopBarPreview() {
+    TopBar(navController = rememberAnimatedNavController())
 }
 
 @Composable

@@ -25,4 +25,5 @@
     <string name="history">Historique</string>
     <string name="linked_probes">Sondes Liées</string>
     <string name="wallet_card_desc">wallet desc</string>
+    <string name="close">Fermer</string>
 </resources>
