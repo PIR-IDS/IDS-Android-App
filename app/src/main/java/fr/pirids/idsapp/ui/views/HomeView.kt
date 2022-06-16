@@ -241,9 +241,7 @@ fun DevicesScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            listOf(
-                Device(1, "PIR-IDS", R.string.app_name, R.drawable.ids_logo),
-            ).forEach {
+            Device.list.forEach {
                 Box(
                     modifier = Modifier
                         .size(120.dp),

@@ -21,4 +21,7 @@
     <string name="password">Password</string>
     <string name="login">Login</string>
     <string name="not_found">Not Found!</string>
+    <string name="history">History</string>
+    <string name="linked_probes">Linked Probes</string>
+    <string name="wallet_card_desc">wallet desc</string>
 </resources>
