@@ -2,6 +2,7 @@
 
 package fr.pirids.idsapp.ui.views.service
 
+import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -137,7 +138,18 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
         Spacer(modifier = Modifier.height(20.dp))
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
             Button(
-                onClick = { },
+                onClick = {
+                    val serviceConnected = ServiceViewController.checkService(
+                        username.value.text,
+                        password.value.text,
+                        service
+                    )
+                    if (serviceConnected) {
+                        Log.d("ServiceView", "Service connected")
+                    } else {
+                        Log.d("ServiceView", "Service not connected")
+                    }
+                },
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .fillMaxWidth()

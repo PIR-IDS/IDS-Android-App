@@ -41,7 +41,7 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
     var serviceTransactionsTime = mutableListOf<Long>()
     var idsWalletOutTimeArray = mutableListOf<ZonedDateTime>()
 
-    val izly = IzlyApi()
+    //val izly = IzlyApi()
 
     private lateinit var bluetoothAdapter: BluetoothAdapter
 
