@@ -60,3 +60,8 @@ val md_theme_dark_inversePrimary = Color(0xFF44655B)
 
 
 val seed = Color(0xFF00231B)
+
+val custom_dark_success = Color(0xFF48D5A2)
+val custom_dark_onSuccess = Color(0xFFFFFFFF)
+val custom_light_success = Color(0xFFAACEC1)
+val custom_light_onSuccess = Color(0xFFFFFFFF)

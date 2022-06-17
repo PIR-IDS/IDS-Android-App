@@ -26,5 +26,7 @@
     <string name="linked_probes">Sondes Liées</string>
     <string name="wallet_card_desc">wallet desc</string>
     <string name="close">Fermer</string>
-    <string name="service_not_connected">Erreur: nous ne pouvons pas vous connecter au service !</string>
+    <string name="service_not_connected">Erreur : nous ne pouvons pas vous connecter au service !</string>
+    <string name="connected">Service Connecté !</string>
+    <string name="reconnect">Se reconnecter au service</string>
 </resources>

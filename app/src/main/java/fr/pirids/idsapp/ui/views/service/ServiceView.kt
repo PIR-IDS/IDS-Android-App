@@ -3,6 +3,7 @@
 package fr.pirids.idsapp.ui.views.service
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,16 +12,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -33,16 +33,18 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.ServiceViewController
+import fr.pirids.idsapp.extensions.custom_success
 import fr.pirids.idsapp.model.items.Device
 import fr.pirids.idsapp.model.items.DeviceId
 import fr.pirids.idsapp.model.items.Service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
+val isConnected : MutableState<Boolean> = mutableStateOf(false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +62,12 @@ fun ServiceView(navController: NavHostController, service: Service) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                LoginForm(service = service)
+                AnimatedVisibility(visible = !isConnected.value) {
+                    LoginForm(service = service)
+                }
+                AnimatedVisibility(visible = isConnected.value) {
+                    ConnectedLabel(service = service)
+                }
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(text = stringResource(id = R.string.history).uppercase(), style = MaterialTheme.typography.titleLarge)
                 HistoryList(service = service)
@@ -103,6 +110,60 @@ fun TopBar(navController: NavHostController) {
 @Composable
 fun TopBarPreview() {
     TopBar(navController = rememberAnimatedNavController())
+}
+
+@Composable
+fun ConnectedLabel(service: Service) {
+    Column(
+        modifier = Modifier
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+            Row(
+                verticalAlignment = CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = service.logo),
+                    contentDescription = service.name
+                )
+                Icon(
+                    Icons.Outlined.TaskAlt,
+                    modifier = Modifier.size(65.dp),
+                    contentDescription = stringResource(id = R.string.connected),
+                    tint = androidx.compose.material.MaterialTheme.colors.custom_success
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            modifier = Modifier
+                .padding(horizontal = 16.dp),
+            text = stringResource(id = R.string.connected),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.displaySmall
+        )
+
+        Spacer(modifier = Modifier.height(5.dp))
+        Button(
+            onClick = { isConnected.value = false },
+            shape = RoundedCornerShape(50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text(text = stringResource(id = R.string.reconnect))
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ConnectedLabelPreview() {
+    ConnectedLabel(Service.list.first())
 }
 
 @Composable
@@ -156,15 +217,9 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
                             service
                         )
                         if (serviceConnected) {
-                            //TODO
-                            scope.launch(Dispatchers.Main) {
-                                Toast.makeText(
-                                    context,
-                                    "service connected!!!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                            isConnected.value = true
                         } else {
+                            isConnected.value = false
                             scope.launch(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,

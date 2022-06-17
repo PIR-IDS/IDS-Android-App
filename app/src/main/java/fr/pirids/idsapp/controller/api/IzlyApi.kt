@@ -99,10 +99,6 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
         catch(e: Exception) { e.message?.let { Log.d("IzlyApi", it) } ; false }
 
     override fun getData(): IzlyData {
-
-        Thread.sleep(1_000)
-
-        //FIXME: se deconnecter apres avoir realiser la connexion
         var succes: Boolean = false
         var cpt_err = 0
         var historyData: Document? = null
