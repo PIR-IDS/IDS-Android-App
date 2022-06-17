@@ -1,24 +1,28 @@
 package fr.pirids.idsapp.ui.views.notifications
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import fr.pirids.idsapp.R
 
 @Composable
 fun AlertNotificationView() {
     Surface(
-        color = Color.Red
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.error
     ) {
         Text(
+            modifier = Modifier.wrapContentHeight(),
             text = stringResource(id = R.string.alert_notify),
-            color = Color.White,
-            fontSize = 24.sp,
+            color = MaterialTheme.colorScheme.onError,
+            style = MaterialTheme.typography.displayLarge,
             textAlign = TextAlign.Center
         )
     }

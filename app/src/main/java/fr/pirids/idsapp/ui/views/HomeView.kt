@@ -70,7 +70,8 @@ fun TopBar(navController: NavHostController) {
             Text(
                 text = stringResource(id = R.string.app_name),
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimary
             )
         },
         backgroundColor = MaterialTheme.colorScheme.primary,
@@ -79,12 +80,20 @@ fun TopBar(navController: NavHostController) {
             IconButton(
                 onClick = {}
             ) {
-                Icon(Icons.Outlined.Notifications, contentDescription = stringResource(id = R.string.notifications))
+                Icon(
+                    Icons.Outlined.Notifications,
+                    contentDescription = stringResource(id = R.string.notifications),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
             IconButton(
                 onClick = {}
             ) {
-                Icon(Icons.Outlined.Settings, contentDescription = stringResource(id = R.string.settings))
+                Icon(
+                    Icons.Outlined.Settings,
+                    contentDescription = stringResource(id = R.string.settings),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     )

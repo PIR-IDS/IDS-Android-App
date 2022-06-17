@@ -89,7 +89,8 @@ fun TopBar(navController: NavHostController) {
             ) {
                 Icon(
                     Icons.Outlined.Close,
-                    contentDescription = stringResource(id = R.string.close)
+                    contentDescription = stringResource(id = R.string.close),
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         },
