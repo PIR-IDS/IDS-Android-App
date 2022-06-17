@@ -2,7 +2,7 @@
 
 package fr.pirids.idsapp.ui.views.service
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,10 +20,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,6 +42,8 @@ import fr.pirids.idsapp.controller.view.ServiceViewController
 import fr.pirids.idsapp.model.items.Device
 import fr.pirids.idsapp.model.items.DeviceId
 import fr.pirids.idsapp.model.items.Service
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,6 +107,7 @@ fun TopBarPreview() {
 
 @Composable
 fun LoginForm(modifier: Modifier = Modifier, service: Service) {
+    val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .then(modifier)
@@ -137,17 +143,36 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
 
         Spacer(modifier = Modifier.height(20.dp))
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+            val context = LocalContext.current
+            val focusManager = LocalFocusManager.current
+            val notFoundText = stringResource(id = R.string.service_not_connected)
             Button(
                 onClick = {
-                    val serviceConnected = ServiceViewController.checkService(
-                        username.value.text,
-                        password.value.text,
-                        service
-                    )
-                    if (serviceConnected) {
-                        Log.d("ServiceView", "Service connected")
-                    } else {
-                        Log.d("ServiceView", "Service not connected")
+                    focusManager.clearFocus()
+                    scope.launch(Dispatchers.IO) {
+                        val serviceConnected = ServiceViewController.checkService(
+                            username.value.text,
+                            password.value.text,
+                            service
+                        )
+                        if (serviceConnected) {
+                            //TODO
+                            scope.launch(Dispatchers.Main) {
+                                Toast.makeText(
+                                    context,
+                                    "service connected!!!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            scope.launch(Dispatchers.Main) {
+                                Toast.makeText(
+                                    context,
+                                    notFoundText,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     }
                 },
                 shape = RoundedCornerShape(50.dp),

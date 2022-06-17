@@ -36,7 +36,7 @@ object ServiceViewController {
 
     private fun connectToService(username: String, password: String, service: Service): ApiInterface {
         when(service.id) {
-            ServiceId.IZLY -> return IzlyApi(IzlyAuth(username, password)) //FIXME: use a thread/coroutine to avoid blocking the UI (StrictMode$AndroidBlockGuardPolicy)
+            ServiceId.IZLY -> return IzlyApi(IzlyAuth(username, password))
             else -> throw Exception("Service not supported")
         }
     }

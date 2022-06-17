@@ -16,8 +16,8 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
     private val timeOfEachAction: MutableList<Long> = mutableListOf()
     private val maxRetries = 50
     private lateinit var credentials: IzlyAuth
-    private lateinit var cookieSessionId: String
-    private lateinit var cookieASPXAUTH: String
+    private var cookieSessionId: String? = null
+    private var cookieASPXAUTH: String? = null
 
     private val logonURL = "https://mon-espace.izly.fr/Home/Logon"
     private val historyURL = "https://mon-espace.izly.fr/History?page=1"
@@ -66,7 +66,7 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
                 "Cookie",
                 "ApplicationGatewayAffinityCORS=" + (cookieApplicationGatewayAffinityCORS?.toString() ?: "") + "; " +
                         "ApplicationGatewayAffinity=" + (cookieApplicationGatewayAffinity?.toString() ?: "") + "; "+
-                        "ASP.NET_SessionId=" + cookieSessionId + "; "+
+                        "ASP.NET_SessionId=" + (cookieSessionId ?: "") + "; "+
                         "__RequestVerificationToken" + (cookieRequestVerificationToken?.toString() ?: "")
             )
             .header("Host", "mon-espace.izly.fr")
@@ -85,7 +85,7 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
             .cookie("__RequestVerificationToken", cookieRequestVerificationToken?.toString() ?: "")
             .cookie("ApplicationGatewayAffinity", cookieApplicationGatewayAffinity?.toString() ?: "")
             .cookie("ApplicationGatewayAffinityCORS", cookieApplicationGatewayAffinityCORS?.toString() ?: "")
-            .cookie("ASP.NET_SessionId", cookieSessionId)
+            .cookie("ASP.NET_SessionId", cookieSessionId ?: "")
 
             .method(Connection.Method.POST)
 
@@ -94,7 +94,9 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
     }
 
     override fun checkConnection(): Boolean =
-        getHistoryConnection().statusCode() == HttpURLConnection.HTTP_OK // HTTP 200, we don't want the 302 status which is obtained when we are not logged in
+        try { getHistoryConnection().statusCode() == HttpURLConnection.HTTP_OK } // HTTP 200, we don't want the 302 status which is obtained when we are not logged in
+        catch(e: HttpStatusException) { e.message?.let { Log.d("IzlyApi", it) } ; false }
+        catch(e: Exception) { e.message?.let { Log.d("IzlyApi", it) } ; false }
 
     override fun getData(): IzlyData {
 
@@ -185,8 +187,8 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
     private fun getHistoryConnection() = Jsoup.connect(historyURL)
         .data("username", credentials.id)
         .data("password", credentials.password)
-        .cookie(".ASPXAUTH", cookieASPXAUTH)
-        .cookie("ASP.NET_SessionId", cookieSessionId)
+        .cookie(".ASPXAUTH", cookieASPXAUTH ?: "")
+        .cookie("ASP.NET_SessionId", cookieSessionId ?: "")
         .cookie("_culture", "en-US")
         .header("Accept", "text/html, */*; q=0.01")
         .header(

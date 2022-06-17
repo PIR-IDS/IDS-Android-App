@@ -25,4 +25,5 @@
     <string name="linked_probes">Linked Probes</string>
     <string name="wallet_card_desc">wallet desc</string>
     <string name="close">Close</string>
+    <string name="service_not_connected">Error: we are unable to connect you to the service!</string>
 </resources>
