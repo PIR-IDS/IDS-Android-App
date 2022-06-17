@@ -24,7 +24,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -94,8 +93,8 @@ fun TopBar(navController: NavHostController) {
                 )
             }
         },
-        backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground
+        backgroundColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
     )
 }
 
@@ -209,7 +208,7 @@ fun Item(item: String) {
             .fillMaxWidth()
             .padding(4.dp)
             .height(40.dp)
-            .background(color = Color.Gray)
+            .background(color = MaterialTheme.colorScheme.secondary)
     ) {
         Row(
             modifier = Modifier
@@ -228,8 +227,8 @@ fun Item(item: String) {
                     .padding(horizontal = 16.dp)
                     .align(CenterVertically),
                 text = item,
-                color = Color.White,
-                fontSize = 16.sp
+                color = MaterialTheme.colorScheme.onSecondary,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -264,7 +263,7 @@ fun ItemDevice(item: Device) {
             .fillMaxWidth()
             .padding(4.dp)
             .height(40.dp)
-            .background(color = Color.DarkGray)
+            .background(color = MaterialTheme.colorScheme.tertiary)
     ) {
         Row(
             modifier = Modifier
@@ -283,8 +282,8 @@ fun ItemDevice(item: Device) {
                     .padding(horizontal = 16.dp)
                     .align(CenterVertically),
                 text = item.name,
-                color = Color.White,
-                fontSize = 16.sp
+                color = MaterialTheme.colorScheme.onTertiary,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }

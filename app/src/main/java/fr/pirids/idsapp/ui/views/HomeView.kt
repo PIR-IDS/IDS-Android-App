@@ -69,12 +69,12 @@ fun TopBar(navController: NavHostController) {
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = stringResource(id = R.string.app_name),
-                fontSize = 20.sp,
-                fontFamily = null,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge
             )
         },
-        backgroundColor = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground,
+        backgroundColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
         actions = {
             IconButton(
                 onClick = {}
@@ -163,7 +163,7 @@ fun ServicesScreen(navController: NavHostController) {
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             textAlign = TextAlign.Center,
-            fontSize = 35.sp
+            style = MaterialTheme.typography.headlineLarge
         )
         FlowRow(
             modifier = Modifier
@@ -235,7 +235,7 @@ fun DevicesScreen(navController: NavHostController) {
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             textAlign = TextAlign.Center,
-            fontSize = 35.sp
+            style = MaterialTheme.typography.headlineLarge
         )
         FlowRow(
             modifier = Modifier
@@ -311,7 +311,7 @@ fun NetworkScreen(navController: NavHostController) {
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             textAlign = TextAlign.Center,
-            fontSize = 35.sp
+            style = MaterialTheme.typography.headlineLarge
         )
     }
 }
