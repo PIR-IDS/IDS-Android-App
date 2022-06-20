@@ -42,10 +42,12 @@ import fr.pirids.idsapp.model.items.DeviceId
 import fr.pirids.idsapp.model.items.Service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import fr.pirids.idsapp.controller.detection.Service as ServiceController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceView(navController: NavHostController, service: Service) {
+    ServiceViewController.serviceScope = rememberCoroutineScope()
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
@@ -165,7 +167,6 @@ fun ConnectedLabelPreview() {
 
 @Composable
 fun LoginForm(modifier: Modifier = Modifier, service: Service) {
-    val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .then(modifier)
@@ -205,22 +206,24 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
             val focusManager = LocalFocusManager.current
             val notFoundText = stringResource(id = R.string.service_not_connected)
             Button(
+                //TODO: trigger this onclick at each modal opening if
+                // this service was previously connected (credentials in database)
                 onClick = {
                     focusManager.clearFocus()
-                    scope.launch(Dispatchers.IO) {
-                        val (serviceData, serviceConnected) = ServiceViewController.getServiceAndStatus(
+                    ServiceViewController.serviceScope.launch(Dispatchers.IO) {
+                        val (serviceData, serviceConnected) = ServiceController.getServiceAndStatus(
                             username.value.text,
                             password.value.text,
                             service
                         )
                         if (serviceConnected) {
                             ServiceViewController.isConnected.value = true
-                            scope.launch(Dispatchers.IO) {
+                            ServiceViewController.historyScope.launch(Dispatchers.IO) {
                                 ServiceViewController.updateServiceData(serviceData, service)
                             }
                         } else {
                             ServiceViewController.isConnected.value = false
-                            scope.launch(Dispatchers.Main) {
+                            ServiceViewController.serviceScope.launch(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
                                     notFoundText,
@@ -243,6 +246,7 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
 
 @Composable
 fun HistoryList(modifier: Modifier = Modifier, service: Service) {
+    ServiceViewController.historyScope = rememberCoroutineScope()
     AnimatedVisibility(visible = ServiceViewController.serviceHistory.value.isEmpty()) {
         Column(
             modifier = Modifier

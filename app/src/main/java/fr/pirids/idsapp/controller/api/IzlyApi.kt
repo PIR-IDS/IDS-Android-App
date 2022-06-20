@@ -14,7 +14,6 @@ import java.sql.Timestamp
 import java.time.LocalDate
 
 class IzlyApi(credentials: ApiAuth) : ApiInterface {
-    private val timeOfEachAction: MutableList<Long> = mutableListOf()
     private val maxRetries = 50
     private lateinit var credentials: IzlyAuth
     private var cookieSessionId: String? = null
@@ -100,6 +99,7 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
 
     //TODO: improve this function
     override suspend fun getData(): IzlyData {
+        val timeOfEachAction: MutableList<Long> = mutableListOf()
         var success = false
         var cptErr = 0
         var historyData: Document? = null
