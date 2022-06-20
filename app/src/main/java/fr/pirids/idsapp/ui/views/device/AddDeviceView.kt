@@ -1,11 +1,14 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 
-package fr.pirids.idsapp.ui.views.service
+package fr.pirids.idsapp.ui.views.device
 
+import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -18,11 +21,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import fr.pirids.idsapp.R
-import fr.pirids.idsapp.controller.view.service.AddServiceViewController
+import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 
 @Composable
-fun AddServiceView(navController: NavHostController) {
+fun AddDeviceView(navController: NavHostController) {
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
@@ -46,8 +48,8 @@ fun AddServiceView(navController: NavHostController) {
 
 @Preview
 @Composable
-fun AddServiceViewPreview() {
-    AddServiceView(navController = rememberAnimatedNavController())
+fun AddDeviceViewPreview() {
+    AddDeviceView(navController = rememberAnimatedNavController())
 }
 
 @Composable
@@ -56,7 +58,7 @@ private fun TopBar(navController: NavHostController) {
         title = {},
         navigationIcon = {
             IconButton(
-                onClick = { AddServiceViewController.closeModal(navController) }
+                onClick = { AddDeviceViewController.closeModal(navController) }
             ) {
                 Icon(
                     Icons.Outlined.Close,

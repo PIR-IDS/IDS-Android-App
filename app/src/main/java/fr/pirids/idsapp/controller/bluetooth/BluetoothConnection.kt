@@ -60,8 +60,6 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
 
     private val BLUETOOTH_REQUEST_CODE = 1
 
-    //val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSX")
-
     public fun setUpBT() {
         if(!isBluetoothGranted) {
             requestBluetooth()
@@ -112,7 +110,6 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
 
-        // enabling bt
         if (!bluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             resultLauncher.launch(enableBtIntent)

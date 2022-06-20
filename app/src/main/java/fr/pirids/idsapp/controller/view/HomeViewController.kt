@@ -11,6 +11,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavHostController
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
+import fr.pirids.idsapp.model.items.DeviceId
 import fr.pirids.idsapp.model.items.Service
 import fr.pirids.idsapp.model.items.ServiceId
 import fr.pirids.idsapp.model.navigation.NavRoutes
@@ -40,10 +41,6 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
 
     var serviceTransactionsTime = mutableListOf<Long>()
     var idsWalletOutTimeArray = mutableListOf<ZonedDateTime>()
-
-    //val izly = IzlyApi()
-
-    private lateinit var bluetoothAdapter: BluetoothAdapter
 
     //private val bluetoothConnection = BluetoothConnection(this, this)
 
@@ -235,5 +232,13 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
 
     fun showService(navController: NavHostController, service: ServiceId) {
         navController.navigate(NavRoutes.Service.route + "/" + service.ordinal)
+    }
+
+    fun addDevice(navController: NavHostController) {
+        navController.navigate(NavRoutes.AddDevice.route)
+    }
+
+    fun showDevice(navController: NavHostController, device: DeviceId) {
+        navController.navigate(NavRoutes.Device.route + "/" + device.ordinal)
     }
 }

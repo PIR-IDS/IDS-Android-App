@@ -266,9 +266,7 @@ fun DevicesScreen(navController: NavHostController) {
                             .clickable(
                                 enabled = true,
                                 onClickLabel = it.name,
-                                onClick = {
-                                    Log.i("MainActivity", "Clicked on ${it.name}")
-                                }
+                                onClick = { HomeViewController.showDevice(navController, it.id) }
                             )
                     )
                 }
@@ -288,9 +286,7 @@ fun DevicesScreen(navController: NavHostController) {
                         .clickable(
                             enabled = true,
                             onClickLabel = stringResource(id = R.string.add_device),
-                            onClick = {
-                                Log.i("MainActivity", "Clicked on ADD DEVICE")
-                            }
+                            onClick = { HomeViewController.addDevice(navController) }
                         )
                 )
             }

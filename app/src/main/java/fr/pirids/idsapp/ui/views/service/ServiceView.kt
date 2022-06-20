@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.R
-import fr.pirids.idsapp.controller.view.ServiceViewController
+import fr.pirids.idsapp.controller.view.service.ServiceViewController
 import fr.pirids.idsapp.extensions.custom_success
 import fr.pirids.idsapp.model.items.Device
 import fr.pirids.idsapp.model.items.DeviceId
@@ -86,7 +86,7 @@ fun ServiceViewPreview() {
 }
 
 @Composable
-fun TopBar(navController: NavHostController) {
+private fun TopBar(navController: NavHostController) {
     TopAppBar(
         title = {},
         navigationIcon = {
@@ -107,7 +107,7 @@ fun TopBar(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun TopBarPreview() {
+private fun TopBarPreview() {
     TopBar(navController = rememberAnimatedNavController())
 }
 

@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.controller.view
+package fr.pirids.idsapp.controller.view.service
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
