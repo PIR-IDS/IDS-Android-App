@@ -28,4 +28,6 @@
     <string name="service_not_connected">Error: we are unable to connect you to the service!</string>
     <string name="connected">Service Connected!</string>
     <string name="reconnect">Reconnect to the service</string>
+    <string name="no_history">Empty History</string>
+    <string name="no_devices">No Linked Probes</string>
 </resources>

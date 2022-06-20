@@ -52,10 +52,6 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
     var isServiceConnected = false
     var isIDSConnected = false
 
-    val CHECKING_DELAY_MILLIS = 10000L
-
-    val TIME_TOL = 10000.0
-
     val CHANNEL_ID = "ids"
 
     var notificationId = 0

@@ -17,5 +17,5 @@ interface ApiInterface {
     /**
      * Returns the data from the server
      */
-    fun getData() : ApiData
+    suspend fun getData() : ApiData
 }

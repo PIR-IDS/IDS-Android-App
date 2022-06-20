@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TopAppBar
@@ -44,8 +43,6 @@ import fr.pirids.idsapp.model.items.Service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-val isConnected : MutableState<Boolean> = mutableStateOf(false)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceView(navController: NavHostController, service: Service) {
@@ -62,10 +59,10 @@ fun ServiceView(navController: NavHostController, service: Service) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AnimatedVisibility(visible = !isConnected.value) {
+                AnimatedVisibility(visible = !ServiceViewController.isConnected.value) {
                     LoginForm(service = service)
                 }
-                AnimatedVisibility(visible = isConnected.value) {
+                AnimatedVisibility(visible = ServiceViewController.isConnected.value) {
                     ConnectedLabel(service = service)
                 }
                 Spacer(modifier = Modifier.height(20.dp))
@@ -149,7 +146,7 @@ fun ConnectedLabel(service: Service) {
 
         Spacer(modifier = Modifier.height(5.dp))
         Button(
-            onClick = { isConnected.value = false },
+            onClick = { ServiceViewController.isConnected.value = false },
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -211,15 +208,18 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
                 onClick = {
                     focusManager.clearFocus()
                     scope.launch(Dispatchers.IO) {
-                        val serviceConnected = ServiceViewController.checkService(
+                        val (serviceData, serviceConnected) = ServiceViewController.getServiceAndStatus(
                             username.value.text,
                             password.value.text,
                             service
                         )
                         if (serviceConnected) {
-                            isConnected.value = true
+                            ServiceViewController.isConnected.value = true
+                            scope.launch(Dispatchers.IO) {
+                                ServiceViewController.updateServiceData(serviceData, service)
+                            }
                         } else {
-                            isConnected.value = false
+                            ServiceViewController.isConnected.value = false
                             scope.launch(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
@@ -243,6 +243,18 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
 
 @Composable
 fun HistoryList(modifier: Modifier = Modifier, service: Service) {
+    AnimatedVisibility(visible = ServiceViewController.serviceHistory.value.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .then(modifier)
+                .heightIn(0.dp, 300.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(stringResource(id = R.string.no_history))
+        }
+    }
     LazyColumn(
         modifier = Modifier
             .then(modifier)
@@ -251,14 +263,14 @@ fun HistoryList(modifier: Modifier = Modifier, service: Service) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(ServiceViewController.getServiceHistory(service)) {
-            Item(item = it)
+        items(ServiceViewController.serviceHistory.value) {
+            Item(item = it, service = service)
         }
     }
 }
 
 @Composable
-fun Item(item: String) {
+fun Item(item: String, service: Service) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -272,7 +284,7 @@ fun Item(item: String) {
                 .fillMaxWidth()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.izly_logo),
+                painter = painterResource(id = service.logo),
                 contentDescription = item,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
@@ -293,11 +305,23 @@ fun Item(item: String) {
 @Preview
 @Composable
 fun ItemPreview() {
-    Item("Item")
+    Item("Item", Service.list.first())
 }
 
 @Composable
 fun ProbesList(modifier: Modifier = Modifier, service: Service) {
+    AnimatedVisibility(visible = ServiceViewController.getProbesList(service).isEmpty()) {
+        Column(
+            modifier = Modifier
+                .then(modifier)
+                .heightIn(0.dp, 300.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(stringResource(id = R.string.no_devices))
+        }
+    }
     LazyColumn(
         modifier = Modifier
             .then(modifier)

@@ -4,6 +4,7 @@ import android.util.Log
 import fr.pirids.idsapp.model.api.auth.ApiAuth
 import fr.pirids.idsapp.model.api.auth.IzlyAuth
 import fr.pirids.idsapp.model.api.data.IzlyData
+import kotlinx.coroutines.delay
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
@@ -46,7 +47,6 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
             ?.replace("\"", "")
             ?.replace(">","")
             ?: ""
-
 
         // We need the .ASPXAUTH cookie in order to get the History page
         // so we connect to the logon page with the __RequestVerificationToken and get the cookie
@@ -98,35 +98,37 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
         catch(e: HttpStatusException) { e.message?.let { Log.d("IzlyApi", it) } ; false }
         catch(e: Exception) { e.message?.let { Log.d("IzlyApi", it) } ; false }
 
-    override fun getData(): IzlyData {
-        var succes: Boolean = false
-        var cpt_err = 0
+    //TODO: improve this function
+    override suspend fun getData(): IzlyData {
+        var success = false
+        var cptErr = 0
         var historyData: Document? = null
-        while (!succes && cpt_err < maxRetries) {
-            cpt_err++
+
+        while (!success && cptErr < maxRetries) {
+            cptErr++
             try {
                 historyData = getHistoryConnection().parse()
-                succes = !succes
-                Thread.sleep(1_000)
+                success = true
+                delay(1_000)
             } catch (e: HttpStatusException) {
                 Log.d("IZLY", e.toString())
             }
         }
-        Log.d("IZLY", "succes")
-        succes = false
+
+        success = false
         var nbrAction = 0
         var index = 1
-        cpt_err = 0
-        while (!succes && cpt_err < maxRetries) {
-            cpt_err++
+        cptErr = 0
+        while (!success && cptErr < maxRetries) {
+            cptErr++
             val history = historyData?.select(".list-group.list-group-flush li:nth-child($index)")
             if (history.toString() == "") {
-                succes = !succes
+                success = true
             } else {
                 if (history.toString().contains("You have made a payment to")) {
-                    var date = history?.select(".operation-date").toString().substringAfter('>')
-                        .substringBefore('<')
-                    if (date.length < 25) {                        //todo: traiter le cas ou c'est today et yesterday
+                    var date = history?.select(".operation-date").toString().substringAfter('>').substringBefore('<')
+                    if (date.length < 25) {
+                        //TODO: traiter le cas ou c'est today et yesterday
                         val day = date.substringBefore(' ')
                         date = date.substringAfter(" ").replace(" ", "").substringAfter("at")
                         val hour = date.substringBefore('h')
@@ -134,12 +136,12 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
                         val today: LocalDate = LocalDate.now()
                         val yesterday = today.minusDays(1)
                         if (day.equals("today")){
-                            date = today.toString()+ " $hour:$minute:00"
+                            date = "$today $hour:$minute:00"
                             val time = Timestamp.valueOf(date)
                             timeOfEachAction.add(time.time)
                         }
                         if (day.equals("yesterday")){
-                            date = yesterday.toString()+ " $hour:$minute:00"
+                            date = "$yesterday $hour:$minute:00"
                             val time = Timestamp.valueOf(date)
                             timeOfEachAction.add(time.time)
                         }
@@ -171,10 +173,10 @@ class IzlyApi(credentials: ApiAuth) : ApiInterface {
                         val time = Timestamp.valueOf(date)
                         timeOfEachAction.add(time.time)
                     }
-                    nbrAction += 1
+                    nbrAction++
                 }
             }
-            index += 1
+            index++
         }
 
         return IzlyData(transactionList = timeOfEachAction)
