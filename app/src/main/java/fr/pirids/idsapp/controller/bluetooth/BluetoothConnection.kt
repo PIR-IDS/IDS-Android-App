@@ -1,111 +1,87 @@
 package fr.pirids.idsapp.controller.bluetooth
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.icu.util.TimeUnit
 import android.os.Build
-import android.os.Handler
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import java.nio.charset.StandardCharsets
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.lifecycle.LiveData
+import fr.pirids.idsapp.model.items.bluetooth.BluetoothCharacteristic
+import fr.pirids.idsapp.model.items.bluetooth.BluetoothService
+import fr.pirids.idsapp.model.items.bluetooth.CharacteristicId
+import fr.pirids.idsapp.model.items.bluetooth.ServiceId
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.time.*
-import java.time.format.DateTimeFormatter
 import java.util.*
 
-class BluetoothConnection(var mContext: Context, var activity: ComponentActivity) {
+class BluetoothConnection(private val mContext: Context) {
 
-    lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var bluetoothGatt: BluetoothGatt
 
-    lateinit var bluetoothLeScanner : BluetoothLeScanner
+    private lateinit var idsDevice : BluetoothDevice
 
-    lateinit var idsDevice : BluetoothDevice
+    private lateinit var timeService: BluetoothGattService
+    private lateinit var walletService: BluetoothGattService
 
-    lateinit var bluetoothGatt: BluetoothGatt
+    private lateinit var walletOutCharacteristic: BluetoothGattCharacteristic
+    private lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
 
-    lateinit var timeService: BluetoothGattService
+    private val CCCD_UUID = BluetoothCharacteristic.get(CharacteristicId.CCCD).uuid
+    private val TIME_SERVICE_UUID = BluetoothService.get(ServiceId.CURRENT_TIME).uuid
+    private val WALLET_SERVICE_UUID = BluetoothService.get(ServiceId.CUSTOM_IDS_IMU).uuid
+    private val DATE_SERVICE_UUID = BluetoothService.get(ServiceId.CURRENT_TIME).characteristics.find { it.id == CharacteristicId.CURRENT_TIME }!!.uuid
+    private val WALLET_OUT_UUID = BluetoothService.get(ServiceId.CUSTOM_IDS_IMU).characteristics.find { it.id == CharacteristicId.BOOLEAN }!!.uuid
+    private val WHEN_WALLET_OUT_UUID = BluetoothService.get(ServiceId.CUSTOM_IDS_IMU).characteristics.find { it.id == CharacteristicId.DATE_UTC }!!.uuid
 
-    lateinit var walletService: BluetoothGattService
+    private val whenWalletOutArray = mutableListOf<ZonedDateTime>()
 
-    lateinit var walletOutCharacteristic: BluetoothGattCharacteristic
 
-    lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
-
-    var whenWalletOutArray = mutableListOf<ZonedDateTime>()
-
-    val CCCD_UUID : String = "00002902-0000-1000-8000-00805f9b34fb"
-
-    val SCAN_PERIOD : Long = 10000
-
-    val TIME_SERVICE_UUID : String = "00001805-0000-1000-8000-00805f9b34fb"
-
-    val WALLET_SERVICE_UUID : String = "D70C4BB1-98E4-4EBF-9EA5-F9898690D428"
-
-    val DATE_SERVICE_UUID : String = "00002a2b-0000-1000-8000-00805f9b34fb"
-
-    val WALLET_OUT_UUID : String = "00002AE2-0000-1000-8000-00805f9b34fb"
-
-    val WHEN_WALLET_OUT_UUID : String = "00002AED-0000-1000-8000-00805f9b34fb"
-
-    private val BLUETOOTH_REQUEST_CODE = 1
-
-    public fun setUpBT() {
-        if(!isBluetoothGranted) {
-            requestBluetooth()
-        } else {
-            enableScan()
-        }
+    fun setUpBluetooth(resultLauncher: ActivityResultLauncher<Intent>) {
+        enableScan(resultLauncher)
     }
 
-    val isBluetoothGranted
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            mContext.hasPermission(Manifest.permission.BLUETOOTH_SCAN) && mContext.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    fun getNecessaryPermissions() : List<String> {
+        val permissions: MutableList<String> = mutableListOf()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
         } else {
-            mContext.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
-                mContext.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION) && (
-                    Build.VERSION.SDK_INT > Build.VERSION_CODES.R || (
-                            mContext.hasPermission(Manifest.permission.BLUETOOTH_ADMIN) && mContext.hasPermission(Manifest.permission.BLUETOOTH)
-                    )
-            )
-        }
-
-    private fun requestBluetooth() {
-        if(!isBluetoothGranted) {
-            val permissions: MutableList<String> = ArrayList<String>()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                permissions.add(Manifest.permission.BLUETOOTH_SCAN)
-                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-            } else {
-                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-                    permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
-                    permissions.add(Manifest.permission.BLUETOOTH)
-                }
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+                permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+                permissions.add(Manifest.permission.BLUETOOTH)
             }
-            ActivityCompat.requestPermissions(activity, permissions.toTypedArray(), BLUETOOTH_REQUEST_CODE)
+        }
+        return permissions.toList()
+    }
+
+    fun onPermissionsResult(result: Map<String, Boolean>) {
+        if(result.all { it.value }) {
+            Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
+        } else {
+            Log.i("BluetoothGattDiscoverServices", "Bluetooth permission not granted")
         }
     }
 
-    var resultLauncher = activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-            scanLE()
-        }
-    }
-
-    private fun enableScan() {
+    private fun enableScan(resultLauncher: ActivityResultLauncher<Intent>) {
         val context = Context.BLUETOOTH_SERVICE;
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
@@ -114,57 +90,75 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             resultLauncher.launch(enableBtIntent)
         } else {
-            bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-            scanLE()
+            CoroutineScope(Dispatchers.Default).launch { initScan() }
         }
     }
 
-    public fun scanLE() {
-        if (!scanning) {
-            handler.postDelayed({
-                scanning = false
-                if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                    requestBluetooth()
-                }
-                bluetoothLeScanner.stopScan(leScanCallback)
-            }, SCAN_PERIOD)
-            scanning = true
-            bluetoothLeScanner.startScan(leScanCallback)
-            Log.d("Scan", "LE scan started 2")
-        } else {
-            scanning = false
-            bluetoothLeScanner.stopScan(leScanCallback)
+    fun handleBluetoothIntent(result: ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK) {
+            CoroutineScope(Dispatchers.Default).launch { initScan() }
         }
     }
 
-    var scanning = false
+    suspend fun initScan() {
+        scanLE(deviceFlow(bluetoothAdapter.bluetoothLeScanner))
+    }
 
-    val handler = Handler()
-    private val leScanCallback: ScanCallback = object : ScanCallback() {
-
-        @SuppressLint("MissingPermission")
-        override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            if (result != null) {
-                with(result.device) {
-                    //afficherToast("Found BLE device with name: ${name ?: "No name"}, address: $address")
-                    if (name == "PIR-IDS") {
-                        //afficherToast("Found BLE device with name: ${name ?: "No name"}, address: $address")
-                        scanning = false
-                        idsDevice = this
-
-                        Log.d("Scan", "PIR-IDS Detected")
-                        // connect
-                        connect()
-                    }
+    private fun deviceFlow(scanner: BluetoothLeScanner) : Flow<ScanResult> = callbackFlow {
+        val scanCallback = object : ScanCallback() {
+            override fun onScanResult(callbackType: Int, result: ScanResult) {
+                trySend(result).onFailure {
+                    Log.e("BluetoothGattDiscoverServices", "Error while sending scan result", it)
                 }
+            }
+            override fun onBatchScanResults(results: MutableList<ScanResult>?) {
+                results?.forEach { trySend(it) }
+            }
+            override fun onScanFailed(errorCode: Int) {
+                Log.e("BluetoothGattDiscoverServices", "Scan failed with error code $errorCode")
+            }
+        }
+
+        val settings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .setReportDelay(0)
+            .build()
+
+        try {
+            scanner.startScan(null, settings, scanCallback)
+        } catch (e: SecurityException) {
+            Log.e("BluetoothGattDiscoverServices", "Error while starting scan", e)
+        }
+
+        awaitClose {
+            try {
+                scanner.stopScan(scanCallback)
+            } catch (e: SecurityException) {
+                Log.e("BluetoothGattDiscoverServices", "Error while stopping scan", e)
             }
         }
     }
 
-    // TODO
-    @SuppressLint("MissingPermission")
+    private suspend fun scanLE(flow: Flow<ScanResult>) {
+        flow.collect {
+            try {
+                Log.d("BluetoothGattDiscoverServices", "Scan result: ${it.device.name}")
+                if (it.device.name == "PIR-IDS") {
+                    idsDevice = it.device
+                    connect()
+                }
+            } catch (e: SecurityException) {
+                Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+            }
+        }
+    }
+
     fun connect() {
-        bluetoothGatt = idsDevice.connectGatt(mContext, false, gattCallback)
+        try {
+            bluetoothGatt = idsDevice.connectGatt(mContext, false, gattCallback)
+        } catch (e: SecurityException) {
+            Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+        }
 
         //afficherToast("device connected" + bluetoothGatt.device)
 
@@ -182,78 +176,86 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
 
     private val gattCallback = object : BluetoothGattCallback() {
 
-        @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             val deviceAddress = gatt.device.address
 
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
-                    // TODO: Store a reference to BluetoothGatt
-                    bluetoothGatt.discoverServices()
-                    //afficherToast("IDS device connected");
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
-                    //afficherToast("IDS device disconnected");
+            try {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
+                        // TODO: Store a reference to BluetoothGatt
+                        bluetoothGatt.discoverServices()
+                        //afficherToast("IDS device connected");
+                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
+                        //afficherToast("IDS device disconnected");
+                        bluetoothGatt.close()
+                    }
+                } else {
+                    Log.w("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
+                    //afficherToast("IDS device not connected");
                     bluetoothGatt.close()
                 }
-            } else {
-                Log.w("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
-                //afficherToast("IDS device not connected");
-                bluetoothGatt.close()
+            } catch (e: SecurityException) {
+                Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
             }
         }
 
-        @SuppressLint("MissingPermission")
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             with(gatt) {
-                Log.w("BluetoothGattCallback", "Discovered ${services.size} services for ${device.address}")
-                printGattTable()
+                try {
+                    Log.w("BluetoothGattCallback", "Discovered ${services.size} services for ${device.address}")
+                    printGattTable()
 
-                timeService = bluetoothGatt.getService(UUID.fromString(TIME_SERVICE_UUID))
-                Log.i("time", "Time service found $timeService")
+                    timeService = bluetoothGatt.getService(TIME_SERVICE_UUID)
+                    Log.i("time", "Time service found $timeService")
 
-                val currentTimeMillis = System.currentTimeMillis()
-                Log.i("time", currentTimeMillis.toString())
+                    val currentTimeMillis = System.currentTimeMillis()
+                    Log.i("time", currentTimeMillis.toString())
 
-                Log.i("BluetoothGattCallback", "semaphore ok")
+                    Log.i("BluetoothGattCallback", "semaphore ok")
 
-                val dateServiceUUID = UUID.fromString(DATE_SERVICE_UUID)
-                val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
-                if (!timeCharacteristic.isWritable()) {
-                    Log.i("BluetoothGattCallback", "not writable")
+                    val dateServiceUUID = DATE_SERVICE_UUID
+                    val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
+                    if (!timeCharacteristic.isWritable()) {
+                        Log.i("BluetoothGattCallback", "not writable")
+                    }
+                    timeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                    timeCharacteristic.value = currentTimeMillis.toString().toByteArray()
+                    val result = writeCharacteristic(timeCharacteristic)
+
+                    Log.i("BluetoothGattCallback", "write result=$result")
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
                 }
-                timeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                timeCharacteristic.value = currentTimeMillis.toString().toByteArray()
-                val result = writeCharacteristic(timeCharacteristic)
-
-                Log.i("BluetoothGattCallback", "write result=$result")
             }
         }
 
-        @SuppressLint("MissingPermission")
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
         ) {
             with(characteristic) {
                 //Log.i("BluetoothGattCallback", "Characteristic ${this?.uuid} changed | value: ${this?.value}")
-                gatt?.readCharacteristic(whenWalletOutCharacteristic)
+                try {
+                    gatt?.readCharacteristic(whenWalletOutCharacteristic)
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+                }
             }
         }
 
-        @SuppressLint("MissingPermission")
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
             Log.i("BluetoothGattCallback", "ack received")
-            walletService = bluetoothGatt.getService(UUID.fromString(WALLET_SERVICE_UUID))
-            val walletOutCharacteristicUUID = UUID.fromString(WALLET_OUT_UUID)
+            walletService = bluetoothGatt.getService(WALLET_SERVICE_UUID)
+            val walletOutCharacteristicUUID = WALLET_OUT_UUID
             walletOutCharacteristic = walletService.getCharacteristic(walletOutCharacteristicUUID)
 
-            val whenWalletOutCharacteristicUUID = UUID.fromString(WHEN_WALLET_OUT_UUID)
+            val whenWalletOutCharacteristicUUID = WHEN_WALLET_OUT_UUID
             whenWalletOutCharacteristic = walletService.getCharacteristic(whenWalletOutCharacteristicUUID)
 
             enableNotifications(walletOutCharacteristic)
@@ -261,17 +263,19 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
             super.onCharacteristicWrite(gatt, characteristic, status)
         }
 
-        @SuppressLint("MissingPermission")
         fun writeDescriptor(descriptor: BluetoothGattDescriptor, payload: ByteArray) {
-            bluetoothGatt?.let { gatt ->
-                descriptor.value = payload
-                gatt.writeDescriptor(descriptor)
-            } ?: error("Not connected to a BLE device!")
+            try {
+                bluetoothGatt?.let { gatt ->
+                    descriptor.value = payload
+                    gatt.writeDescriptor(descriptor)
+                } ?: error("Not connected to a BLE device!")
+            } catch (e: SecurityException) {
+                Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+            }
         }
 
-        @SuppressLint("MissingPermission")
         fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
-            val cccdUuid = UUID.fromString(CCCD_UUID)
+            val cccdUuid =CCCD_UUID
             val payload = when {
                 characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
                 characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
@@ -282,26 +286,33 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
             }
 
             characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
-                if (bluetoothGatt?.setCharacteristicNotification(characteristic, true) == false) {
-                    Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
-                    return
+                try {
+                    if (bluetoothGatt?.setCharacteristicNotification(characteristic, true) == false) {
+                        Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
+                        return
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
                 }
                 writeDescriptor(cccDescriptor, payload)
             } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
         }
 
-        @SuppressLint("MissingPermission")
         fun disableNotifications(characteristic: BluetoothGattCharacteristic) {
             if (!characteristic.isNotifiable() && !characteristic.isIndicatable()) {
                 Log.e("ConnectionManager", "${characteristic.uuid} doesn't support indications/notifications")
                 return
             }
 
-            val cccdUuid = UUID.fromString(CCCD_UUID)
+            val cccdUuid = CCCD_UUID
             characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
-                if (bluetoothGatt?.setCharacteristicNotification(characteristic, false) == false) {
-                    Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
-                    return
+                try {
+                    if (bluetoothGatt?.setCharacteristicNotification(characteristic, false) == false) {
+                        Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
+                        return
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
                 }
                 writeDescriptor(cccDescriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
             } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
@@ -343,11 +354,6 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
         }
     }
 
-    // TODO: refactor this in extension file
-    fun Context.hasPermission(permissionType: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, permissionType) == PackageManager.PERMISSION_GRANTED
-    }
-
     private fun BluetoothGatt.printGattTable() {
         if (services.isEmpty()) {
             Log.i("printGattTable", "No service and characteristic available, call discoverServices() first?")
@@ -374,22 +380,5 @@ class BluetoothConnection(var mContext: Context, var activity: ComponentActivity
 
     fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean {
         return properties and property != 0
-    }
-
-    fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            BLUETOOTH_REQUEST_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                    Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
-                    enableScan()
-                } else {
-                    Log.i("BluetoothGattDiscoverServices", "Bluetooth permission not granted")
-                }
-            }
-        }
     }
 }

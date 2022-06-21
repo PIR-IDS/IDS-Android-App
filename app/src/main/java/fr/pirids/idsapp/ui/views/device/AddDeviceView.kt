@@ -1,4 +1,7 @@
-@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(
+    ExperimentalAnimationApi::class,
+    ExperimentalMaterial3Api::class
+)
 
 package fr.pirids.idsapp.ui.views.device
 
@@ -22,9 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
+import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
 
 @Composable
 fun AddDeviceView(navController: NavHostController) {
+    LaunchBluetooth()
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
