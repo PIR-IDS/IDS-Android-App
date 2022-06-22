@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
@@ -16,6 +17,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @Composable
 fun LaunchBluetooth() {
+    val scope = rememberCoroutineScope()
     val ble = BluetoothConnection(LocalContext.current)
     val multiplePermissionsState = rememberMultiplePermissionsState(ble.getNecessaryPermissions()) { ble.onPermissionsResult(it) }
     if(!multiplePermissionsState.allPermissionsGranted) {
@@ -31,27 +33,27 @@ fun LaunchBluetooth() {
             }
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose {
-                lifecycleOwner.lifecycle.removeObserver(observer) //TODO: maybe remove this block in order to always keep an eye on the BLE connection
+                lifecycleOwner.lifecycle.removeObserver(observer)
             }
         })
     } else {
         ble.onPermissionsResult(multiplePermissionsState.permissions.associate { it.permission to it.status.isGranted })
     }
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { ble.handleBluetoothIntent(it) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { ble.handleScanBluetoothIntent(it, scope) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(key1 = lifecycleOwner, effect = {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    ble.setUpBluetooth(launcher)
+                    ble.launchScan(launcher, scope)
                 }
                 else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer) //TODO: maybe remove this block in order to always keep an eye on the BLE connection
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     })
 }

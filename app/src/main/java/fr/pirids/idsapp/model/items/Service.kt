@@ -8,6 +8,9 @@ enum class ServiceId {
     IZLY
 }
 
+/**
+ * All the supported services
+ */
 data class Service(val id: ServiceId, val name: String, @StringRes val description: Int, @DrawableRes val logo: Int, val compatibleDevices: List<Device>) {
     companion object {
         val list = listOf(

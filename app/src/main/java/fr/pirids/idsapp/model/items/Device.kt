@@ -9,6 +9,9 @@ enum class DeviceId {
     WALLET_CARD
 }
 
+/**
+ * All the supported sensors
+ */
 data class Device(val id: DeviceId, val name: String, @StringRes val description: Int, @DrawableRes val logo: Int, val bluetoothServices : List<BluetoothService>) {
     companion object {
         val list = listOf(
