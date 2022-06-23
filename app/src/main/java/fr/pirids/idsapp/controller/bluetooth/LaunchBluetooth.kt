@@ -14,6 +14,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 
 @Composable
 fun LaunchBluetooth() {
@@ -40,6 +41,7 @@ fun LaunchBluetooth() {
         ble.onPermissionsResult(multiplePermissionsState.permissions.associate { it.permission to it.status.isGranted })
     }
 
+    //FIXME: crash when permissions not granted, it should wait to have an answer before starting the bluetooth scan
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { ble.handleScanBluetoothIntent(it, scope) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(key1 = lifecycleOwner, effect = {
@@ -54,6 +56,27 @@ fun LaunchBluetooth() {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    })
+
+    //TODO: handle bluetooth connection when user click on a device
+    //FIXME: this does not work yet
+    val connectLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(key1 = connectLifecycleOwner, effect = {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    AddDeviceViewController.idsDeviceToConnect.value?.let {
+                        ble.connect(it)
+                        AddDeviceViewController.idsDeviceToConnect.value = null
+                    }
+                }
+                else -> {}
+            }
+        }
+        connectLifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            connectLifecycleOwner.lifecycle.removeObserver(observer)
         }
     })
 }

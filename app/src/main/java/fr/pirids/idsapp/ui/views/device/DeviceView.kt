@@ -39,7 +39,6 @@ fun DeviceView(navController: NavHostController, device: Device) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                //TODO: SELECT SERVICE WIDGET
                 Text(text = "WIP")
                 Spacer(modifier = Modifier.height(20.dp))
             }

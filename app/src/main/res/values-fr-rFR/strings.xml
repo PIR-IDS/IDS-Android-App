@@ -31,4 +31,5 @@
     <string name="reconnect">Se reconnecter au service</string>
     <string name="no_history">Historique vide</string>
     <string name="no_devices">Pas de Sondes Liées</string>
+    <string name="scanned_devices">Scan des Sondes…</string>
 </resources>

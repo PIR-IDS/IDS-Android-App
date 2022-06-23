@@ -2,7 +2,6 @@
 
 package fr.pirids.idsapp.ui.views
 
-import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import fr.pirids.idsapp.R
 import androidx.compose.foundation.Image
@@ -26,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -194,7 +192,7 @@ fun ServicesScreen(navController: NavHostController) {
                             .clickable(
                                 enabled = true,
                                 onClickLabel = it.name,
-                                onClick = { HomeViewController.showService(navController, it.id)}
+                                onClick = { HomeViewController.showService(navController, it.id) }
                             )
                     )
                 }

@@ -30,4 +30,5 @@
     <string name="reconnect">Reconnect to the service</string>
     <string name="no_history">Empty History</string>
     <string name="no_devices">No Linked Probes</string>
+    <string name="scanned_devices">Scanning for Probes…</string>
 </resources>

@@ -6,16 +6,20 @@ import fr.pirids.idsapp.R
 import fr.pirids.idsapp.model.items.bluetooth.BluetoothService
 
 enum class DeviceId {
-    WALLET_CARD
+    WALLET_CARD,
+    BEACON_TEST,
 }
 
 /**
  * All the supported sensors
+ * We will use the name of the sensor as the identifier to link the BLE sensor to its Device type
  */
 data class Device(val id: DeviceId, val name: String, @StringRes val description: Int, @DrawableRes val logo: Int, val bluetoothServices : List<BluetoothService>) {
     companion object {
+        const val idsPrefix = "gDevice-beacon"//"PIR-IDS"
         val list = listOf(
-            Device(DeviceId.WALLET_CARD, "WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_logo, listOf())
+            Device(DeviceId.WALLET_CARD, "$idsPrefix WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_logo, listOf()),
+            Device(DeviceId.BEACON_TEST, idsPrefix, R.string.wallet_card_desc, R.drawable.ids_logo, listOf())
         )
         fun get(id: DeviceId) = list.first { it.id == id }
     }
