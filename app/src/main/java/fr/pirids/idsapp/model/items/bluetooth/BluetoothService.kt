@@ -21,4 +21,5 @@ data class BluetoothService(val id: ServiceId, val uuid: UUID, val characteristi
         fun get(id: ServiceId) = list.first { it.id == id }
         fun get(uuid: UUID) = list.first { it.uuid == uuid }
     }
+    fun getBluetoothCharacteristic(id: CharacteristicId) : BluetoothCharacteristic? = list.flatMap { it.characteristics }.find { it.id == id }
 }

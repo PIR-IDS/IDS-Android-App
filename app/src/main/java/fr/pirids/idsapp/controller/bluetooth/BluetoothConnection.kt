@@ -17,6 +17,10 @@ import fr.pirids.idsapp.extensions.isIndicatable
 import fr.pirids.idsapp.extensions.isNotifiable
 import fr.pirids.idsapp.extensions.isWritable
 import fr.pirids.idsapp.extensions.printGattTable
+import fr.pirids.idsapp.model.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.model.device.data.DeviceData
+import fr.pirids.idsapp.model.device.data.WalletCardData
+import fr.pirids.idsapp.model.items.DeviceId
 import fr.pirids.idsapp.model.items.bluetooth.*
 import fr.pirids.idsapp.model.items.Device as DeviceItem
 import kotlinx.coroutines.CoroutineScope
@@ -34,21 +38,6 @@ class BluetoothConnection(private val mContext: Context) {
 
     private val defaultScope = CoroutineScope(Dispatchers.IO)
     private lateinit var bluetoothAdapter: BluetoothAdapter
-    private lateinit var bluetoothGatt: BluetoothGatt
-
-    private lateinit var walletService: BluetoothGattService
-
-    private lateinit var walletOutCharacteristic: BluetoothGattCharacteristic
-    private lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
-
-    private val CCCD_UUID = BluetoothCharacteristic.get(CharacteristicId.CCCD).uuid
-    private val TIME_SERVICE_UUID = BluetoothService.get(ServiceId.CURRENT_TIME).uuid
-    private val WALLET_SERVICE_UUID = BluetoothService.get(ServiceId.CUSTOM_IDS_IMU).uuid
-    private val DATE_SERVICE_UUID = BluetoothService.get(ServiceId.CURRENT_TIME).characteristics.find { it.id == CharacteristicId.CURRENT_TIME }!!.uuid
-    private val WALLET_OUT_UUID = BluetoothService.get(ServiceId.CUSTOM_IDS_IMU).characteristics.find { it.id == CharacteristicId.BOOLEAN }!!.uuid
-    private val WHEN_WALLET_OUT_UUID = BluetoothService.get(ServiceId.CUSTOM_IDS_IMU).characteristics.find { it.id == CharacteristicId.DATE_UTC }!!.uuid
-
-    private val whenWalletOutArray = mutableListOf<ZonedDateTime>()
 
     fun getNecessaryPermissions() : List<String> {
         val permissions: MutableList<String> = mutableListOf()
@@ -174,7 +163,7 @@ class BluetoothConnection(private val mContext: Context) {
                 Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
                 devicesList.find { found -> found.address == it.device.address }?.let { deviceFound ->
                     deviceFound.device = it.device
-                    connect(deviceFound.device!!)
+                    connect(deviceFound, WalletCardData()) //TODO: replace this data placeholder with a real data structure
                 }
             } catch (e: SecurityException) {
                 Log.e("BluetoothGattDiscoverServices", "Error while collecting search result", e)
@@ -182,156 +171,212 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    fun connect(idsDevice: BluetoothDevice) {
-        try {
-            bluetoothGatt = idsDevice.connectGatt(mContext, false, gattCallback)
-        } catch (e: SecurityException) {
-            Log.e("BluetoothGattDiscoverServices", "Error while connecting", e)
-        }
-    }
+    fun connect(idsDevice: BluetoothDeviceIDS, data: DeviceData) {
+        lateinit var bluetoothGatt: BluetoothGatt
+        var initialized = false
+        val deviceItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
 
-    private fun initiateDeviceClock(gatt: BluetoothGatt) {
+        // TODO: maybe create a callbackFlow for each connection
+        val gattCallback = object : BluetoothGattCallback() {
+            private val CCCD_UUID = BluetoothCharacteristic.get(CharacteristicId.CCCD).uuid
+            private val TIME_SERVICE_UUID = BluetoothService.get(ServiceId.CURRENT_TIME).uuid
 
-        val timeService = bluetoothGatt.getService(TIME_SERVICE_UUID)
-        Log.i("time", "Time service found $timeService")
+            fun initiateDeviceClock(gatt: BluetoothGatt) {
+                val timeService = bluetoothGatt.getService(TIME_SERVICE_UUID)
+                Log.i("time", "Time service found $timeService")
 
-        val dateServiceUUID = DATE_SERVICE_UUID
-        val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
-        if (!timeCharacteristic.isWritable()) {
-            Log.i("BluetoothGattCallback", "not writable")
-        }
-        timeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-        timeCharacteristic.value = System.currentTimeMillis().toString().toByteArray()
-        try {
-            val result = gatt.writeCharacteristic(timeCharacteristic)
-            Log.i("BluetoothGattCallback", "write result=$result")
-        } catch (e: SecurityException) {
-            Log.e("BluetoothGattDiscoverServices", "Error while discovering services", e)
-        }
-    }
+                val dateServiceUUID = BluetoothService.get(ServiceId.CURRENT_TIME).characteristics.find { it.id == CharacteristicId.CURRENT_TIME }!!.uuid
+                val timeCharacteristic = timeService.getCharacteristic(dateServiceUUID)
+                if (!timeCharacteristic.isWritable()) {
+                    Log.i("BluetoothGattCallback", "not writable")
+                }
+                timeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                timeCharacteristic.value = System.currentTimeMillis().toString().toByteArray()
+                try {
+                    val result = gatt.writeCharacteristic(timeCharacteristic)
+                    Log.i("BluetoothGattCallback", "write result=$result")
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while discovering services", e)
+                }
+            }
 
-    // TODO: handle many connections, maybe by creating a callbackFlow for each connection
-    private val gattCallback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            val deviceAddress = gatt.device.address
-            try {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    when(newState) {
-                        BluetoothProfile.STATE_CONNECTED -> {
-                            Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
-                            // TODO: Store a reference to BluetoothGatt
-                            bluetoothGatt.discoverServices()
+            override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+                val deviceAddress = gatt.device.address
+                try {
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        when(newState) {
+                            BluetoothProfile.STATE_CONNECTED -> {
+                                Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
+                                // TODO: Store a reference to BluetoothGatt
+                                bluetoothGatt.discoverServices()
+                            }
+                            BluetoothProfile.STATE_DISCONNECTED -> {
+                                Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
+                                bluetoothGatt.close()
+                            }
+                            else -> {}
                         }
-                        BluetoothProfile.STATE_DISCONNECTED -> {
-                            Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
-                            bluetoothGatt.close()
-                        }
-                        else -> {}
+                    } else {
+                        Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
+                        bluetoothGatt.close()
                     }
-                } else {
-                    Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
-                    bluetoothGatt.close()
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while connecting to GATT", e)
                 }
-            } catch (e: SecurityException) {
-                Log.e("BluetoothGattDiscoverServices", "Error while connecting to GATT", e)
             }
-        }
 
-        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            Log.w("BluetoothGattCallback", "Discovered ${gatt.services.size} services for ${gatt.device.address}")
-            gatt.printGattTable()
-            initiateDeviceClock(gatt)
-        }
+            override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+                Log.w("BluetoothGattCallback", "Discovered ${gatt.services.size} services for ${gatt.device.address}")
+                gatt.printGattTable()
+                initiateDeviceClock(gatt)
+            }
 
-        fun writeDescriptor(descriptor: BluetoothGattDescriptor, payload: ByteArray) {
-            try {
-                bluetoothGatt.let { gatt ->
-                    descriptor.value = payload
-                    gatt.writeDescriptor(descriptor)
+            fun writeDescriptor(descriptor: BluetoothGattDescriptor, payload: ByteArray) {
+                try {
+                    bluetoothGatt.let { gatt ->
+                        descriptor.value = payload
+                        gatt.writeDescriptor(descriptor)
+                    }
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
                 }
-            } catch (e: SecurityException) {
-                Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
             }
-        }
 
-        fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
-            val cccdUuid = CCCD_UUID
-            val payload = when {
-                characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
-                characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                else -> {
-                    Log.e("ConnectionManager", "${characteristic.uuid} doesn't support notifications/indications")
+            fun enableNotifications(characteristic: BluetoothGattCharacteristic) {
+                val cccdUuid = CCCD_UUID
+                val payload = when {
+                    characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+                    characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    else -> {
+                        Log.e("ConnectionManager", "${characteristic.uuid} doesn't support notifications/indications")
+                        return
+                    }
+                }
+
+                characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                    try {
+                        if (!bluetoothGatt.setCharacteristicNotification(characteristic, true)) {
+                            Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
+                            return
+                        }
+                    } catch (e: SecurityException) {
+                        Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+                    }
+                    writeDescriptor(cccDescriptor, payload)
+                } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
+            }
+
+            fun disableNotifications(characteristic: BluetoothGattCharacteristic) {
+                if (!characteristic.isNotifiable() && !characteristic.isIndicatable()) {
+                    Log.e("ConnectionManager", "${characteristic.uuid} doesn't support indications/notifications")
                     return
                 }
+
+                val cccdUuid = CCCD_UUID
+                characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+                    try {
+                        if (!bluetoothGatt.setCharacteristicNotification(characteristic, false)) {
+                            Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
+                            return
+                        }
+                    } catch (e: SecurityException) {
+                        Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+                    }
+                    writeDescriptor(cccDescriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+                } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
             }
 
-            characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
+            override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
                 try {
-                    if (!bluetoothGatt.setCharacteristicNotification(characteristic, true)) {
-                        Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
-                        return
-                    }
-                } catch (e: SecurityException) {
-                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
-                }
-                writeDescriptor(cccDescriptor, payload)
-            } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
-        }
-
-        fun disableNotifications(characteristic: BluetoothGattCharacteristic) {
-            if (!characteristic.isNotifiable() && !characteristic.isIndicatable()) {
-                Log.e("ConnectionManager", "${characteristic.uuid} doesn't support indications/notifications")
-                return
-            }
-
-            val cccdUuid = CCCD_UUID
-            characteristic.getDescriptor(cccdUuid)?.let { cccDescriptor ->
-                try {
-                    if (!bluetoothGatt.setCharacteristicNotification(characteristic, false)) {
-                        Log.e("ConnectionManager", "setCharacteristicNotification failed for ${characteristic.uuid}")
-                        return
-                    }
-                } catch (e: SecurityException) {
-                    Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
-                }
-                writeDescriptor(cccDescriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
-            } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
-        }
-
-        //TODO: adapt these functions to a more dynamic handling for each device service
-
-        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-            with(characteristic) {
-                try {
-                    gatt?.readCharacteristic(whenWalletOutCharacteristic)
+                    gatt?.readCharacteristic(characteristic)
                 } catch (e: SecurityException) {
                     Log.e("BluetoothGattDiscoverServices", "Error while reading characteristic", e)
                 }
             }
-        }
 
-        override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            Log.i("BluetoothGattCallback", "ack received")
-            walletService = bluetoothGatt.getService(WALLET_SERVICE_UUID)
-            val walletOutCharacteristicUUID = WALLET_OUT_UUID
-            walletOutCharacteristic = walletService.getCharacteristic(walletOutCharacteristicUUID)
+            //TODO: handle these two values in an abstract data structure in order to be able to handle many devices' services
+            private lateinit var walletOutCharacteristic: BluetoothGattCharacteristic
+            private lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
 
-            val whenWalletOutCharacteristicUUID = WHEN_WALLET_OUT_UUID
-            whenWalletOutCharacteristic = walletService.getCharacteristic(whenWalletOutCharacteristicUUID)
+            /**
+             * We will get there when a characteristic is written, mainly when we are initializing the device clock.
+             */
+            override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                Log.i("BluetoothGattCallback", "ack received")
+                // If we just wrote the device clock, we can enable notifications for the wanted characteristics
+                if(!initialized) {
+                    when (deviceItem?.id) {
+                        DeviceId.WALLET_CARD -> {
+                            val walletServiceIDS = deviceItem.getBluetoothService(ServiceId.CUSTOM_IDS_IMU)
+                            val walletService = walletServiceIDS
+                                ?.let { bluetoothGatt.getService(it.uuid) }
+                                ?: throw Exception("Wallet service not found")
 
-            enableNotifications(walletOutCharacteristic)
+                            //TODO: handle these two values in an abstract data structure in order to be able to handle many devices' services
+                            walletOutCharacteristic = walletServiceIDS.getBluetoothCharacteristic(CharacteristicId.BOOLEAN)
+                                ?.let { walletService.getCharacteristic(it.uuid) }
+                                ?: throw Exception("walletOutCharacteristic not found")
 
-            super.onCharacteristicWrite(gatt, characteristic, status)
-        }
+                            whenWalletOutCharacteristic = walletServiceIDS.getBluetoothCharacteristic(CharacteristicId.DATE_UTC)
+                                ?.let { walletService.getCharacteristic(it.uuid) }
+                                ?: throw Exception("whenWalletOutCharacteristic not found")
 
-        override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            Log.i("BluetoothGattCallback", "Characteristic read callback")
-            characteristic?.let {
-                val dateTime = LocalDateTime.parse(it.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
-                val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                            enableNotifications(walletOutCharacteristic)
+                        }
+                        else -> {
+                            Log.e(
+                                "BluetoothGattCallback",
+                                "Unknown device ${deviceItem?.id}"
+                            )
+                        }
+                    }
+                    initialized = true
+                }
 
-                whenWalletOutArray.add(localDateTime) // TODO: create an abstract wrapper for modularity for all devices
+                super.onCharacteristicWrite(gatt, characteristic, status)
             }
+
+            /**
+             * We will get there when a characteristic is read, notably after one has changed
+             */
+            override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+                Log.i("BluetoothGattCallback", "Characteristic read callback")
+                characteristic?.let { char ->
+                    when(deviceItem?.id) {
+                        DeviceId.WALLET_CARD -> {
+
+                            // If we have the wallet out, we add the timestamp to the list
+                            when(char) {
+                                //TODO: handle these two values in an abstract data structure in order to be able to handle many devices' services
+                                walletOutCharacteristic -> {
+                                    try {
+                                        gatt?.readCharacteristic(whenWalletOutCharacteristic)
+                                    } catch (e: SecurityException) {
+                                        Log.e("BluetoothGattDiscoverServices", "Error while connecting", e)
+                                    }
+                                }
+                                whenWalletOutCharacteristic -> {
+                                    val dateTime = LocalDateTime.parse(char.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
+                                    val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                    (data as WalletCardData).whenWalletOutArray.add(localDateTime)
+                                }
+                                else -> { }
+                            }
+
+                        }
+                        else -> {
+                            Log.e("BluetoothGattCallback", "Unknown device ${deviceItem?.id}")
+                        }
+                    }
+                }
+            }
+        }
+
+        // Connect to the device
+        try {
+            bluetoothGatt = idsDevice.device?.connectGatt(mContext, false, gattCallback) ?: throw Exception("Device is null")
+        } catch (e: SecurityException) {
+            Log.e("BluetoothGattDiscoverServices", "Error while connecting", e)
         }
     }
 }

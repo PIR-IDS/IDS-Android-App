@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
+import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
 import kotlinx.coroutines.CoroutineScope
@@ -127,7 +128,7 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
         verticalArrangement = Arrangement.Center,
         horizontalArrangement = Arrangement.Center,
         modifier = modifier.then(Modifier.padding(top = 56.dp))) {
-        items(AddDeviceViewController.getScannedDevices()) {
+        items(Device.getScannedDevices()) {
             Box(
                 modifier = Modifier
                     .size(120.dp),
@@ -145,7 +146,7 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
                             onClickLabel = it.name,
                             onClick = {
                                 try {
-                                    AddDeviceViewController.connectToDevice(it, ble, scope)
+                                    Device.connectToDevice(it, ble, scope)
                                 } catch (e: Exception) {
                                     Log.e("AddDeviceView", "Error while connecting to device", e)
                                 }

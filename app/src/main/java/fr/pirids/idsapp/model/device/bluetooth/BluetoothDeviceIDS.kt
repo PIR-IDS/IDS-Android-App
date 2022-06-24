@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.model.items.bluetooth
+package fr.pirids.idsapp.model.device.bluetooth
 
 import android.bluetooth.BluetoothDevice
 
