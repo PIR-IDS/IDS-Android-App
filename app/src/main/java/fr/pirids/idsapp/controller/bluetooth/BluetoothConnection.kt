@@ -210,24 +210,26 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    // TODO: handle many connections
+    // TODO: handle many connections, maybe by creating a callbackFlow for each connection
     private val gattCallback = object : BluetoothGattCallback() {
-
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             val deviceAddress = gatt.device.address
-
             try {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    if (newState == BluetoothProfile.STATE_CONNECTED) {
-                        Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
-                        // TODO: Store a reference to BluetoothGatt
-                        bluetoothGatt.discoverServices()
-                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
-                        bluetoothGatt.close()
+                    when(newState) {
+                        BluetoothProfile.STATE_CONNECTED -> {
+                            Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
+                            // TODO: Store a reference to BluetoothGatt
+                            bluetoothGatt.discoverServices()
+                        }
+                        BluetoothProfile.STATE_DISCONNECTED -> {
+                            Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
+                            bluetoothGatt.close()
+                        }
+                        else -> {}
                     }
                 } else {
-                    Log.w("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
+                    Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
                     bluetoothGatt.close()
                 }
             } catch (e: SecurityException) {
@@ -239,30 +241,6 @@ class BluetoothConnection(private val mContext: Context) {
             Log.w("BluetoothGattCallback", "Discovered ${gatt.services.size} services for ${gatt.device.address}")
             gatt.printGattTable()
             initiateDeviceClock(gatt)
-        }
-
-        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-            with(characteristic) {
-                try {
-                    gatt?.readCharacteristic(whenWalletOutCharacteristic)
-                } catch (e: SecurityException) {
-                    Log.e("BluetoothGattDiscoverServices", "Error while reading characteristic", e)
-                }
-            }
-        }
-
-        override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-            Log.i("BluetoothGattCallback", "ack received")
-            walletService = bluetoothGatt.getService(WALLET_SERVICE_UUID)
-            val walletOutCharacteristicUUID = WALLET_OUT_UUID
-            walletOutCharacteristic = walletService.getCharacteristic(walletOutCharacteristicUUID)
-
-            val whenWalletOutCharacteristicUUID = WHEN_WALLET_OUT_UUID
-            whenWalletOutCharacteristic = walletService.getCharacteristic(whenWalletOutCharacteristicUUID)
-
-            enableNotifications(walletOutCharacteristic)
-
-            super.onCharacteristicWrite(gatt, characteristic, status)
         }
 
         fun writeDescriptor(descriptor: BluetoothGattDescriptor, payload: ByteArray) {
@@ -320,10 +298,36 @@ class BluetoothConnection(private val mContext: Context) {
             } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
         }
 
+        //TODO: adapt these functions to a more dynamic handling for each device service
+
+        override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+            with(characteristic) {
+                try {
+                    gatt?.readCharacteristic(whenWalletOutCharacteristic)
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothGattDiscoverServices", "Error while reading characteristic", e)
+                }
+            }
+        }
+
+        override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+            Log.i("BluetoothGattCallback", "ack received")
+            walletService = bluetoothGatt.getService(WALLET_SERVICE_UUID)
+            val walletOutCharacteristicUUID = WALLET_OUT_UUID
+            walletOutCharacteristic = walletService.getCharacteristic(walletOutCharacteristicUUID)
+
+            val whenWalletOutCharacteristicUUID = WHEN_WALLET_OUT_UUID
+            whenWalletOutCharacteristic = walletService.getCharacteristic(whenWalletOutCharacteristicUUID)
+
+            enableNotifications(walletOutCharacteristic)
+
+            super.onCharacteristicWrite(gatt, characteristic, status)
+        }
+
         override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
             Log.i("BluetoothGattCallback", "Characteristic read callback")
             characteristic?.let {
-                val dateTime = LocalDateTime.parse(characteristic.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
+                val dateTime = LocalDateTime.parse(it.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
                 val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
 
                 whenWalletOutArray.add(localDateTime) // TODO: create an abstract wrapper for modularity for all devices

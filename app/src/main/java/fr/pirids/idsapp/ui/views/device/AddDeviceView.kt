@@ -11,9 +11,9 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -24,9 +24,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,17 +36,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import fr.pirids.idsapp.controller.bluetooth.Device
+import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
-import fr.pirids.idsapp.controller.view.service.ServiceViewController
-import fr.pirids.idsapp.ui.views.service.Item
+import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun AddDeviceView(navController: NavHostController) {
-    LaunchBluetooth()
+    val ble = BluetoothConnection(LocalContext.current)
+    val scope = rememberCoroutineScope()
+    LaunchBluetooth(ble, scope)
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
@@ -80,7 +82,7 @@ fun AddDeviceView(navController: NavHostController) {
                     )
                 }
             }
-            DevicesList(navController, modifier = Modifier.padding(top = it.calculateTopPadding()))
+            DevicesList(navController, ble, scope, modifier = Modifier.padding(top = it.calculateTopPadding()))
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
@@ -119,9 +121,12 @@ private fun TopBarPreview() {
 }
 
 @Composable
-fun DevicesList(navController: NavHostController, modifier: Modifier = Modifier) {
-    //TODO: implement a FlowRow to display the devices (but LazyFlowRow does not exist yet...)
-    LazyColumn(modifier = modifier.then(Modifier.padding(top = 56.dp))) {
+fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scope: CoroutineScope,  modifier: Modifier = Modifier) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(120.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier.then(Modifier.padding(top = 56.dp))) {
         items(AddDeviceViewController.getScannedDevices()) {
             Box(
                 modifier = Modifier
@@ -140,7 +145,7 @@ fun DevicesList(navController: NavHostController, modifier: Modifier = Modifier)
                             onClickLabel = it.name,
                             onClick = {
                                 try {
-                                    AddDeviceViewController.connectToDevice(it)
+                                    AddDeviceViewController.connectToDevice(it, ble, scope)
                                 } catch (e: Exception) {
                                     Log.e("AddDeviceView", "Error while connecting to device", e)
                                 }
@@ -152,8 +157,12 @@ fun DevicesList(navController: NavHostController, modifier: Modifier = Modifier)
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun DevicesListPreview() {
-    DevicesList(navController = rememberAnimatedNavController())
+    DevicesList(
+        navController = rememberAnimatedNavController(),
+        ble = BluetoothConnection(LocalContext.current),
+        scope = rememberCoroutineScope()
+    )
 }

@@ -7,7 +7,6 @@ import fr.pirids.idsapp.model.items.bluetooth.BluetoothService
 
 enum class DeviceId {
     WALLET_CARD,
-    BEACON_TEST,
 }
 
 /**
@@ -16,10 +15,9 @@ enum class DeviceId {
  */
 data class Device(val id: DeviceId, val name: String, @StringRes val description: Int, @DrawableRes val logo: Int, val bluetoothServices : List<BluetoothService>) {
     companion object {
-        const val idsPrefix = "gDevice-beacon"//"PIR-IDS"
+        const val idsPrefix = "PIR-IDS"
         val list = listOf(
-            Device(DeviceId.WALLET_CARD, "$idsPrefix WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_logo, listOf()),
-            Device(DeviceId.BEACON_TEST, idsPrefix, R.string.wallet_card_desc, R.drawable.ids_logo, listOf())
+            Device(DeviceId.WALLET_CARD, "$idsPrefix WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_logo, listOf())
         )
         fun get(id: DeviceId) = list.first { it.id == id }
     }

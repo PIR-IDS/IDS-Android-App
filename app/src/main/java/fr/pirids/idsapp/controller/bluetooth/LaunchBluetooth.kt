@@ -14,12 +14,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
+import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun LaunchBluetooth() {
-    val scope = rememberCoroutineScope()
-    val ble = BluetoothConnection(LocalContext.current)
+fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.current), scope: CoroutineScope = rememberCoroutineScope()) {
     val multiplePermissionsState = rememberMultiplePermissionsState(ble.getNecessaryPermissions()) { ble.onPermissionsResult(it) }
     if(!multiplePermissionsState.allPermissionsGranted) {
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -56,27 +54,6 @@ fun LaunchBluetooth() {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    })
-
-    //TODO: handle bluetooth connection when user click on a device
-    //FIXME: this does not work yet
-    val connectLifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(key1 = connectLifecycleOwner, effect = {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> {
-                    AddDeviceViewController.idsDeviceToConnect.value?.let {
-                        ble.connect(it)
-                        AddDeviceViewController.idsDeviceToConnect.value = null
-                    }
-                }
-                else -> {}
-            }
-        }
-        connectLifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            connectLifecycleOwner.lifecycle.removeObserver(observer)
         }
     })
 }
