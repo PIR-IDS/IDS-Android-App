@@ -102,11 +102,19 @@ class BluetoothConnection(private val mContext: Context) {
     }
 
     private suspend fun initScan() {
-        scanLE(deviceFlow(bluetoothAdapter.bluetoothLeScanner))
+        try {
+            scanLE(deviceFlow(bluetoothAdapter.bluetoothLeScanner))
+        } catch (e: Exception) {
+            Log.e("BluetoothConnection", "Error while scanning for devices", e)
+        }
     }
 
     private suspend fun initSearch(devicesList: MutableSet<BluetoothDeviceIDS>) {
-        searchLE(devicesList, deviceFlow(bluetoothAdapter.bluetoothLeScanner, true))
+        try {
+            searchLE(devicesList, deviceFlow(bluetoothAdapter.bluetoothLeScanner, true))
+        } catch (e: Exception) {
+            Log.e("BluetoothConnection", "Error while searching for devices", e)
+        }
     }
 
     private fun deviceFlow(scanner: BluetoothLeScanner, background: Boolean = false) : Flow<ScanResult> = callbackFlow {
@@ -148,8 +156,8 @@ class BluetoothConnection(private val mContext: Context) {
         flow.collect {
             try {
                 Log.d("BluetoothGattDiscoverServices", "Scan result: ${it.device.name} [${it.device.address}]")
-                if (it.device.name?.startsWith(DeviceItem.idsPrefix) ?: false) {
-                    Device.foundDevices.value = Device.foundDevices.value + BluetoothDeviceIDS(it.device.name, it.device.address, it.device)
+                if (it.device.name?.startsWith(DeviceItem.idsPrefix) == true) {
+                    addToFoundDevices(it.device)
                 }
             } catch (e: SecurityException) {
                 Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
@@ -163,7 +171,7 @@ class BluetoothConnection(private val mContext: Context) {
                 Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
                 devicesList.find { found -> found.address == it.device.address }?.let { deviceFound ->
                     deviceFound.device = it.device
-                    connect(deviceFound, WalletCardData()) //TODO: replace this data placeholder with a real data structure
+                    connect(deviceFound)
                 }
             } catch (e: SecurityException) {
                 Log.e("BluetoothGattDiscoverServices", "Error while collecting search result", e)
@@ -171,7 +179,36 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    fun connect(idsDevice: BluetoothDeviceIDS, data: DeviceData) {
+    /**
+     * We have to compare manually the content of the Set because the unicity of the Set is not based
+     * on the address of the device even when the Comparator is based on it.
+     */
+    private fun addToFoundDevices(device: BluetoothDevice) {
+        try {
+            val newDevice = BluetoothDeviceIDS(device.name, device.address, getDeviceData(device), device)
+            Device.foundDevices.value.forEach {
+                if (BluetoothDeviceIDS.comparator.compare(it, newDevice) == 0) return
+            }
+            Device.foundDevices.value = Device.foundDevices.value + newDevice
+        } catch (e: SecurityException) {
+            Log.e("BluetoothGattDiscoverServices", "Error while adding device to found devices", e)
+        }
+    }
+
+    private fun getDeviceData(device: BluetoothDevice) : DeviceData {
+        try {
+            when(Device.getDeviceItemFromName(device.name)?.id) {
+                DeviceId.WALLET_CARD -> return WalletCardData()
+                DeviceId.BEACON_TEST -> return WalletCardData()
+                else -> throw Exception("Unknown device type")
+            }
+        } catch (e: SecurityException) {
+            Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+        }
+        throw Exception("Unknown device type")
+    }
+
+    fun connect(idsDevice: BluetoothDeviceIDS) {
         lateinit var bluetoothGatt: BluetoothGatt
         var initialized = false
         val deviceItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
@@ -294,16 +331,13 @@ class BluetoothConnection(private val mContext: Context) {
                 }
             }
 
-            //TODO: handle these two values in an abstract data structure in order to be able to handle many devices' services
-            private lateinit var walletOutCharacteristic: BluetoothGattCharacteristic
-            private lateinit var whenWalletOutCharacteristic: BluetoothGattCharacteristic
-
             /**
              * We will get there when a characteristic is written, mainly when we are initializing the device clock.
              */
             override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                Log.i("BluetoothGattCallback", "ack received")
+                Log.i("BluetoothGattCallback", "onCharacteristicWrite")
                 // If we just wrote the device clock, we can enable notifications for the wanted characteristics
+                //TODO: handle this init phase in a better way...
                 if(!initialized) {
                     when (deviceItem?.id) {
                         DeviceId.WALLET_CARD -> {
@@ -312,16 +346,15 @@ class BluetoothConnection(private val mContext: Context) {
                                 ?.let { bluetoothGatt.getService(it.uuid) }
                                 ?: throw Exception("Wallet service not found")
 
-                            //TODO: handle these two values in an abstract data structure in order to be able to handle many devices' services
-                            walletOutCharacteristic = walletServiceIDS.getBluetoothCharacteristic(CharacteristicId.BOOLEAN)
+                            (idsDevice.data as WalletCardData).walletOutCharacteristic = walletServiceIDS.getBluetoothCharacteristic(CharacteristicId.BOOLEAN)
                                 ?.let { walletService.getCharacteristic(it.uuid) }
                                 ?: throw Exception("walletOutCharacteristic not found")
 
-                            whenWalletOutCharacteristic = walletServiceIDS.getBluetoothCharacteristic(CharacteristicId.DATE_UTC)
+                            idsDevice.data.whenWalletOutCharacteristic = walletServiceIDS.getBluetoothCharacteristic(CharacteristicId.DATE_UTC)
                                 ?.let { walletService.getCharacteristic(it.uuid) }
                                 ?: throw Exception("whenWalletOutCharacteristic not found")
 
-                            enableNotifications(walletOutCharacteristic)
+                            enableNotifications(idsDevice.data.walletOutCharacteristic!!)
                         }
                         else -> {
                             Log.e(
@@ -347,18 +380,17 @@ class BluetoothConnection(private val mContext: Context) {
 
                             // If we have the wallet out, we add the timestamp to the list
                             when(char) {
-                                //TODO: handle these two values in an abstract data structure in order to be able to handle many devices' services
-                                walletOutCharacteristic -> {
+                                (idsDevice.data as WalletCardData).walletOutCharacteristic -> {
                                     try {
-                                        gatt?.readCharacteristic(whenWalletOutCharacteristic)
+                                        gatt?.readCharacteristic(idsDevice.data.whenWalletOutCharacteristic)
                                     } catch (e: SecurityException) {
                                         Log.e("BluetoothGattDiscoverServices", "Error while connecting", e)
                                     }
                                 }
-                                whenWalletOutCharacteristic -> {
+                                idsDevice.data.whenWalletOutCharacteristic -> {
                                     val dateTime = LocalDateTime.parse(char.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
                                     val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                    (data as WalletCardData).whenWalletOutArray.add(localDateTime)
+                                    idsDevice.data.whenWalletOutArray.add(localDateTime)
                                 }
                                 else -> { }
                             }

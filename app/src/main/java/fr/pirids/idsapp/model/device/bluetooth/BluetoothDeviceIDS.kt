@@ -1,10 +1,14 @@
 package fr.pirids.idsapp.model.device.bluetooth
 
 import android.bluetooth.BluetoothDevice
+import fr.pirids.idsapp.model.device.data.DeviceData
 
 //TODO: maybe change the name of the device if it has changed
-data class BluetoothDeviceIDS(val name: String, val address: String, var device: BluetoothDevice? = null) : Comparator<BluetoothDeviceIDS> {
-    override fun compare(o1: BluetoothDeviceIDS, o2: BluetoothDeviceIDS): Int {
-        return o1.address.compareTo(o2.address)
+data class BluetoothDeviceIDS(val name: String, val address: String, val data: DeviceData, var device: BluetoothDevice? = null) : Comparable<BluetoothDeviceIDS> {
+    companion object {
+        val comparator = Comparator<BluetoothDeviceIDS> { o1, o2 -> o1.address.compareTo(o2.address) }
+    }
+    override fun compareTo(other: BluetoothDeviceIDS): Int {
+        return comparator.compare(this, other)
     }
 }
