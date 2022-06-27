@@ -157,7 +157,7 @@ class BluetoothConnection(private val mContext: Context) {
             try {
                 Log.d("BluetoothGattDiscoverServices", "Scan result: ${it.device.name} [${it.device.address}]")
                 if (it.device.name?.startsWith(DeviceItem.idsPrefix) == true) {
-                    addToFoundDevices(it.device)
+                    Device.addToFoundDevices(BluetoothDeviceIDS(it.device.name, it.device.address, getDeviceData(it.device), it.device))
                 }
             } catch (e: SecurityException) {
                 Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
@@ -179,36 +179,19 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    /**
-     * We have to compare manually the content of the Set because the unicity of the Set is not based
-     * on the address of the device even when the Comparator is based on it.
-     */
-    private fun addToFoundDevices(device: BluetoothDevice) {
-        try {
-            val newDevice = BluetoothDeviceIDS(device.name, device.address, getDeviceData(device), device)
-            Device.foundDevices.value.forEach {
-                if (BluetoothDeviceIDS.comparator.compare(it, newDevice) == 0) return
-            }
-            Device.foundDevices.value = Device.foundDevices.value + newDevice
-        } catch (e: SecurityException) {
-            Log.e("BluetoothGattDiscoverServices", "Error while adding device to found devices", e)
-        }
-    }
-
     private fun getDeviceData(device: BluetoothDevice) : DeviceData {
         try {
-            when(Device.getDeviceItemFromName(device.name)?.id) {
-                DeviceId.WALLET_CARD -> return WalletCardData()
-                DeviceId.BEACON_TEST -> return WalletCardData()
+            return when(Device.getDeviceItemFromName(device.name)?.id) {
+                DeviceId.WALLET_CARD -> WalletCardData()
                 else -> throw Exception("Unknown device type")
             }
         } catch (e: SecurityException) {
             Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
+            throw e
         }
-        throw Exception("Unknown device type")
     }
 
-    fun connect(idsDevice: BluetoothDeviceIDS) {
+    fun connect(idsDevice: BluetoothDeviceIDS, onConnected: (Boolean) -> Unit = {}) {
         lateinit var bluetoothGatt: BluetoothGatt
         var initialized = false
         val deviceItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
@@ -245,23 +228,29 @@ class BluetoothConnection(private val mContext: Context) {
                             BluetoothProfile.STATE_CONNECTED -> {
                                 Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
                                 // TODO: Store a reference to BluetoothGatt
+                                // This triggers the onServicesDiscovered callback
                                 bluetoothGatt.discoverServices()
                             }
                             BluetoothProfile.STATE_DISCONNECTED -> {
                                 Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
                                 bluetoothGatt.close()
+                                Device.connectedDevices.value.minus(idsDevice)
                             }
                             else -> {}
                         }
                     } else {
                         Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
                         bluetoothGatt.close()
+                        Device.connectedDevices.value.minus(idsDevice)
                     }
                 } catch (e: SecurityException) {
                     Log.e("BluetoothGattDiscoverServices", "Error while connecting to GATT", e)
                 }
             }
 
+            /**
+             * We are probably here after being connected to the device, we launch the device clock initialization
+             */
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 Log.w("BluetoothGattCallback", "Discovered ${gatt.services.size} services for ${gatt.device.address}")
                 gatt.printGattTable()
@@ -363,6 +352,15 @@ class BluetoothConnection(private val mContext: Context) {
                             )
                         }
                     }
+
+                    // We add the newly initialized device to the list of connected devices
+                    Device.foundDevices.value = Device.foundDevices.value.minus(idsDevice)
+                    Device.addToKnownDevices(idsDevice)
+                    Device.addToConnectedDevices(idsDevice)
+
+                    // We also execute the onConnected callback
+                    onConnected(true)
+
                     initialized = true
                 }
 

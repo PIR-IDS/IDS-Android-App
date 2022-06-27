@@ -14,10 +14,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ScaffoldState
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.TaskAlt
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,10 +50,12 @@ import fr.pirids.idsapp.controller.detection.Service as ServiceController
 @Composable
 fun ServiceView(navController: NavHostController, service: Service) {
     ServiceViewController.serviceScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = { TopBar(navController) }
         ) {
             Column(
@@ -62,7 +66,7 @@ fun ServiceView(navController: NavHostController, service: Service) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AnimatedVisibility(visible = !ServiceViewController.isConnected.value) {
-                    LoginForm(service = service)
+                    LoginForm(service = service, snackbarHostState = snackbarHostState)
                 }
                 AnimatedVisibility(visible = ServiceViewController.isConnected.value) {
                     ConnectedLabel(service = service)
@@ -166,7 +170,7 @@ fun ConnectedLabelPreview() {
 }
 
 @Composable
-fun LoginForm(modifier: Modifier = Modifier, service: Service) {
+fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState: SnackbarHostState) {
     Column(
         modifier = Modifier
             .then(modifier)
@@ -202,7 +206,6 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
 
         Spacer(modifier = Modifier.height(20.dp))
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
-            val context = LocalContext.current
             val focusManager = LocalFocusManager.current
             val notFoundText = stringResource(id = R.string.service_not_connected)
             Button(
@@ -224,11 +227,7 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service) {
                         } else {
                             ServiceViewController.isConnected.value = false
                             ServiceViewController.serviceScope.launch(Dispatchers.Main) {
-                                Toast.makeText(
-                                    context,
-                                    notFoundText,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                snackbarHostState.showSnackbar(notFoundText)
                             }
                         }
                     }

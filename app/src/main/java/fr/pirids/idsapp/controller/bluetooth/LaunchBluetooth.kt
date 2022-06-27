@@ -53,6 +53,7 @@ fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            Device.foundDevices.value = setOf() // We clear the list of found devices after the search window is closed
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     })

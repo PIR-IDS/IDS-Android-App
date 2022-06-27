@@ -20,18 +20,8 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
-object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback, AdapterView.OnItemSelectedListener*/ {
+object HomeViewController {
 
-    lateinit var currentSelectedService : String
-
-    /*lateinit var buttonIDS : Button
-    lateinit var buttonRemoteService : Button
-    lateinit var buttonStartDetection : Button
-    lateinit var buttonTest : Button
-    lateinit var buttonStopDetection : Button
-    lateinit var serviceSpinner : Spinner*/
-
-    val currentTime = System.currentTimeMillis()
 
     //lateinit var notifBuilder : NotificationCompat.Builder
 
@@ -42,48 +32,11 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
     var serviceTransactionsTime = mutableListOf<Long>()
     var idsWalletOutTimeArray = mutableListOf<ZonedDateTime>()
 
-    //private val bluetoothConnection = BluetoothConnection(this, this)
-
-    var serviceCredentials = mutableListOf<String>()
-
-    var isServiceConnected = false
-    var isIDSConnected = false
-
     val CHANNEL_ID = "ids"
 
     var notificationId = 0
 
     /*
-            buttonRemoteService = findViewById(R.id.remote_service_button)
-
-            serviceSpinner = findViewById(R.id.remote_service_spinner)
-
-            ArrayAdapter.createFromResource(
-                this,
-                R.array.remote_services,
-                android.R.layout.simple_spinner_item
-            ).also { adapter ->
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                serviceSpinner.adapter = adapter
-            }
-
-            currentSelectedService = resources.getStringArray(R.array.remote_services).get(0)
-
-            serviceSpinner.onItemSelectedListener = this
-
-            buttonStartDetection = findViewById<Button>(R.id.start_detection_button)
-            buttonStopDetection = findViewById<Button>(R.id.stop_detection_button)
-            buttonTest = findViewById<Button>(R.id.test_button)
-
-            buttonIDS = findViewById(R.id.ids_button)
-            buttonIDS.setOnClickListener {
-                bluetoothConnection.setUpBT()
-                isIDSConnected = true
-                if (isServiceConnected) {
-                    buttonStartDetection.isEnabled = true
-                }
-            }
-
             // Create the NotificationChannel, but only on API 26+ because
             // the NotificationChannel class is new and not in the support library
             val name = "IDS"
@@ -161,36 +114,10 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
                     mainHandler.postDelayed(this, CHECKING_DELAY_MILLIS)
                 }
             }
-
-            buttonStartDetection.setOnClickListener {
-                if (currentSelectedService.equals("IZLY")) {
-                    buttonStopDetection.isEnabled = true
-                    buttonStartDetection.isEnabled = false
-                    mainHandler.post(loopingThd)
-                }
-            }
-
-            buttonStopDetection.setOnClickListener {
-                mainHandler.removeCallbacks(loopingThd)
-                buttonStartDetection.isEnabled = true
-                buttonStopDetection.isEnabled = false
-            }
             buttonTest.setOnClickListener {
                 serviceTransactionsTime.add(System.currentTimeMillis())
             }*/
-    /*
-        val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                serviceCredentials.add(result.data?.getStringExtra("phone_number").toString())
-                serviceCredentials.add(result.data?.getStringExtra("password").toString())
-                //findViewById<Button>(R.id.start_detection_button).isEnabled = true
-                isServiceConnected = true
-                if (isIDSConnected) {
-                    findViewById<Button>(R.id.start_detection_button).isEnabled = true
-                }
-            }
-        }
-    */
+
         /*private fun triggerNotification(serviceTime: Long) {
         val time = Instant.ofEpochMilli(serviceTime).atZone(ZoneId.of("UTC")).withZoneSameInstant(
             TimeZone.getDefault().toZoneId())
@@ -202,28 +129,6 @@ object HomeViewController /*: ActivityCompat.OnRequestPermissionsResultCallback,
             )
             notificationId++
         }
-    }
-    /*
-        fun startServiceActivity(view: View) {
-            if (currentSelectedService.equals("IZLY")) {
-                val intent = Intent(this@MainActivity, IzlyActivity::class.java)
-                //startActivity(intent)
-                resultLauncher.launch(intent)
-            }
-        }
-    */
-    override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-        currentSelectedService = p0?.getItemAtPosition(p2) as String
-        //buttonRemoteService.isEnabled = true
-    }
-
-    override fun onNothingSelected(p0: AdapterView<*>?) {
-        //buttonRemoteService.isEnabled = false
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        //super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        //bluetoothConnection.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 */
     fun addService(navController: NavHostController) {

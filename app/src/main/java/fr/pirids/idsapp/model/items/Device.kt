@@ -8,7 +8,6 @@ import fr.pirids.idsapp.model.items.bluetooth.ServiceId
 
 enum class DeviceId {
     WALLET_CARD,
-    BEACON_TEST,
 }
 
 /**
@@ -23,10 +22,6 @@ data class Device(val id: DeviceId, val name: String, @StringRes val description
                 BluetoothService.get(ServiceId.CURRENT_TIME),
                 BluetoothService.get(ServiceId.CUSTOM_IDS_IMU),
             )),
-            Device(DeviceId.BEACON_TEST, idsPrefix, R.string.wallet_card_desc, R.drawable.ids_logo, listOf(
-                BluetoothService.get(ServiceId.CURRENT_TIME),
-                BluetoothService.get(ServiceId.CUSTOM_IDS_IMU),
-            ))
         )
         fun get(id: DeviceId) = list.first { it.id == id }
     }

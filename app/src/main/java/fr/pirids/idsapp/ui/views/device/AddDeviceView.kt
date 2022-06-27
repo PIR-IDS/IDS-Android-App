@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +43,11 @@ import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
-fun AddDeviceView(navController: NavHostController) {
+fun AddDeviceView(navController: NavHostController, appSnackbarHostState: SnackbarHostState) {
     val ble = BluetoothConnection(LocalContext.current)
     val scope = rememberCoroutineScope()
     LaunchBluetooth(ble, scope)
@@ -52,6 +55,7 @@ fun AddDeviceView(navController: NavHostController) {
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(appSnackbarHostState) },
             topBar = { TopBar(navController) }
         ) {
             Column(
@@ -83,7 +87,7 @@ fun AddDeviceView(navController: NavHostController) {
                     )
                 }
             }
-            DevicesList(navController, ble, scope, modifier = Modifier.padding(top = it.calculateTopPadding()))
+            DevicesList(navController, ble, scope, appSnackbarHostState, modifier = Modifier.padding(top = it.calculateTopPadding()))
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
@@ -92,7 +96,7 @@ fun AddDeviceView(navController: NavHostController) {
 @Preview(showBackground = true)
 @Composable
 fun AddDeviceViewPreview() {
-    AddDeviceView(navController = rememberAnimatedNavController())
+    AddDeviceView(navController = rememberAnimatedNavController(), appSnackbarHostState = remember { SnackbarHostState() })
 }
 
 @Composable
@@ -122,37 +126,55 @@ private fun TopBarPreview() {
 }
 
 @Composable
-fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scope: CoroutineScope,  modifier: Modifier = Modifier) {
+fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scope: CoroutineScope, appSnackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
+    val successMessage = stringResource(id = R.string.device_connected)
+    val failMessage = stringResource(id = R.string.device_connection_failed)
     LazyVerticalGrid(
         columns = GridCells.Adaptive(120.dp),
         verticalArrangement = Arrangement.Center,
         horizontalArrangement = Arrangement.Center,
         modifier = modifier.then(Modifier.padding(top = 56.dp))) {
         items(Device.getScannedDevices()) {
+            val device = Device.getDeviceItemFromBluetoothDevice(it) ?: return@items
             Box(
                 modifier = Modifier
                     .size(120.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = it.logo),
-                    contentDescription = it.name,
-                    //contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(90.dp)
-                        .clip(CircleShape)
-                        .clickable(
-                            enabled = true,
-                            onClickLabel = it.name,
-                            onClick = {
-                                try {
-                                    Device.connectToDevice(it, ble, scope)
-                                } catch (e: Exception) {
-                                    Log.e("AddDeviceView", "Error while connecting to device", e)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Image(
+                        painter = painterResource(id = device.logo),
+                        contentDescription = device.name,
+                        //contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(90.dp)
+                            .clip(CircleShape)
+                            .clickable(
+                                enabled = true,
+                                onClickLabel = device.name,
+                                onClick = {
+                                    try {
+                                        Device.connectToDevice(it, ble, scope) { success ->
+                                            scope.launch(Dispatchers.Main) {
+                                                appSnackbarHostState.showSnackbar("${device.name} | " + if (success) successMessage else failMessage)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("AddDeviceView", "Error while connecting to device", e)
+                                    }
                                 }
-                            }
-                        )
-                )
+                            )
+                    )
+                    Text(
+                        text = "${device.name} [${it.address}]",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
@@ -164,6 +186,7 @@ fun DevicesListPreview() {
     DevicesList(
         navController = rememberAnimatedNavController(),
         ble = BluetoothConnection(LocalContext.current),
-        scope = rememberCoroutineScope()
+        scope = rememberCoroutineScope(),
+        appSnackbarHostState = remember { SnackbarHostState() }
     )
 }

@@ -30,7 +30,7 @@ import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.*
 import fr.pirids.idsapp.controller.view.HomeViewController
-import fr.pirids.idsapp.model.items.Device
+import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.model.items.Service
 import fr.pirids.idsapp.model.view.TabItem
 import kotlinx.coroutines.launch
@@ -248,25 +248,43 @@ fun DevicesScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Device.list.forEach {
-                Box(
-                    modifier = Modifier
-                        .size(120.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = it.logo),
-                        contentDescription = it.name,
-                        //contentScale = ContentScale.Crop,
+            Device.knownDevices.value.forEach {
+                Device.getDeviceItemFromBluetoothDevice(it)?.let { device ->
+                    Box(
                         modifier = Modifier
-                            .size(90.dp)
-                            .clip(CircleShape)
-                            .clickable(
-                                enabled = true,
-                                onClickLabel = it.name,
-                                onClick = { HomeViewController.showDevice(navController, it.id) }
+                            .size(120.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Image(
+                                painter = painterResource(id = device.logo),
+                                contentDescription = device.name,
+                                //contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .clip(CircleShape)
+                                    .clickable(
+                                        enabled = true,
+                                        onClickLabel = device.name,
+                                        onClick = {
+                                            HomeViewController.showDevice(
+                                                navController,
+                                                device.id
+                                            )
+                                        }
+                                    )
                             )
-                    )
+                            Text(
+                                text = "${device.name} [${it.address}]",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
             Box(

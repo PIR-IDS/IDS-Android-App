@@ -3,7 +3,9 @@ package fr.pirids.idsapp.controller.navigation
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -30,6 +32,7 @@ fun IDSApp(
     navController: NavHostController = rememberAnimatedNavController(),
     startDestination: String = NavRoutes.Home.route
 ) {
+    val appSnackbarHostState = remember { SnackbarHostState() }
     val tweenDuration = 500
     AnimatedNavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         composable(
@@ -89,7 +92,7 @@ fun IDSApp(
                     else -> null
                 }
             }
-        ) { AddDeviceView(navController) }
+        ) { AddDeviceView(navController, appSnackbarHostState = appSnackbarHostState) }
 
         composable(
             NavRoutes.Device.route + "/{id}",
