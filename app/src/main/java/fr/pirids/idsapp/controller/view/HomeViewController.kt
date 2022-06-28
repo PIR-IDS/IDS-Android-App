@@ -25,13 +25,6 @@ object HomeViewController {
 
     //lateinit var notifBuilder : NotificationCompat.Builder
 
-    var intrusion : Boolean = false
-
-    var isDebug : Boolean = false
-
-    var serviceTransactionsTime = mutableListOf<Long>()
-    var idsWalletOutTimeArray = mutableListOf<ZonedDateTime>()
-
     val CHANNEL_ID = "ids"
 
     var notificationId = 0
@@ -49,8 +42,6 @@ object HomeViewController {
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
-
-            val mainHandler = Handler(Looper.getMainLooper())
 
             val intent = Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
@@ -74,49 +65,7 @@ object HomeViewController {
                 .setAutoCancel(false)
                 .setContentIntent(pendingIntent)
                 .setFullScreenIntent(fullScreenPendingIntent, true)
-
-            val loopingThd : Runnable
-            loopingThd = object : Runnable {
-                override fun run() {
-                    //Log.d("DETECTION", "walletOut times: ${bluetoothConnection.whenWalletOutArray}")
-
-                    //triggerNotification(System.currentTimeMillis())
-                    // detection
-                    // non opti ?
-                    idsWalletOutTimeArray = bluetoothConnection.whenWalletOutArray
-                    Log.d("DETECTION", "walletout times: $idsWalletOutTimeArray")
-
-                    //serviceTransactionsTime = izly.getTransactionList(serviceCredentials.get(0), serviceCredentials.get(1))
-                    Thread {
-                        serviceTransactionsTime.addAll(izly.getTransactionList(serviceCredentials[0], serviceCredentials[1]))
-                        Log.d("DETECTION", "IZLY transactions: $serviceTransactionsTime")
-                    }.start()
-
-                    // checking
-                    serviceTransactionsTime.forEach { serviceTime ->
-                        if (serviceTime > currentTime || isDebug) {
-                            intrusion = true
-                            isDebug = false
-                            idsWalletOutTimeArray.forEach { idsTime ->
-                                val idsDate = idsTime.toInstant().toEpochMilli()
-                                Log.d("DETECTION", "ids time $idsDate")
-                                val diff = Math.abs(serviceTime - idsDate)
-                                if (diff < TIME_TOL) {
-                                    intrusion = false
-                                }
-                            }
-
-                            if (intrusion) {
-                                triggerNotification(serviceTime)
-                            }
-                        }
-                    }
-                    mainHandler.postDelayed(this, CHECKING_DELAY_MILLIS)
-                }
-            }
-            buttonTest.setOnClickListener {
-                serviceTransactionsTime.add(System.currentTimeMillis())
-            }*/
+    */
 
         /*private fun triggerNotification(serviceTime: Long) {
         val time = Instant.ofEpochMilli(serviceTime).atZone(ZoneId.of("UTC")).withZoneSameInstant(

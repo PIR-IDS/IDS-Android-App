@@ -39,7 +39,6 @@ fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.
         ble.onPermissionsResult(multiplePermissionsState.permissions.associate { it.permission to it.status.isGranted })
     }
 
-    //FIXME: crash when permissions not granted, it should wait to have an answer before starting the bluetooth scan
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { ble.handleScanBluetoothIntent(it, scope) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(key1 = lifecycleOwner, effect = {

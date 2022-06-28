@@ -34,6 +34,7 @@ fun IDSApp(
 ) {
     val appSnackbarHostState = remember { SnackbarHostState() }
     val tweenDuration = 500
+
     AnimatedNavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         composable(
             NavRoutes.Home.route

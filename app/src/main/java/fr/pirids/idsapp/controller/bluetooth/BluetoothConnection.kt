@@ -152,6 +152,7 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
+    //FIXME: scanned devices not displayed when permission not granted yet, it should wait to have an answer before starting the bluetooth scan
     private suspend fun scanLE(flow: Flow<ScanResult>) {
         flow.collect {
             try {
