@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.model.items
+package fr.pirids.idsapp.data.items
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes

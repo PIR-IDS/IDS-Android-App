@@ -2,7 +2,6 @@
 
 package fr.pirids.idsapp.ui.views.service
 
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
@@ -14,18 +13,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ScaffoldState
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.TaskAlt
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,9 +35,9 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.service.ServiceViewController
 import fr.pirids.idsapp.extensions.custom_success
-import fr.pirids.idsapp.model.items.Device
-import fr.pirids.idsapp.model.items.DeviceId
-import fr.pirids.idsapp.model.items.Service
+import fr.pirids.idsapp.data.items.Device
+import fr.pirids.idsapp.data.items.DeviceId
+import fr.pirids.idsapp.data.items.Service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import fr.pirids.idsapp.controller.detection.Service as ServiceController

@@ -17,12 +17,12 @@ import fr.pirids.idsapp.extensions.isIndicatable
 import fr.pirids.idsapp.extensions.isNotifiable
 import fr.pirids.idsapp.extensions.isWritable
 import fr.pirids.idsapp.extensions.printGattTable
-import fr.pirids.idsapp.model.device.bluetooth.BluetoothDeviceIDS
-import fr.pirids.idsapp.model.device.data.DeviceData
-import fr.pirids.idsapp.model.device.data.WalletCardData
-import fr.pirids.idsapp.model.items.DeviceId
-import fr.pirids.idsapp.model.items.bluetooth.*
-import fr.pirids.idsapp.model.items.Device as DeviceItem
+import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.data.device.data.DeviceData
+import fr.pirids.idsapp.data.device.data.WalletCardData
+import fr.pirids.idsapp.data.items.DeviceId
+import fr.pirids.idsapp.data.items.bluetooth.*
+import fr.pirids.idsapp.data.items.Device as DeviceItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose

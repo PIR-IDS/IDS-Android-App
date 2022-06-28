@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.controller.view.device.DeviceViewController
-import fr.pirids.idsapp.model.items.Device
+import fr.pirids.idsapp.data.items.Device
 
 @Composable
 fun DeviceView(navController: NavHostController, device: Device) {

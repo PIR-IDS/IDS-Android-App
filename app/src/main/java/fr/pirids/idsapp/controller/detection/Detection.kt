@@ -2,16 +2,16 @@ package fr.pirids.idsapp.controller.detection
 
 import android.util.Log
 import fr.pirids.idsapp.controller.bluetooth.Device
-import fr.pirids.idsapp.model.api.data.IzlyData
-import fr.pirids.idsapp.model.device.bluetooth.BluetoothDeviceIDS
-import fr.pirids.idsapp.model.device.data.WalletCardData
-import fr.pirids.idsapp.model.items.ServiceId
+import fr.pirids.idsapp.data.api.data.IzlyData
+import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.data.device.data.WalletCardData
+import fr.pirids.idsapp.data.items.ServiceId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import fr.pirids.idsapp.model.items.Service as ServiceItem
+import fr.pirids.idsapp.data.items.Service as ServiceItem
 
 object Detection {
     private const val checkingDelayMillis = 15_000L

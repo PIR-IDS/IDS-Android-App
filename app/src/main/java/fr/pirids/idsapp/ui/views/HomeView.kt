@@ -31,8 +31,8 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.*
 import fr.pirids.idsapp.controller.view.HomeViewController
 import fr.pirids.idsapp.controller.bluetooth.Device
-import fr.pirids.idsapp.model.items.Service
-import fr.pirids.idsapp.model.view.TabItem
+import fr.pirids.idsapp.data.items.Service
+import fr.pirids.idsapp.data.view.TabItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

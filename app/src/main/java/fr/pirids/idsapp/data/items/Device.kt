@@ -1,10 +1,10 @@
-package fr.pirids.idsapp.model.items
+package fr.pirids.idsapp.data.items
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import fr.pirids.idsapp.R
-import fr.pirids.idsapp.model.items.bluetooth.BluetoothService
-import fr.pirids.idsapp.model.items.bluetooth.ServiceId
+import fr.pirids.idsapp.data.items.bluetooth.BluetoothService
+import fr.pirids.idsapp.data.items.bluetooth.ServiceId
 
 enum class DeviceId {
     WALLET_CARD,

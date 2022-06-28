@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.model.navigation
+package fr.pirids.idsapp.data.navigation
 
 sealed class NavRoutes(val route: String) {
     object Home : NavRoutes("home")

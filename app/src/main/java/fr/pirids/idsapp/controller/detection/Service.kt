@@ -4,10 +4,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.controller.api.ApiInterface
 import fr.pirids.idsapp.controller.api.IzlyApi
-import fr.pirids.idsapp.model.api.auth.IzlyAuth
-import fr.pirids.idsapp.model.api.data.ApiData
-import fr.pirids.idsapp.model.items.Service
-import fr.pirids.idsapp.model.items.ServiceId
+import fr.pirids.idsapp.data.api.auth.IzlyAuth
+import fr.pirids.idsapp.data.api.data.ApiData
+import fr.pirids.idsapp.data.items.Service
+import fr.pirids.idsapp.data.items.ServiceId
 
 object Service {
     val connectedServices : MutableState<Set<ApiInterface>> = mutableStateOf(setOf())

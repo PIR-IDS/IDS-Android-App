@@ -1,9 +1,9 @@
 package fr.pirids.idsapp.controller.api
 
 import android.util.Log
-import fr.pirids.idsapp.model.api.auth.ApiAuth
-import fr.pirids.idsapp.model.api.auth.IzlyAuth
-import fr.pirids.idsapp.model.api.data.IzlyData
+import fr.pirids.idsapp.data.api.auth.ApiAuth
+import fr.pirids.idsapp.data.api.auth.IzlyAuth
+import fr.pirids.idsapp.data.api.data.IzlyData
 import kotlinx.coroutines.delay
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException

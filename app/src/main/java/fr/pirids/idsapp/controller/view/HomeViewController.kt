@@ -1,24 +1,9 @@
 package fr.pirids.idsapp.controller.view
 
-import android.bluetooth.BluetoothAdapter
-import android.view.View
-import android.widget.AdapterView
-import android.widget.Button
-import android.widget.Spinner
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavHostController
-import fr.pirids.idsapp.controller.api.IzlyApi
-import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
-import fr.pirids.idsapp.model.items.DeviceId
-import fr.pirids.idsapp.model.items.Service
-import fr.pirids.idsapp.model.items.ServiceId
-import fr.pirids.idsapp.model.navigation.NavRoutes
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.*
+import fr.pirids.idsapp.data.items.DeviceId
+import fr.pirids.idsapp.data.items.ServiceId
+import fr.pirids.idsapp.data.navigation.NavRoutes
 
 object HomeViewController {
 

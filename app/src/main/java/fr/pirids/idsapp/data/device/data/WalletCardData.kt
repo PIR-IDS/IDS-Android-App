@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.model.device.data
+package fr.pirids.idsapp.data.device.data
 
 import android.bluetooth.BluetoothGattCharacteristic
 import java.time.ZonedDateTime

@@ -3,11 +3,11 @@ package fr.pirids.idsapp.controller.bluetooth
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import fr.pirids.idsapp.model.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import fr.pirids.idsapp.model.items.Device as DeviceItem
+import fr.pirids.idsapp.data.items.Device as DeviceItem
 
 object Device {
     val foundDevices : MutableState<Set<BluetoothDeviceIDS>> = mutableStateOf(setOf())

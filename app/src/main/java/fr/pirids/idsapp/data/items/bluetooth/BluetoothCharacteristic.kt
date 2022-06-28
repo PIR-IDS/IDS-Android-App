@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.model.items.bluetooth
+package fr.pirids.idsapp.data.items.bluetooth
 
 import java.util.*
 

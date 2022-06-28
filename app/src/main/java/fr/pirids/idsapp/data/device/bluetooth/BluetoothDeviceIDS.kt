@@ -1,7 +1,7 @@
-package fr.pirids.idsapp.model.device.bluetooth
+package fr.pirids.idsapp.data.device.bluetooth
 
 import android.bluetooth.BluetoothDevice
-import fr.pirids.idsapp.model.device.data.DeviceData
+import fr.pirids.idsapp.data.device.data.DeviceData
 
 //TODO: maybe change the name of the device if it has changed
 data class BluetoothDeviceIDS(val name: String, val address: String, val data: DeviceData, var device: BluetoothDevice? = null) : Comparable<BluetoothDeviceIDS> {

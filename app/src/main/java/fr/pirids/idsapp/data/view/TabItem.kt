@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.model.view
+package fr.pirids.idsapp.data.view
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons

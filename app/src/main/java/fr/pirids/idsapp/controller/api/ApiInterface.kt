@@ -1,7 +1,7 @@
 package fr.pirids.idsapp.controller.api
 
-import fr.pirids.idsapp.model.api.auth.ApiAuth
-import fr.pirids.idsapp.model.api.data.ApiData
+import fr.pirids.idsapp.data.api.auth.ApiAuth
+import fr.pirids.idsapp.data.api.data.ApiData
 
 interface ApiInterface {
     /**

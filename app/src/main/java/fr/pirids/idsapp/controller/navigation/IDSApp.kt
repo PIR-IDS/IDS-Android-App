@@ -13,11 +13,11 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import fr.pirids.idsapp.model.items.Device
-import fr.pirids.idsapp.model.items.DeviceId
-import fr.pirids.idsapp.model.items.Service
-import fr.pirids.idsapp.model.items.ServiceId
-import fr.pirids.idsapp.model.navigation.NavRoutes
+import fr.pirids.idsapp.data.items.Device
+import fr.pirids.idsapp.data.items.DeviceId
+import fr.pirids.idsapp.data.items.Service
+import fr.pirids.idsapp.data.items.ServiceId
+import fr.pirids.idsapp.data.navigation.NavRoutes
 import fr.pirids.idsapp.ui.views.HomeView
 import fr.pirids.idsapp.ui.views.device.AddDeviceView
 import fr.pirids.idsapp.ui.views.device.DeviceView
