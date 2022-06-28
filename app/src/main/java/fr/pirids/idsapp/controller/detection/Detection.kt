@@ -1,5 +1,6 @@
 package fr.pirids.idsapp.controller.detection
 
+import android.content.Context
 import android.util.Log
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.data.api.data.IzlyData
@@ -19,11 +20,11 @@ object Detection {
     private var startupTimestamp: Long = System.currentTimeMillis()
     private val scope = CoroutineScope(Dispatchers.Default)
 
-    fun launchDetection() {
-        scope.launch { monitorServices() }
+    fun launchDetection(context: Context) {
+        scope.launch { monitorServices(context) }
     }
 
-    private suspend fun monitorServices() : Nothing {
+    private suspend fun monitorServices(context: Context) : Nothing {
         while(true) {
             startupTimestamp = System.currentTimeMillis()
 
@@ -39,7 +40,7 @@ object Detection {
                             Device.connectedDevices.value.forEach { device ->
                                 if (Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices) {
                                     // We analyze the data
-                                    analyzeIzlyData(device, apiData)
+                                    analyzeIzlyData(context, device, apiData)
                                 }
                             }
                         }
@@ -59,7 +60,7 @@ object Detection {
      * Analyze the data from the device and find out if there is an intrusion by comparing the device data with the service data
      * This also trigger a notification if there is an intrusion
      */
-    private fun analyzeIzlyData(device: BluetoothDeviceIDS, apiData: IzlyData) {
+    private fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData) {
         try {
             when (val devData = device.data) {
                 is WalletCardData -> {
@@ -79,7 +80,7 @@ object Detection {
                             }
 
                             if (intrusionDetected) {
-                                NotificationHandler.triggerNotification(timestamp.toString())
+                                NotificationHandler.triggerNotification(context, timestamp.toString())
                             }
                         }
                     }

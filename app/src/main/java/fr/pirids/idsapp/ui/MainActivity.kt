@@ -7,6 +7,7 @@ import fr.pirids.idsapp.controller.navigation.IDSApp
 import fr.pirids.idsapp.ui.theme.IDSAppTheme
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
 import fr.pirids.idsapp.controller.detection.Detection
+import fr.pirids.idsapp.controller.detection.NotificationHandler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,7 +18,14 @@ class MainActivity : ComponentActivity() {
                 if(false) {
                     LaunchBluetooth()
                 }
-                Detection.launchDetection() // We launch the IDS monitoring
+
+                // We create the main Notification channel
+                NotificationHandler.createNotificationChannel(this)
+
+                // We launch the IDS monitoring
+                Detection.launchDetection(this)
+
+                // We launch the router
                 IDSApp()
             }
         }
