@@ -91,7 +91,7 @@ object Detection {
         }
     }
 
-    private suspend fun updateDeviceData() : Nothing {
+    private suspend fun updateDeviceData(context: Context) : Nothing {
         while(true) {
             Device.connectedDevices.value.forEach {
                 try {

@@ -13,6 +13,7 @@ import android.os.Build
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.extensions.isIndicatable
 import fr.pirids.idsapp.extensions.isNotifiable
 import fr.pirids.idsapp.extensions.isWritable
@@ -390,6 +391,8 @@ class BluetoothConnection(private val mContext: Context) {
                                     val dateTime = LocalDateTime.parse(char.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
                                     val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                     idsDevice.data.whenWalletOutArray.add(localDateTime)
+                                    //TODO: delete this line [for DEBUG purpose only]
+                                    //NotificationHandler.triggerNotification(mContext, localDateTime.toString())
                                 }
                                 else -> { }
                             }
