@@ -119,6 +119,8 @@ Morgan Pelloux [ [GitHub](https://github.com/MonsieurSinge) ] – Co-developer
 <br>
 David Violes [ [GitHub](https://github.com/ViolesD) ] – Co-developer
 <br>
+Amélie Muller [ [GitHub](https://github.com/AmelieMuller) ] – Co-developer
+<br>
 Malik Sedira [ [GitHub](https://github.com/sediramalik) ] – Co-developer
 <br>
 Quentin Douarre [ [GitHub](https://github.com/Quintus618) ] – Co-developer
