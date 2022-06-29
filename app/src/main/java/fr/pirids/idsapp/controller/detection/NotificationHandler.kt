@@ -29,7 +29,7 @@ object NotificationHandler {
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun triggerNotification(context: Context, message: String) {
+    fun triggerNotification(context: Context, message: String, debug: Boolean = false) {
         val notifIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
@@ -54,10 +54,17 @@ object NotificationHandler {
             .setContentIntent(pendingIntent)
             .setFullScreenIntent(fullScreenPendingIntent, true)
 
-        val time = Instant.ofEpochMilli(message.toLong()).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
-        with(NotificationManagerCompat.from(context)) {
-            notify(notificationId, notifBuilder.setContentText("at $time").build())
-            notificationId++
+        if(debug) {
+            with(NotificationManagerCompat.from(context)) {
+                notify(notificationId, notifBuilder.setContentText("at $message").build())
+                notificationId++
+            }
+        } else {
+            val time = Instant.ofEpochMilli(message.toLong()).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
+            with(NotificationManagerCompat.from(context)) {
+                notify(notificationId, notifBuilder.setContentText("at $time").build())
+                notificationId++
+            }
         }
     }
 }
