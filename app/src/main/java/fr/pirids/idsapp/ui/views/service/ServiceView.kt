@@ -19,7 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -36,13 +39,10 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.service.ServiceViewController
-import fr.pirids.idsapp.extensions.custom_success
 import fr.pirids.idsapp.data.items.Device
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.data.items.Service
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import fr.pirids.idsapp.controller.detection.Service as ServiceController
+import fr.pirids.idsapp.extensions.custom_success
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -136,12 +136,12 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
                         val minute = date.substringAfter('h')
                         val today: LocalDate = LocalDate.now()
                         val yesterday = today.minusDays(1)
-                        if (day.equals("today")){
+                        if (day == "today"){
                             date = "$today $hour:$minute:00"
                             val time = Timestamp.valueOf(date)
                             timeOfEachAction.add(time.time)
                         }
-                        if (day.equals("yesterday")){
+                        if (day == "yesterday"){
                             date = "$yesterday $hour:$minute:00"
                             val time = Timestamp.valueOf(date)
                             timeOfEachAction.add(time.time)

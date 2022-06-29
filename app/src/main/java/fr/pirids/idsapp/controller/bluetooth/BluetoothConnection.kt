@@ -13,17 +13,18 @@ import android.os.Build
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import fr.pirids.idsapp.controller.detection.NotificationHandler
-import fr.pirids.idsapp.extensions.isIndicatable
-import fr.pirids.idsapp.extensions.isNotifiable
-import fr.pirids.idsapp.extensions.isWritable
-import fr.pirids.idsapp.extensions.printGattTable
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import fr.pirids.idsapp.data.device.data.DeviceData
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.DeviceId
-import fr.pirids.idsapp.data.items.bluetooth.*
-import fr.pirids.idsapp.data.items.Device as DeviceItem
+import fr.pirids.idsapp.data.items.bluetooth.BluetoothCharacteristic
+import fr.pirids.idsapp.data.items.bluetooth.BluetoothService
+import fr.pirids.idsapp.data.items.bluetooth.CharacteristicId
+import fr.pirids.idsapp.data.items.bluetooth.ServiceId
+import fr.pirids.idsapp.extensions.isIndicatable
+import fr.pirids.idsapp.extensions.isNotifiable
+import fr.pirids.idsapp.extensions.isWritable
+import fr.pirids.idsapp.extensions.printGattTable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -31,9 +32,10 @@ import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-
-import java.time.*
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
+import fr.pirids.idsapp.data.items.Device as DeviceItem
 
 class BluetoothConnection(private val mContext: Context) {
 

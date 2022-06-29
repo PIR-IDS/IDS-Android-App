@@ -4,7 +4,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavHostController
 import fr.pirids.idsapp.controller.api.ApiInterface
 import fr.pirids.idsapp.data.api.data.IzlyData
@@ -59,7 +58,7 @@ object ServiceViewController {
         }
     }
 
-    suspend fun updateServiceData(serviceData: ApiInterface, service: Service) : Nothing {
+    private suspend fun updateServiceData(serviceData: ApiInterface, service: Service) : Nothing {
         while(true) {
             ServiceController.getServiceData(serviceData)?.let {
                 when(service.id) {

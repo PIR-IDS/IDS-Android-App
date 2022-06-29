@@ -6,8 +6,6 @@ import fr.pirids.idsapp.controller.api.ApiInterface
 import fr.pirids.idsapp.controller.api.IzlyApi
 import fr.pirids.idsapp.data.api.auth.IzlyAuth
 import fr.pirids.idsapp.data.api.data.ApiData
-import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
-import fr.pirids.idsapp.data.items.Device
 import fr.pirids.idsapp.data.items.Service
 import fr.pirids.idsapp.data.items.ServiceId
 
