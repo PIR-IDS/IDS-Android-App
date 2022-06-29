@@ -3,9 +3,9 @@
 package fr.pirids.idsapp.ui.views.service
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -13,13 +13,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.service.AddServiceViewController
+import fr.pirids.idsapp.controller.detection.Service
 
 @Composable
 fun AddServiceView(navController: NavHostController) {
@@ -33,12 +39,57 @@ fun AddServiceView(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(top = it.calculateTopPadding()),
+                    .padding(top = it.calculateTopPadding())
+                    .background(MaterialTheme.colorScheme.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                //TODO: SELECT SERVICE WIDGET
-                Text(text = "WIP")
-                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = stringResource(id = R.string.add_service),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineLarge
+                )
+                FlowRow(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Service.getNotAddedCompatibleServices().forEach {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Image(
+                                    painter = painterResource(id = it.logo),
+                                    contentDescription = it.name,
+                                    //contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            enabled = true,
+                                            onClickLabel = it.name,
+                                            onClick = { AddServiceViewController.showService(navController, it.id) }
+                                        )
+                                )
+                                Text(
+                                    text = it.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

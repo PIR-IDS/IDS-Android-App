@@ -65,6 +65,16 @@ fun AddDeviceView(navController: NavHostController, appSnackbarHostState: Snackb
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    text = stringResource(id = R.string.add_device),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineLarge
+                )
                 Row(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -77,13 +87,13 @@ fun AddDeviceView(navController: NavHostController, appSnackbarHostState: Snackb
                         fontWeight = FontWeight.Light,
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.headlineSmall
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     CircularProgressIndicator(
                         modifier = Modifier
                             .padding(horizontal = 18.dp)
-                            .size(30.dp)
+                            .size(25.dp)
                     )
                 }
             }
@@ -131,9 +141,11 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
     val failMessage = stringResource(id = R.string.device_connection_failed)
     LazyVerticalGrid(
         columns = GridCells.Adaptive(120.dp),
-        verticalArrangement = Arrangement.Center,
         horizontalArrangement = Arrangement.Center,
-        modifier = modifier.then(Modifier.padding(top = 56.dp))) {
+        modifier = modifier.then(Modifier
+            .padding(top = 116.dp, start = 10.dp, end = 10.dp)
+            .fillMaxSize()
+        )) {
         items(Device.getScannedDevices()) {
             val device = Device.getDeviceItemFromBluetoothDevice(it) ?: return@items
             Box(

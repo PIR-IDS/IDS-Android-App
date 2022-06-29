@@ -4,6 +4,7 @@ import android.util.Log
 import fr.pirids.idsapp.data.api.auth.ApiAuth
 import fr.pirids.idsapp.data.api.auth.IzlyAuth
 import fr.pirids.idsapp.data.api.data.IzlyData
+import fr.pirids.idsapp.data.items.ServiceId
 import kotlinx.coroutines.delay
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException
@@ -13,7 +14,7 @@ import java.net.HttpURLConnection
 import java.sql.Timestamp
 import java.time.LocalDate
 
-class IzlyApi(credentials: ApiAuth) : ApiInterface {
+class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceId.IZLY) : ApiInterface {
     private val maxRetries = 50
     private lateinit var credentials: IzlyAuth
     private var cookieSessionId: String? = null

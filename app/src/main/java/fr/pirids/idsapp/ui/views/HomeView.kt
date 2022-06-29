@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,7 +32,7 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.*
 import fr.pirids.idsapp.controller.view.HomeViewController
 import fr.pirids.idsapp.controller.bluetooth.Device
-import fr.pirids.idsapp.data.items.Service
+import fr.pirids.idsapp.controller.detection.Service
 import fr.pirids.idsapp.data.view.TabItem
 import kotlinx.coroutines.launch
 
@@ -63,7 +64,11 @@ fun DefaultPreview() {
 fun TopBar(navController: NavHostController) {
     TopAppBar(
         title = {
-            Image(painter = painterResource(R.drawable.ids_logo), contentDescription = "")
+            Image(
+                painter = painterResource(R.drawable.ids_logo_flat),
+                contentDescription = stringResource(R.string.app_name),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary)
+            )
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = stringResource(id = R.string.app_name),
@@ -176,25 +181,39 @@ fun ServicesScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Service.list.forEach {
-                Box(
-                    modifier = Modifier
-                        .size(120.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = it.logo),
-                        contentDescription = it.name,
-                        //contentScale = ContentScale.Crop,
+            //TODO: replace this with the "known" services (previously added)
+            Service.connectedServices.value.forEach {
+                Service.getServiceItemFromApiService(it)?.let { service ->
+                    Box(
                         modifier = Modifier
-                            .size(90.dp)
-                            .clip(CircleShape)
-                            .clickable(
-                                enabled = true,
-                                onClickLabel = it.name,
-                                onClick = { HomeViewController.showService(navController, it.id) }
+                            .size(120.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Image(
+                                painter = painterResource(id = service.logo),
+                                contentDescription = service.name,
+                                //contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .clip(CircleShape)
+                                    .clickable(
+                                        enabled = true,
+                                        onClickLabel = service.name,
+                                        onClick = { HomeViewController.showService(navController, service.id) }
+                                    )
                             )
-                    )
+                            Text(
+                                text = service.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
             Box(

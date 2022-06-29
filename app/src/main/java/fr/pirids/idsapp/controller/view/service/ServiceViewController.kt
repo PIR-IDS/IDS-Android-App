@@ -14,7 +14,6 @@ import fr.pirids.idsapp.controller.detection.Service as ServiceController
 
 object ServiceViewController {
     private const val checkingDelayMillis = 10_000L
-    private const val timeTolerance = 10_000.0
 
     //TODO: adapt this boolean to handle many services
     val isConnected : MutableState<Boolean> = mutableStateOf(false)
@@ -32,8 +31,8 @@ object ServiceViewController {
                 when(service.id) {
                     ServiceId.IZLY -> {
                         val historyList: MutableList<String> = mutableListOf()
-                        (it as IzlyData).transactionList.forEach {
-                            historyList.add((if(it > 0) "+" else "-") + " : $it")
+                        (it as IzlyData).transactionList.forEach { timestamp ->
+                            historyList.add((if(timestamp > 0) "+" else "-") + " : $timestamp")
                         }
                         serviceHistory.value = historyList
                     }
