@@ -1,7 +1,6 @@
 package fr.pirids.idsapp.controller.navigation
 
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -62,12 +61,14 @@ fun IDSApp(
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
+                    NavRoutes.AddService.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
                     else -> null
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
                     NavRoutes.Home.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(tweenDuration))
+                    NavRoutes.AddService.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(tweenDuration))
                     else -> null
                 }
             }

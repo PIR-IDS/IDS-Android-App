@@ -10,5 +10,4 @@ object AddServiceViewController {
     fun showService(navController: NavHostController, service: ServiceId) {
         navController.navigate(NavRoutes.Service.route + "/" + service.ordinal)
     }
-
 }

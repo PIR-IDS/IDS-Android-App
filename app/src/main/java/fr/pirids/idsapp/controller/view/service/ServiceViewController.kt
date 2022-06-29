@@ -1,7 +1,10 @@
 package fr.pirids.idsapp.controller.view.service
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavHostController
 import fr.pirids.idsapp.controller.api.ApiInterface
 import fr.pirids.idsapp.data.api.data.IzlyData
@@ -9,7 +12,9 @@ import fr.pirids.idsapp.data.items.Device
 import fr.pirids.idsapp.data.items.Service
 import fr.pirids.idsapp.data.items.ServiceId
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import fr.pirids.idsapp.controller.detection.Service as ServiceController
 
 object ServiceViewController {
@@ -24,6 +29,35 @@ object ServiceViewController {
     fun getProbesList(service: Service): List<Device> = service.compatibleDevices
 
     fun closeModal(navController: NavHostController) = navController.popBackStack()
+
+    fun onLoginAction(
+        focusManager: FocusManager,
+        service: Service,
+        snackbarHostState: SnackbarHostState,
+        username: String,
+        password: String,
+        notFoundText: String
+    ) {
+        focusManager.clearFocus()
+        serviceScope.launch(Dispatchers.IO) {
+            val (serviceData, serviceConnected) = ServiceController.getServiceAndStatus(
+                username,
+                password,
+                service
+            )
+            if (serviceConnected) {
+                isConnected.value = true
+                historyScope.launch(Dispatchers.IO) {
+                    updateServiceData(serviceData, service)
+                }
+            } else {
+                isConnected.value = false
+                serviceScope.launch(Dispatchers.Main) {
+                    snackbarHostState.showSnackbar(notFoundText)
+                }
+            }
+        }
+    }
 
     suspend fun updateServiceData(serviceData: ApiInterface, service: Service) : Nothing {
         while(true) {

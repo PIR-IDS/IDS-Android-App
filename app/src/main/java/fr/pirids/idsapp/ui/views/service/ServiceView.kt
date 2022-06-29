@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TopAppBar
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
@@ -176,6 +178,8 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
     ) {
         val username = remember { mutableStateOf(TextFieldValue()) }
         val password = remember { mutableStateOf(TextFieldValue()) }
+        val focusManager = LocalFocusManager.current
+        val notFoundText = stringResource(id = R.string.service_not_connected)
 
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
             Image(
@@ -188,7 +192,9 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
         TextField(
             label = { Text(text = stringResource(id = R.string.username)) },
             value = username.value,
-            onValueChange = { username.value = it }
+            onValueChange = { username.value = it },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -196,38 +202,34 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
             label = { Text(text = stringResource(id = R.string.password)) },
             value = password.value,
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            onValueChange = { password.value = it }
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { ServiceViewController.onLoginAction(
+                    focusManager,
+                    service,
+                    snackbarHostState,
+                    username.value.text,
+                    password.value.text,
+                    notFoundText
+                )}
+            ),
+            onValueChange = { password.value = it },
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(20.dp))
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
-            val focusManager = LocalFocusManager.current
-            val notFoundText = stringResource(id = R.string.service_not_connected)
             Button(
                 //TODO: trigger this onclick at each modal opening if
                 // this service was previously connected (credentials in database)
-                onClick = {
-                    focusManager.clearFocus()
-                    ServiceViewController.serviceScope.launch(Dispatchers.IO) {
-                        val (serviceData, serviceConnected) = ServiceController.getServiceAndStatus(
-                            username.value.text,
-                            password.value.text,
-                            service
-                        )
-                        if (serviceConnected) {
-                            ServiceViewController.isConnected.value = true
-                            ServiceViewController.historyScope.launch(Dispatchers.IO) {
-                                ServiceViewController.updateServiceData(serviceData, service)
-                            }
-                        } else {
-                            ServiceViewController.isConnected.value = false
-                            ServiceViewController.serviceScope.launch(Dispatchers.Main) {
-                                snackbarHostState.showSnackbar(notFoundText)
-                            }
-                        }
-                    }
-                },
+                onClick = { ServiceViewController.onLoginAction(
+                    focusManager,
+                    service,
+                    snackbarHostState,
+                    username.value.text,
+                    password.value.text,
+                    notFoundText
+                )},
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .fillMaxWidth()

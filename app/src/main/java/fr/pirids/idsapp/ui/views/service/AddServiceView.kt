@@ -53,6 +53,7 @@ fun AddServiceView(navController: NavHostController) {
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge
                 )
+                //TODO: Add a search bar to search for services
                 FlowRow(
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 8.dp)
