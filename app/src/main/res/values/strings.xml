@@ -4,14 +4,33 @@
     <string name="bluetooth_connect">Connect to IDS with Bluetooth</string>
     <string name="bluetooth_error">Bluetooth not supported on this device</string>
     <string name="title_activity_izly">IzlyActivity</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_alert_notification">AlertNotificationActivity</string>
     <string name="alert_notify">IDS detected an intrusion!</string>
+    <string name="tab_text_services">My Services</string>
+    <string name="tab_text_devices">My Probes</string>
+    <string name="tab_text_network">My Network</string>
+    <string name="logo">Logo</string>
+    <string name="izly_description">izly desc</string>
+    <string name="add_service">Add a Service</string>
+    <string name="add_device">Add a Probe</string>
+    <string name="settings">Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="not_found">Not Found!</string>
+    <string name="history">History</string>
+    <string name="linked_probes">Linked Probes</string>
+    <string name="wallet_card_desc">wallet desc</string>
+    <string name="close">Close</string>
+    <string name="service_not_connected">Error: we are unable to connect you to the service!</string>
+    <string name="connected">Service Connected!</string>
+    <string name="reconnect">Reconnect to the service</string>
+    <string name="no_history">Empty History</string>
+    <string name="no_devices">No Linked Probes</string>
+    <string name="scanned_devices">Scanning for Probes…</string>
+    <string name="device_connected">New Probe connected successfully!</string>
+    <string name="device_connection_failed">Failed to connect to Probe!</string>
 </resources>

@@ -64,6 +64,7 @@ This code will be used in order to receive the anomalies detected by the Arduino
 ### Built With
 * [Kotlin](https://kotlinlang.org/)
 * [Android](https://developer.android.com/)
+* [Jetpack Compose](https://developer.android.com/jetpack/compose/)
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -117,6 +118,8 @@ Romain Monier [ [GitHub](https://github.com/rmonier) ] – Co-developer
 Morgan Pelloux [ [GitHub](https://github.com/MonsieurSinge) ] – Co-developer
 <br>
 David Violes [ [GitHub](https://github.com/ViolesD) ] – Co-developer
+<br>
+Amélie Muller [ [GitHub](https://github.com/AmelieMuller) ] – Co-developer
 <br>
 Malik Sedira [ [GitHub](https://github.com/sediramalik) ] – Co-developer
 <br>
