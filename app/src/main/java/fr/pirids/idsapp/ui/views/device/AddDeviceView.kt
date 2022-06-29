@@ -146,7 +146,7 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
             .padding(top = 116.dp, start = 10.dp, end = 10.dp)
             .fillMaxSize()
         )) {
-        items(Device.getScannedDevices()) {
+        items(Device.foundDevices.value.toList()) {
             val device = Device.getDeviceItemFromBluetoothDevice(it) ?: return@items
             Box(
                 modifier = Modifier

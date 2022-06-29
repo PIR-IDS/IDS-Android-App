@@ -16,7 +16,6 @@ object Device {
 
     fun getDeviceItemFromBluetoothDevice(bleDevice: BluetoothDeviceIDS): DeviceItem? = DeviceItem.list.find { it.name == bleDevice.name }
     fun getDeviceItemFromName(name: String): DeviceItem? = DeviceItem.list.find { it.name == name }
-    fun getScannedDevices(): List<BluetoothDeviceIDS> = foundDevices.value.toList()
 
     fun connectToDevice(
         device: BluetoothDeviceIDS,
