@@ -394,7 +394,7 @@ class BluetoothConnection(private val mContext: Context) {
                                     val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                     idsDevice.data.whenWalletOutArray.add(localDateTime)
                                     //TODO: delete this line [for DEBUG purpose only]
-                                    //NotificationHandler.triggerNotification(mContext, localDateTime.toString(), debug=true)
+                                    //fr.pirids.idsapp.controller.detection.NotificationHandler.triggerNotification(mContext, localDateTime.toString(), debug=true)
                                 }
                                 else -> { }
                             }
