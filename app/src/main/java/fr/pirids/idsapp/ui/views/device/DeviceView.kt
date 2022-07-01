@@ -213,8 +213,8 @@ private fun TopBar(navController: NavHostController) {
                 onClick = { DeviceViewController.closeModal(navController) }
             ) {
                 Icon(
-                    Icons.Outlined.ArrowBack,
-                    contentDescription = stringResource(id = R.string.go_back),
+                    Icons.Outlined.Close,
+                    contentDescription = stringResource(id = R.string.close),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
