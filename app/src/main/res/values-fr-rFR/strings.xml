@@ -26,4 +26,20 @@
     <string name="scanned_devices">Scan des Sondes…</string>
     <string name="device_connected">Nouvelle sonde connectée avec succès !</string>
     <string name="device_connection_failed">Échec de la connexion à la sonde !</string>
+    <string name="go_back">Précédent</string>
+    <string name="general">Général</string>
+    <string name="full_screen_alert">Alerte plein écran</string>
+    <string name="about">A propos</string>
+    <string name="version">Version</string>
+    <string name="version_number">0.2</string>
+    <string name="developers">Développeurs</string>
+    <string name="developers_names">Romain Monier, Morgan Pelloux, Noé Chauveau, Amélie Muller</string>
+    <string name="delete">Supprimer</string>
+    <string name="wallet_intrusion">Intrusion Porte-feuille !</string>
+    <string name="suspicious_transaction">Transaction suspecte :</string>
+    <string name="full_screen_alert_explanation">Notification plein écran lors d une intrusion</string>
+    <string name="theme">Theme</string>
+    <string name="probe_name">Nom de la sonde</string>
+    <string name="probe_address">Adresse de la sonde</string>
+    <string name="data_history">HISTORIQUE DES DONNEES</string>
 </resources>

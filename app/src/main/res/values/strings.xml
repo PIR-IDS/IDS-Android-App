@@ -25,4 +25,20 @@
     <string name="scanned_devices">Scanning for Probes…</string>
     <string name="device_connected">New Probe connected successfully!</string>
     <string name="device_connection_failed">Failed to connect to Probe!</string>
+    <string name="go_back">Go back</string>
+    <string name="general">General</string>
+    <string name="full_screen_alert">Full screen alert</string>
+    <string name="full_screen_alert_explanation">Full screen notification when intrusion</string>
+    <string name="theme">Theme</string>
+    <string name="about">About</string>
+    <string name="version">Version</string>
+    <string name="version_number">0.2</string>
+    <string name="developers">Developers</string>
+    <string name="developers_names">Romain Monier, Morgan Pelloux, Noé Chauveau, Amélie Muller</string>
+    <string name="delete">Delete</string>
+    <string name="wallet_intrusion">Wallet intrusion !</string>
+    <string name="suspicious_transaction">Suspicious transaction :</string>
+    <string name="probe_name">Probe name</string>
+    <string name="probe_address">Probe address</string>
+    <string name="data_history">DATA HISTORY</string>
 </resources>

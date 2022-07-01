@@ -23,6 +23,8 @@ import fr.pirids.idsapp.ui.views.device.DeviceView
 import fr.pirids.idsapp.ui.views.service.AddServiceView
 import fr.pirids.idsapp.ui.views.service.ServiceView
 import fr.pirids.idsapp.ui.views.errors.NotFoundView
+import fr.pirids.idsapp.ui.views.menus.NotificationView
+import fr.pirids.idsapp.ui.views.menus.SettingsView
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -118,5 +120,37 @@ fun IDSApp(
                 ?.let { device -> DeviceView(navController, device) }
                 ?: NotFoundView(navController)
         }
+
+        composable(
+            NavRoutes.Settings.route,
+            enterTransition = {
+                when (initialState.destination.route) {
+                    NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Start, animationSpec = tween(tweenDuration))
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    NavRoutes.Home.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.End, animationSpec = tween(tweenDuration))
+                    else -> null
+                }
+            }
+        ) { SettingsView(navController) }
+
+        composable(
+            NavRoutes.Notification.route,
+            enterTransition = {
+                when (initialState.destination.route) {
+                    NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Start, animationSpec = tween(tweenDuration))
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    NavRoutes.Home.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.End, animationSpec = tween(tweenDuration))
+                    else -> null
+                }
+            }
+        ) { NotificationView(navController) }
     }
 }
