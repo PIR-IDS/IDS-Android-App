@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import fr.pirids.idsapp.BuildConfig
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.menus.SettingsViewController
 import fr.pirids.idsapp.controller.view.service.AddServiceViewController
@@ -145,7 +146,7 @@ fun SettingsView(navController: NavHostController) {
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text = stringResource(id = R.string.version_number),
+                        text = BuildConfig.VERSION_NAME,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
                             .padding(horizontal = 45.dp),
@@ -164,7 +165,7 @@ fun SettingsView(navController: NavHostController) {
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text = stringResource(id = R.string.developers_names),
+                        text = "Romain Monier, Morgan Pelloux, Noé Chauveau, Amélie Muller",
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
                             .padding(horizontal = 45.dp),

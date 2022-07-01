@@ -147,10 +147,10 @@ private fun TopBar(navController: NavHostController) {
         backgroundColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
         actions = {
-            androidx.compose.material3.IconButton(
+            IconButton(
                 onClick = {}
             ) {
-                androidx.compose.material3.Icon(
+                Icon(
                     Icons.Outlined.Delete,
                     contentDescription = stringResource(id = R.string.delete),
                     tint = MaterialTheme.colorScheme.onPrimary

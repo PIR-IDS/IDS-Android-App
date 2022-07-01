@@ -32,12 +32,10 @@
     <string name="theme">Theme</string>
     <string name="about">About</string>
     <string name="version">Version</string>
-    <string name="version_number">0.2</string>
     <string name="developers">Developers</string>
-    <string name="developers_names">Romain Monier, Morgan Pelloux, Noé Chauveau, Amélie Muller</string>
     <string name="delete">Delete</string>
-    <string name="wallet_intrusion">Wallet intrusion !</string>
-    <string name="suspicious_transaction">Suspicious transaction :</string>
+    <string name="wallet_intrusion">Wallet intrusion!</string>
+    <string name="suspicious_transaction">Suspicious transaction:</string>
     <string name="probe_name">Probe name</string>
     <string name="probe_address">Probe address</string>
     <string name="data_history">DATA HISTORY</string>
