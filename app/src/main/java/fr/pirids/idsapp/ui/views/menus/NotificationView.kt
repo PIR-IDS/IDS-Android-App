@@ -3,14 +3,17 @@
 package fr.pirids.idsapp.ui.views.menus
 
 import android.annotation.SuppressLint
+import android.util.Log
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.DismissValue
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.TopAppBar
@@ -53,7 +56,9 @@ fun NotificationView(navController: NavHostController) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(15.dp)
+                        .padding(15.dp),
+                    onClick = { NotificationViewController.goBack(navController)
+                    }
                 ) {
                     Row {
                                 Column {

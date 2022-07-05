@@ -40,4 +40,5 @@
     <string name="probe_name">Nom de la sonde</string>
     <string name="probe_address">Adresse de la sondée</string>
     <string name="data_history">HISTORIQUE DES DONNÉES</string>
+    <string name="localisation">Localisation</string>
 </resources>

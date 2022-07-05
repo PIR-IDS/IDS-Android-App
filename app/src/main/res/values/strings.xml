@@ -39,4 +39,6 @@
     <string name="probe_name">Probe name</string>
     <string name="probe_address">Probe address</string>
     <string name="data_history">DATA HISTORY</string>
+    <string name="localisation">Localisation</string>
+
 </resources>
