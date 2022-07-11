@@ -59,7 +59,7 @@ object Detection {
      * Analyze the data from the device and find out if there is an intrusion by comparing the device data with the service data
      * This also trigger a notification if there is an intrusion
      */
-    private fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData) {
+    private suspend fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData) {
         try {
             when (val devData = device.data) {
                 is WalletCardData -> {
