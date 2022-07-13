@@ -5,14 +5,22 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import fr.pirids.idsapp.controller.security.DatabaseCipherHandler
-import fr.pirids.idsapp.data.model.dao.ApiAuthDao
-import fr.pirids.idsapp.data.model.entity.ApiAuth
+import fr.pirids.idsapp.data.model.dao.*
+import fr.pirids.idsapp.data.model.entity.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-@Database(entities = [ApiAuth::class], version = 1)
+@Database(entities = [
+    ApiAuth::class,
+    ApiData::class,
+    Device::class,
+    DeviceData::class,
+    IzlyAuth::class,
+    IzlyData::class,
+    WalletCardData::class,
+], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     companion object {
         private var INSTANCE: AppDatabase? = null
@@ -37,4 +45,10 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     abstract fun apiAuthDao(): ApiAuthDao
+    abstract fun apiDataDao(): ApiDataDao
+    abstract fun deviceDao(): DeviceDao
+    abstract fun deviceDataDao(): DeviceDataDao
+    abstract fun izlyAuthDao(): IzlyAuthDao
+    abstract fun izlyDataDao(): IzlyDataDao
+    abstract fun walletCardDataDao(): WalletCardDataDao
 }

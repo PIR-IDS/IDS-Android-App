@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // We decipher and open the database
+        // We check if there a service to check and device to connect to
         CoroutineScope(Dispatchers.IO).launch {
         }
 

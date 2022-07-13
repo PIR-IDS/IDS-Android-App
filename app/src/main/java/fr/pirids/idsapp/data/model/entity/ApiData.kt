@@ -4,8 +4,8 @@ import androidx.annotation.NonNull
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "api_auth")
-data class ApiAuth(
+@Entity(tableName = "api_data")
+data class ApiData(
     @NonNull
     @PrimaryKey
     val id: Int

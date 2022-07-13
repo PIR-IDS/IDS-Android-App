@@ -8,7 +8,7 @@ import fr.pirids.idsapp.data.model.entity.ApiAuth
 
 @Dao
 interface ApiAuthDao {
-    @Query("SELECT * FROM apiauth")
+    @Query("SELECT * FROM api_auth")
     fun getAll(): List<ApiAuth>
 
     @Insert
