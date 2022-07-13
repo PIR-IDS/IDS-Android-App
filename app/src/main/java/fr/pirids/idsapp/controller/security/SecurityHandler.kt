@@ -6,22 +6,28 @@ import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeyTemplates
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.integration.android.AndroidKeysetManager
+import com.google.crypto.tink.integration.android.AndroidKeystoreKmsClient
 import java.security.SecureRandom
 import kotlin.random.asKotlinRandom
 
 object SecurityHandler {
-    fun getMasterKey(context: Context): MasterKey =
-        MasterKey.Builder(context)
+    private const val masterKeyAlias = MasterKey.DEFAULT_MASTER_KEY_ALIAS
+    private var masterKey: MasterKey? = null
+
+    private fun buildMasterKey(context: Context): MasterKey =
+        MasterKey.Builder(context, masterKeyAlias)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
 
     fun getAead(context: Context): Aead {
+        if(masterKey == null) {
+            masterKey = buildMasterKey(context)
+        }
         AeadConfig.register()
         return AndroidKeysetManager.Builder()
-            //FIXME: find a way to delete this master_key_preference.xml which displays the key in raw?!
+            .withMasterKeyUri(AndroidKeystoreKmsClient.PREFIX + masterKeyAlias)
             .withSharedPref(context, "master_keyset", "master_key_preference")
             .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
-            .withMasterKeyUri("android-keystore://master_key")
             .build()
             .keysetHandle
             .getPrimitive(Aead::class.java)
