@@ -25,12 +25,14 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         private var INSTANCE: AppDatabase? = null
         private val mutex = Mutex()
-        suspend fun getInstance(context: Context): AppDatabase {
+        suspend fun initInstance(context: Context) = getInstance(context)
+        suspend fun getInstance(context: Context? = null): AppDatabase {
             mutex.withLock {
                 return withContext(Dispatchers.IO) {
                     var instance = INSTANCE
 
                     if (instance == null) {
+                        context ?: throw IllegalStateException("Context is null")
                         instance = Room.databaseBuilder(context, AppDatabase::class.java,"encrypted_idsapp_db")
                             .openHelperFactory(DatabaseCipherHandler.getSupportFactory(DatabaseCipherHandler.getDatabaseRawKey(context)))
                             //.fallbackToDestructiveMigration()

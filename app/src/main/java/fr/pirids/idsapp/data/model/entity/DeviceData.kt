@@ -6,15 +6,25 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "device_data", foreignKeys = [
-    ForeignKey(entity = DeviceData::class, parentColumns = ["id"], childColumns = ["device_id"])
-])
+@Entity(
+    tableName = "device_data",
+    foreignKeys = [
+        ForeignKey(
+            entity = DeviceData::class,
+            parentColumns = ["id"],
+            childColumns = ["device_id"],
+            onUpdate = ForeignKey.CASCADE,
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class DeviceData(
     @NonNull
-    @PrimaryKey
-    val id: Int,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "device_id")
+    @ColumnInfo(name = "device_id", index = true)
     val deviceId: Int,
 )

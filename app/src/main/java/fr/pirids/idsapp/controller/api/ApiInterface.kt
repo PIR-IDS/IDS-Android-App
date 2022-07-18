@@ -15,7 +15,7 @@ interface ApiInterface {
     /**
      * Check if the Service answers correctly
      */
-    fun checkConnection(): Boolean
+    suspend fun checkConnection(): Boolean
 
     /**
      * Returns the data from the server

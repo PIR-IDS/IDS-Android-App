@@ -365,6 +365,9 @@ class BluetoothConnection(private val mContext: Context) {
                     Device.addToKnownDevices(idsDevice)
                     Device.addToConnectedDevices(idsDevice)
 
+                    // Save in database
+                    Device.addKnownDeviceToDatabase(idsDevice)
+
                     // We also execute the onConnected callback
                     onConnected(true)
 

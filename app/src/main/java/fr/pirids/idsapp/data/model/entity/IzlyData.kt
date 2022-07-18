@@ -6,16 +6,25 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "izly_data", foreignKeys = [
-    ForeignKey(entity = DeviceData::class, parentColumns = ["id"], childColumns = ["api_id"])
-])
+@Entity(
+    tableName = "izly_data",
+    foreignKeys = [
+        ForeignKey(
+            entity = DeviceData::class,
+            parentColumns = ["id"],
+            childColumns = ["api_id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class IzlyData(
     @NonNull
-    @PrimaryKey
-    val id: Int,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "api_id")
+    @ColumnInfo(name = "api_id", index = true)
     val apiId: Int,
 
     @NonNull

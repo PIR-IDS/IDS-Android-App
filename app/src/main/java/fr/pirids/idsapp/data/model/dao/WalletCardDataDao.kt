@@ -11,8 +11,14 @@ interface WalletCardDataDao {
     @Query("SELECT * FROM wallet_card_data")
     fun getAll(): List<WalletCardData>
 
+    @Query("SELECT * FROM wallet_card_data WHERE id = :id")
+    fun get(id: Int): WalletCardData
+
     @Insert
-    fun insertAll(vararg walletCardDatas: WalletCardData)
+    fun insert(walletCardData: WalletCardData) : Long
+
+    @Insert
+    fun insertAll(vararg walletCardDatas: WalletCardData) : List<Long>
 
     @Delete
     fun delete(walletCardData: WalletCardData)
