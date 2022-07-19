@@ -3,11 +3,8 @@
 package fr.pirids.idsapp.ui.views.menus
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -18,11 +15,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,8 +27,6 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.BuildConfig
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.menus.SettingsViewController
-import fr.pirids.idsapp.controller.view.service.AddServiceViewController
-import fr.pirids.idsapp.data.items.Service
 
 @Composable
 fun SettingsView(navController: NavHostController) {
@@ -79,7 +71,7 @@ fun SettingsView(navController: NavHostController) {
                     )
                     Switch(
                         checked = notificationState.value,
-                        onCheckedChange = { notificationState.value = it },
+                        onCheckedChange = { value -> notificationState.value = value },
                         modifier = Modifier.scale(0.7f)
                     )
                 }
@@ -110,21 +102,10 @@ fun SettingsView(navController: NavHostController) {
                     )
                     Switch(
                         checked = fullScreenState.value,
-                        onCheckedChange = { fullScreenState.value = it },
+                        onCheckedChange = { value -> fullScreenState.value = value },
                         modifier = Modifier.scale(0.7f),
                     )
                 }
-
-
-                Spacer(modifier = Modifier.height(25.dp))
-                Text(
-                    text = stringResource(id = R.string.theme),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .padding(horizontal = 35.dp, vertical = 8.dp),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyLarge
-                )
                 Spacer(modifier = Modifier.height(30.dp))
                 Text(
                     text = stringResource(id = R.string.about),

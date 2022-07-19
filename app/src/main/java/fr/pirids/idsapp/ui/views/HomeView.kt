@@ -291,7 +291,8 @@ fun DevicesScreen(navController: NavHostController) {
                                         onClick = {
                                             HomeViewController.showDevice(
                                                 navController,
-                                                device.id
+                                                device.id,
+                                                it.address
                                             )
                                         }
                                     )

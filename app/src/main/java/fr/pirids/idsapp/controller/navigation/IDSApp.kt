@@ -23,6 +23,7 @@ import fr.pirids.idsapp.ui.views.device.DeviceView
 import fr.pirids.idsapp.ui.views.service.AddServiceView
 import fr.pirids.idsapp.ui.views.service.ServiceView
 import fr.pirids.idsapp.ui.views.errors.NotFoundView
+import fr.pirids.idsapp.ui.views.menus.NotificationDescriptionView
 import fr.pirids.idsapp.ui.views.menus.NotificationView
 import fr.pirids.idsapp.ui.views.menus.SettingsView
 
@@ -99,8 +100,11 @@ fun IDSApp(
         ) { AddDeviceView(navController, appSnackbarHostState = appSnackbarHostState) }
 
         composable(
-            NavRoutes.Device.route + "/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.IntType }),
+            NavRoutes.Device.route + "/{id}?address={address}",
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType },
+                navArgument("address") { type = NavType.StringType },
+            ),
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
@@ -117,7 +121,7 @@ fun IDSApp(
             it.arguments?.getInt("id")
                 ?.let { id -> DeviceId.values().getOrNull(id) }
                 ?.let { devId -> Device.get(devId) }
-                ?.let { device -> DeviceView(navController, device) }
+                ?.let { device -> DeviceView(navController, device, (it.arguments?.getString("address") ?: "")) }
                 ?: NotFoundView(navController)
         }
 
@@ -152,5 +156,26 @@ fun IDSApp(
                 }
             }
         ) { NotificationView(navController) }
+
+        composable(
+            NavRoutes.NotificationDescription.route + "/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType }),
+            enterTransition = {
+                when (initialState.destination.route) {
+                    NavRoutes.Notification.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
+                    else -> null
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    NavRoutes.Notification.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(tweenDuration))
+                    else -> null
+                }
+            }
+        ) {
+            it.arguments?.getInt("id")
+                ?.let { device -> NotificationDescriptionView(navController) }
+                ?: NotFoundView(navController)
+        }
     }
 }

@@ -36,10 +36,11 @@
     <string name="delete">Delete</string>
     <string name="wallet_intrusion">Wallet intrusion!</string>
     <string name="suspicious_transaction">Suspicious transaction:</string>
+    <string name="wallet_data">Wallet data</string>
+    <string name="wallet_event_message">Wallet out at:</string>
     <string name="probe_name">Probe name</string>
     <string name="probe_address">Probe address</string>
     <string name="data_history">DATA HISTORY</string>
-    <string name="localisation">Localisation</string>
+    <string name="location">Location</string>
     <string name="more_details">More Details</string>
-
 </resources>

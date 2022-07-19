@@ -2,10 +2,10 @@
 
 package fr.pirids.idsapp.ui.views.device
 
+import androidx.annotation.StringRes
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,13 +14,14 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -28,12 +29,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.view.device.DeviceViewController
-import fr.pirids.idsapp.data.items.Device
-import fr.pirids.idsapp.data.items.Service
+import fr.pirids.idsapp.data.device.data.WalletCardData
+import fr.pirids.idsapp.data.items.DeviceId
+import fr.pirids.idsapp.data.items.Device as DeviceItem
 
 @Composable
-fun DeviceView(navController: NavHostController, device: Device) {
+fun DeviceView(navController: NavHostController, device: DeviceItem, address: String) {
+    val bleDevice = Device.getBluetoothDeviceFromAddress(address)
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
@@ -47,10 +51,10 @@ fun DeviceView(navController: NavHostController, device: Device) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(15.dp))
                 Box(
                     modifier = Modifier
-                        .size(90.dp),
+                        .size(130.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -58,134 +62,97 @@ fun DeviceView(navController: NavHostController, device: Device) {
                         contentDescription = device.name,
                         //contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(90.dp)
+                            .size(130.dp)
                             .clip(CircleShape)
-                            .clickable(
-                                enabled = true,
-                                onClickLabel = device.name,
-                                onClick = { }
-                            )
                     )
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = stringResource(id = R.string.probe_address),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyLarge
-                )
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = stringResource(id = R.string.data_history),
+                    text = device.name,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineSmall
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = bleDevice?.address ?: "",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(35.dp))
+                Text(
+                    text = stringResource(id = R.string.data_history),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Spacer(modifier = Modifier.height(20.dp))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(15.dp)
-                ) {
-                    Row {
-                        Column {
-                            Text(
-                                    text = stringResource(id = R.string.wallet_intrusion),
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    modifier = Modifier
-                                        .padding(horizontal = 35.dp, vertical = 8.dp),
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                    text = stringResource(id = R.string.suspicious_transaction),
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    modifier = Modifier
-                                        .padding(horizontal = 40.dp, vertical = 0.5.dp),
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodySmall
-                            )
-                        }
 
-                        Spacer(modifier = Modifier.height(15.dp))
-                        Spacer(modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight())
-                        Box(
-                                modifier = Modifier
-                                    .size(70.dp),
-                                contentAlignment = Alignment.Center
-                        ) {
-                            val izlyTest = Service.list.first()
-                            Image(
-                                painter = painterResource(id = izlyTest.logo),
-                                contentDescription = izlyTest.name,
-                                //contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                        .size(60.dp)
-                                        .clip(CircleShape)
-                                        .clickable(
-                                            enabled = true,
-                                            onClickLabel = izlyTest.name,
-                                            onClick = { }
-                                        )
-                                )
+                //TODO: create a tab slider with Detection History linked to the current device
 
+                //TODO: clean this by doing something better (timestamp array in DeviceData because it's needed everywhere anyway)
+                bleDevice?.let { bleDev ->
+                    when(device.id) {
+                        DeviceId.WALLET_CARD -> {
+                            (bleDev.data as WalletCardData).whenWalletOutArray.forEach {
+                                DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon)
+                            }
                         }
+                        else -> {}
                     }
                 }
-                Card(
+            }
+        }
+    }
+}
+
+@Composable
+fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(15.dp)
+    ) {
+        //TODO: add timestamp somewhere
+        Row {
+            Column {
+                Text(
+                    text = stringResource(id = title),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(15.dp)
-                ) {
-                    Row {
-                        Column {
-                            Text(
-                                text = stringResource(id = R.string.wallet_intrusion),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier
-                                    .padding(horizontal = 35.dp, vertical = 8.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = stringResource(id = R.string.suspicious_transaction),
-                                color = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier
-                                    .padding(horizontal = 40.dp, vertical = 0.5.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
+                        .padding(horizontal = 35.dp, vertical = 8.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(id = message),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .padding(horizontal = 40.dp, vertical = 0.5.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
-                        Spacer(modifier = Modifier.height(15.dp))
-                        Spacer(modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight())
-                        Box(
-                            modifier = Modifier
-                                .size(70.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val izlyTest = Service.list.first()
-                            Image(
-                                painter = painterResource(id = izlyTest.logo),
-                                contentDescription = izlyTest.name,
-                                //contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(CircleShape)
-                                    .clickable(
-                                        enabled = true,
-                                        onClickLabel = izlyTest.name,
-                                        onClick = { }
-                                    )
-                            )
+            Spacer(modifier = Modifier.height(15.dp))
+            Spacer(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight())
+            Box(
+                modifier = Modifier
+                    .size(70.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = rememberVectorPainter(icon),
+                    contentDescription = "",
+                    //contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                )
 
-                        }
-                    }
-                }
             }
         }
     }
@@ -194,20 +161,13 @@ fun DeviceView(navController: NavHostController, device: Device) {
 @Preview
 @Composable
 fun DeviceViewPreview() {
-    DeviceView(navController = rememberAnimatedNavController(), Device.list.first())
+    DeviceView(navController = rememberAnimatedNavController(), DeviceItem.list.first(), "")
 }
 
 @Composable
 private fun TopBar(navController: NavHostController) {
     TopAppBar(
-        title = {
-            Text(
-                text = stringResource(id = R.string.probe_name),
-                color = MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Left,
-                style = MaterialTheme.typography.headlineSmall
-            )
-        },
+        title = {},
         navigationIcon = {
             IconButton(
                 onClick = { DeviceViewController.closeModal(navController) }

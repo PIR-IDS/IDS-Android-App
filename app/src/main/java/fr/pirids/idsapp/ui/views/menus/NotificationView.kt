@@ -2,26 +2,19 @@
 
 package fr.pirids.idsapp.ui.views.menus
 
-import android.annotation.SuppressLint
-import android.graphics.Color
-import android.util.Log
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -40,13 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import fr.pirids.idsapp.controller.detection.Service
-import fr.pirids.idsapp.controller.view.HomeViewController
 import fr.pirids.idsapp.controller.view.menus.NotificationViewController
-import fr.pirids.idsapp.data.notifications.Notification
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 
-@SuppressLint("UnrememberedMutableState")
 @Composable
 fun NotificationView(navController: NavHostController) {
     Surface(
@@ -60,12 +48,12 @@ fun NotificationView(navController: NavHostController) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(items = NotificationViewController.notificationList.value) { item ->    //
+                items(items = NotificationViewController.notificationList.value) { item ->
                     val dismissState = rememberDismissState(
                         confirmStateChange = {
                             NotificationViewController.notificationList.value = NotificationViewController.notificationList.value.minus(item)
                             true
-                            }
+                        }
                     )
                     SwipeToDismiss(
                         state = dismissState,
@@ -102,61 +90,57 @@ fun NotificationView(navController: NavHostController) {
         }
     }
 }
+
 @Composable
-private fun NotificationCard(navController: NavHostController) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            onClick = {
-                NotificationViewController.goBack(navController)
-            }
-        ) {
-            Row {
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.wallet_intrusion),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .padding(horizontal = 35.dp, vertical = 8.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text = stringResource(id = R.string.suspicious_transaction),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .padding(horizontal = 40.dp, vertical = 0.5.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Spacer(modifier = Modifier.height(15.dp))
-                Spacer(modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight())
-                Box(
+fun NotificationCard(navController: NavHostController) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        onClick = {
+            NotificationViewController.showDescription(navController)
+        }
+    ) {
+        Row {
+            Column {
+                Text(
+                    text = stringResource(id = R.string.wallet_intrusion),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
-                        .size(70.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val izlyTest = ServiceItem.list.first()
-                    Image(
-                        painter = painterResource(id = izlyTest.logo),
-                        contentDescription = izlyTest.name,
-                        //contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(CircleShape)
-                            .clickable(
-                                enabled = true,
-                                onClickLabel = izlyTest.name,
-                                onClick = { }
-                            )
-                    )
-                }
+                        .padding(horizontal = 35.dp, vertical = 8.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(id = R.string.suspicious_transaction),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .padding(horizontal = 40.dp, vertical = 0.5.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(modifier = Modifier.height(15.dp))
+            Spacer(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight())
+            Box(
+                modifier = Modifier
+                    .size(70.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val izlyTest = ServiceItem.list.first()
+                Image(
+                    painter = painterResource(id = izlyTest.logo),
+                    contentDescription = izlyTest.name,
+                    //contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                )
             }
         }
+    }
 }
 
 @Preview
@@ -168,7 +152,6 @@ fun NotificationViewPreview() {
 @Composable
 private fun TopBar(navController: NavHostController) {
     TopAppBar(
-
         title = {
             Text(
                 text = stringResource(id = R.string.notifications),
@@ -178,9 +161,8 @@ private fun TopBar(navController: NavHostController) {
             )
             Spacer(
                 modifier = Modifier
-
                     .fillMaxHeight(),
-                )
+            )
         },
         navigationIcon = {
             IconButton(

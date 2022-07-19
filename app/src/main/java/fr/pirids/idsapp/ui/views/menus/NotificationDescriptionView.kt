@@ -1,12 +1,10 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 
 package fr.pirids.idsapp.ui.views.menus
 
-import android.annotation.SuppressLint
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,16 +26,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import fr.pirids.idsapp.controller.detection.Service
-import fr.pirids.idsapp.controller.view.HomeViewController
-import fr.pirids.idsapp.controller.view.menus.NotificationViewController
-import fr.pirids.idsapp.data.items.Device
+import fr.pirids.idsapp.controller.view.menus.NotificationDescriptionViewController
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 
-
-
 @Composable
-fun NotificationDescriptionView(navController: NavHostController ) {
+fun NotificationDescriptionView(navController: NavHostController) {
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
@@ -65,11 +58,6 @@ fun NotificationDescriptionView(navController: NavHostController ) {
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .clickable(
-                                enabled = true,
-                                onClickLabel = izlyTest.name,
-                                onClick = { }
-                            )
                     )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
@@ -100,7 +88,7 @@ fun NotificationDescriptionView(navController: NavHostController ) {
                                     modifier = Modifier.height(10.dp)
                                 )
                                 Text(
-                                    text = stringResource(id = R.string.localisation),
+                                    text = stringResource(id = R.string.location),
                                     color = MaterialTheme.colorScheme.onBackground,
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.bodyLarge
@@ -119,52 +107,52 @@ fun NotificationDescriptionView(navController: NavHostController ) {
                             ) {
                                 Icon(
                                     Icons.Outlined.PinDrop,
-                                    contentDescription = stringResource(id = R.string.localisation),
+                                    contentDescription = stringResource(id = R.string.location),
                                     tint = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                         }
                     }
-                        Spacer( modifier = Modifier.height(10.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(15.dp),
-                            onClick = { }
-                        ) {
-                            Row {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(start = 30.dp, end = 30.dp)
-                                )
-                                {
-                                    Spacer(
-                                        modifier = Modifier.height(10.dp)
-                                    )
-                                    Text(
-                                        text = stringResource(id = R.string.delete),
-                                        color = MaterialTheme.colorScheme.onBackground,
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp),
+                        onClick = { }
+                    ) {
+                        Row {
+                            Column(
+                                modifier = Modifier
+                                    .padding(start = 30.dp, end = 30.dp)
+                            )
+                            {
                                 Spacer(
-                                    modifier = Modifier.weight(1f)
-                                        .fillMaxHeight()
+                                    modifier = Modifier.height(10.dp)
                                 )
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp),
-                                    contentAlignment = Alignment.Center
+                                Text(
+                                    text = stringResource(id = R.string.delete),
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(
+                                modifier = Modifier.weight(1f)
+                                    .fillMaxHeight()
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp),
+                                contentAlignment = Alignment.Center
 
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.Delete,
-                                        contentDescription = stringResource(id = R.string.localisation),
-                                        tint = MaterialTheme.colorScheme.onBackground
-                                    )
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    contentDescription = stringResource(id = R.string.delete),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
 
                             }
                         }
@@ -174,36 +162,33 @@ fun NotificationDescriptionView(navController: NavHostController ) {
         }
     }
 }
-@OptIn(ExperimentalAnimationApi::class)
+
 @Preview
 @Composable
 fun NotificationDescriptionViewPreview() {
-    NotificationDescriptionView(navController =  rememberAnimatedNavController())
+    NotificationDescriptionView(navController = rememberAnimatedNavController())
 }
 
 @Composable
 private fun TopBar(navController: NavHostController) {
     TopAppBar(
-
-        title = {  },
+        title = {},
         navigationIcon = {
             IconButton(
-                onClick = { NotificationViewController.goBack(navController) }
-            ) {Icon(
-                Icons.Outlined.Close,
-                contentDescription = stringResource(id = R.string.close),
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-
+                onClick = { NotificationDescriptionViewController.closeModal(navController) }
+            ) {
+                Icon(
+                    Icons.Outlined.Close,
+                    contentDescription = stringResource(id = R.string.close),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
-
         },
         backgroundColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Preview(showBackground = true)
 @Composable
 private fun TopBarPreview() {

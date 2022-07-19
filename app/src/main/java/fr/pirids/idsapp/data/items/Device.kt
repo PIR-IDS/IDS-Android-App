@@ -14,14 +14,25 @@ enum class DeviceId {
  * All the supported sensors
  * We will use the name of the sensor as the identifier to link the BLE sensor to its Device type
  */
-data class Device(val id: DeviceId, val name: String, @StringRes val description: Int, @DrawableRes val logo: Int, val bluetoothServices : List<BluetoothService>) {
+data class Device(
+    val id: DeviceId,
+    val name: String,
+    @StringRes val description: Int,
+    @DrawableRes val logo: Int,
+    val bluetoothServices : List<BluetoothService>
+) {
     companion object {
         const val idsPrefix = "PIR-IDS"
         val list = listOf(
-            Device(DeviceId.WALLET_CARD, "$idsPrefix WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_logo, listOf(
-                BluetoothService.get(ServiceId.CURRENT_TIME),
-                BluetoothService.get(ServiceId.CUSTOM_IDS_IMU),
-            )),
+            Device(
+                DeviceId.WALLET_CARD,
+                "$idsPrefix WALLET CARD",
+                R.string.wallet_card_desc,
+                R.drawable.ids_logo, listOf(
+                    BluetoothService.get(ServiceId.CURRENT_TIME),
+                    BluetoothService.get(ServiceId.CUSTOM_IDS_IMU),
+                )
+            ),
         )
         fun get(id: DeviceId) = list.first { it.id == id }
     }
