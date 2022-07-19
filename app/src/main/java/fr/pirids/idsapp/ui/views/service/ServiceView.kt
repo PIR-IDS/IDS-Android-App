@@ -66,7 +66,7 @@ fun ServiceView(navController: NavHostController, service: Service) {
                 AnimatedVisibility(visible = !ServiceViewController.isConnected.value) {
                     LoginForm(service = service, snackbarHostState = snackbarHostState)
                 }
-                AnimatedVisibility(visible = ServiceViewController.isConnected.value) {
+                AnimatedVisibility(visible = ServiceViewController.isConnected.value && !ServiceViewController.isLoading.value) {
                     ConnectedLabel(service = service)
                 }
                 Spacer(modifier = Modifier.height(20.dp))
@@ -190,6 +190,7 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
 
         Spacer(modifier = Modifier.height(20.dp))
         TextField(
+            readOnly = ServiceViewController.isLoading.value,
             label = { Text(text = stringResource(id = R.string.username)) },
             value = username.value,
             onValueChange = { username.value = it },
@@ -199,6 +200,7 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
 
         Spacer(modifier = Modifier.height(20.dp))
         TextField(
+            readOnly = ServiceViewController.isLoading.value,
             label = { Text(text = stringResource(id = R.string.password)) },
             value = password.value,
             visualTransformation = PasswordVisualTransformation(),
@@ -218,24 +220,35 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
         )
 
         Spacer(modifier = Modifier.height(20.dp))
-        Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
-            Button(
-                //TODO: trigger this onclick at each modal opening if
-                // this service was previously connected (credentials in database)
-                onClick = { ServiceViewController.onLoginAction(
-                    focusManager,
-                    service,
-                    snackbarHostState,
-                    username.value.text,
-                    password.value.text,
-                    notFoundText
-                )},
-                shape = RoundedCornerShape(50.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(text = stringResource(id = R.string.login))
+        AnimatedVisibility(visible = !ServiceViewController.isLoading.value) {
+            Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+                Button(
+                    //TODO: trigger this onclick at each modal opening if
+                    // this service was previously connected (credentials in database)
+                    onClick = { ServiceViewController.onLoginAction(
+                        focusManager,
+                        service,
+                        snackbarHostState,
+                        username.value.text,
+                        password.value.text,
+                        notFoundText
+                    )},
+                    shape = RoundedCornerShape(50.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text(text = stringResource(id = R.string.login))
+                }
+            }
+        }
+        AnimatedVisibility(visible = ServiceViewController.isLoading.value) {
+            Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(horizontal = 18.dp)
+                        .size(50.dp)
+                )
             }
         }
     }

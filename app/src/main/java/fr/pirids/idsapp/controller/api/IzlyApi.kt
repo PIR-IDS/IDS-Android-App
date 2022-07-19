@@ -31,18 +31,18 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
     override fun authenticate(credentials: ApiAuth) {
         (credentials as? IzlyAuth)?.let { this.credentials = it } ?: throw IllegalArgumentException("Credentials must be IzlyAuth")
 
-        val firstRequestConnection = Jsoup.connect(logonURL).execute()
+        val firstRequestConnection = try { Jsoup.connect(logonURL).execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while fetching URL: ", e) ; null }
 
-        val cookieRequestVerificationToken = firstRequestConnection.cookie("__RequestVerificationToken")
-        val cookieApplicationGatewayAffinity = firstRequestConnection.cookie("ApplicationGatewayAffinity")
-        val cookieApplicationGatewayAffinityCORS = firstRequestConnection.cookie("ApplicationGatewayAffinityCORS")
-        cookieSessionId = firstRequestConnection.cookie("ASP.NET_SessionId")
-        val documentData = firstRequestConnection.parse()
+        val cookieRequestVerificationToken = firstRequestConnection?.cookie("__RequestVerificationToken")
+        val cookieApplicationGatewayAffinity = firstRequestConnection?.cookie("ApplicationGatewayAffinity")
+        val cookieApplicationGatewayAffinityCORS = firstRequestConnection?.cookie("ApplicationGatewayAffinityCORS")
+        cookieSessionId = firstRequestConnection?.cookie("ASP.NET_SessionId")
+        val documentData = firstRequestConnection?.parse()
 
         // We need to get the __RequestVerificationToken from the page before we can logon
         // so we scrape it from the HTML
         val requestedToken = documentData
-            .select("input[name=\"__RequestVerificationToken\"]")
+            ?.select("input[name=\"__RequestVerificationToken\"]")
             ?.toString()
             ?.substringAfter("value=")
             ?.replace("\"", "")
@@ -90,8 +90,8 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
 
             .method(Connection.Method.POST)
 
-        val firstLoginConnection = loginConnection.execute()
-        cookieASPXAUTH = firstLoginConnection.cookie(".ASPXAUTH")
+        val firstLoginConnection = try { loginConnection.execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while logging in: ", e) ; null }
+        cookieASPXAUTH = firstLoginConnection?.cookie(".ASPXAUTH")
     }
 
     private suspend fun insistToGetHistoryConnection() : Response {
