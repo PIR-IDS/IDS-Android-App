@@ -34,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                     if (instance == null) {
                         context ?: throw IllegalStateException("Context is null")
                         instance = Room.databaseBuilder(context, AppDatabase::class.java,"encrypted_idsapp_db")
-                            //.openHelperFactory(DatabaseCipherHandler.getSupportFactory(DatabaseCipherHandler.getDatabaseRawKey(context)))
+                            .openHelperFactory(DatabaseCipherHandler.getSupportFactory(DatabaseCipherHandler.getDatabaseRawKey(context)))
                             //.fallbackToDestructiveMigration()
                             .build()
 
