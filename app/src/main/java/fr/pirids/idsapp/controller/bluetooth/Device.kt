@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.data.model.AppDatabase
+import fr.pirids.idsapp.data.model.entity.Device
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,6 +29,19 @@ object Device {
             device.device
                 ?.let { ble.connect(device, onConnected) }
                 ?: throw Exception("Device null")
+    }
+
+    fun addKnownDeviceToDatabase(device: BluetoothDeviceIDS) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                AppDatabase.getInstance().deviceDao().insert(Device(
+                    name = device.name,
+                    address = device.address
+                ))
+            } catch (e: Exception) {
+                Log.e("Service", "Error while saving device in database: $e")
+            }
+        }
     }
 
     /**

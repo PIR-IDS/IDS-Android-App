@@ -8,11 +8,14 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import fr.pirids.idsapp.R
+import fr.pirids.idsapp.data.preferences.UserPreferencesRepository
 import fr.pirids.idsapp.ui.MainActivity
 import fr.pirids.idsapp.ui.views.notifications.AlertNotificationActivity
+import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.ZoneId
 import java.util.*
+import kotlin.NoSuchElementException
 
 object NotificationHandler {
     private var notificationId = 0
@@ -29,7 +32,7 @@ object NotificationHandler {
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun triggerNotification(context: Context, message: String, debug: Boolean = false) {
+    suspend fun triggerNotification(context: Context, message: String, debug: Boolean = false) {
         val notifIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
@@ -52,8 +55,20 @@ object NotificationHandler {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setContentIntent(pendingIntent)
-            .setFullScreenIntent(fullScreenPendingIntent, true)
 
+        // Get the user preferences for the fullscreen notification
+        val userPreferences = UserPreferencesRepository(context)
+        try {
+            if (userPreferences.userPreferencesFlow.first().fullscreenNotification) {
+                notifBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+            }
+        } catch (e: NoSuchElementException) {
+            if(UserPreferencesRepository.DEFAULT_FULLSCREEN_NOTIFICATION) {
+                notifBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+            }
+        }
+
+        //TODO: delete this if block [for DEBUG purpose only]
         if(debug) {
             with(NotificationManagerCompat.from(context)) {
                 notify(notificationId, notifBuilder.setContentText("at $message").build())

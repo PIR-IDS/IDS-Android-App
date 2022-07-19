@@ -181,8 +181,7 @@ fun ServicesScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            //TODO: replace this with the "known" services (previously added)
-            Service.connectedServices.value.forEach {
+            Service.knownServices.value.forEach {
                 Service.getServiceItemFromApiService(it)?.let { service ->
                     Box(
                         modifier = Modifier

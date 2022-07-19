@@ -66,7 +66,7 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    fun searchForKnownDevices(devicesList: MutableSet<BluetoothDeviceIDS>, resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
+    fun searchForKnownDevices(devicesList: Set<BluetoothDeviceIDS>, resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
         val context = Context.BLUETOOTH_SERVICE
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
@@ -79,7 +79,7 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    fun handleSearchBluetoothIntent(result: ActivityResult, devicesList: MutableSet<BluetoothDeviceIDS>, scope: CoroutineScope = defaultScope) {
+    fun handleSearchBluetoothIntent(result: ActivityResult, devicesList: Set<BluetoothDeviceIDS>, scope: CoroutineScope = defaultScope) {
         if (result.resultCode == Activity.RESULT_OK) {
             scope.launch { initSearch(devicesList) }
         }
@@ -112,7 +112,7 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    private suspend fun initSearch(devicesList: MutableSet<BluetoothDeviceIDS>) {
+    private suspend fun initSearch(devicesList: Set<BluetoothDeviceIDS>) {
         try {
             searchLE(devicesList, deviceFlow(bluetoothAdapter.bluetoothLeScanner, true))
         } catch (e: Exception) {
@@ -169,7 +169,8 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    private suspend fun searchLE(devicesList: MutableSet<BluetoothDeviceIDS>, flow: Flow<ScanResult>) {
+    //FIXME: searched devices not found when permission not granted yet, it should wait to have an answer before starting the bluetooth search
+    private suspend fun searchLE(devicesList: Set<BluetoothDeviceIDS>, flow: Flow<ScanResult>) {
         flow.collect {
             try {
                 Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
@@ -183,17 +184,19 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    private fun getDeviceData(device: BluetoothDevice) : DeviceData {
+    private fun getDeviceData(device: BluetoothDevice) : DeviceData =
         try {
-            return when(Device.getDeviceItemFromName(device.name)?.id) {
-                DeviceId.WALLET_CARD -> WalletCardData()
-                else -> throw Exception("Unknown device type")
-            }
+            getDeviceDataByName(device.name)
         } catch (e: SecurityException) {
             Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
             throw e
         }
-    }
+
+    fun getDeviceDataByName(name: String) : DeviceData =
+        when(Device.getDeviceItemFromName(name)?.id) {
+            DeviceId.WALLET_CARD -> WalletCardData()
+            else -> throw Exception("Unknown device type")
+        }
 
     fun connect(idsDevice: BluetoothDeviceIDS, onConnected: (Boolean) -> Unit = {}) {
         lateinit var bluetoothGatt: BluetoothGatt
@@ -362,6 +365,9 @@ class BluetoothConnection(private val mContext: Context) {
                     Device.addToKnownDevices(idsDevice)
                     Device.addToConnectedDevices(idsDevice)
 
+                    // Save in database
+                    Device.addKnownDeviceToDatabase(idsDevice)
+
                     // We also execute the onConnected callback
                     onConnected(true)
 
@@ -394,7 +400,7 @@ class BluetoothConnection(private val mContext: Context) {
                                     val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                     idsDevice.data.whenWalletOutArray.add(localDateTime)
                                     //TODO: delete this line [for DEBUG purpose only]
-                                    //NotificationHandler.triggerNotification(mContext, localDateTime.toString(), debug=true)
+                                    //defaultScope.launch { fr.pirids.idsapp.controller.detection.NotificationHandler.triggerNotification(mContext, localDateTime.toString(), debug=true) }
                                 }
                                 else -> { }
                             }

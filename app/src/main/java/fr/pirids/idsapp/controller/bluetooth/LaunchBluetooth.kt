@@ -17,7 +17,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.current), scope: CoroutineScope = rememberCoroutineScope()) {
+fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.current), scope: CoroutineScope = rememberCoroutineScope(), daemonMode: Boolean = false) {
     val multiplePermissionsState = rememberMultiplePermissionsState(ble.getNecessaryPermissions()) { ble.onPermissionsResult(it) }
     if(!multiplePermissionsState.allPermissionsGranted) {
         val lifecycleOwner = LocalLifecycleOwner.current
@@ -39,13 +39,17 @@ fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.
         ble.onPermissionsResult(multiplePermissionsState.permissions.associate { it.permission to it.status.isGranted })
     }
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { ble.handleScanBluetoothIntent(it, scope) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (daemonMode) ble.handleSearchBluetoothIntent(it, Device.knownDevices.value, scope)
+        else ble.handleScanBluetoothIntent(it, scope)
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(key1 = lifecycleOwner, effect = {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    ble.launchScan(launcher, scope)
+                    if (daemonMode) ble.searchForKnownDevices(Device.knownDevices.value, launcher, scope)
+                    else ble.launchScan(launcher, scope)
                 }
                 else -> {}
             }

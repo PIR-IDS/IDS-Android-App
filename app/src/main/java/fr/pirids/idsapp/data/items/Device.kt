@@ -28,7 +28,7 @@ data class Device(
                 DeviceId.WALLET_CARD,
                 "$idsPrefix WALLET CARD",
                 R.string.wallet_card_desc,
-                R.drawable.ids_logo, listOf(
+                R.drawable.ids_wallet_card_logo, listOf(
                     BluetoothService.get(ServiceId.CURRENT_TIME),
                     BluetoothService.get(ServiceId.CUSTOM_IDS_IMU),
                 )

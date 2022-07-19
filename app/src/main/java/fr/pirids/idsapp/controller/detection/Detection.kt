@@ -19,6 +19,7 @@ object Detection {
     private const val timeTolerance = 10_000.0
     private var startupTimestamp: Long = System.currentTimeMillis()
     private val scope = CoroutineScope(Dispatchers.Default)
+    private val detectedIntrusions = mutableListOf<Long>()
 
     fun launchDetection(context: Context) {
         scope.launch { monitorServices(context) }
@@ -26,8 +27,6 @@ object Detection {
 
     private suspend fun monitorServices(context: Context) : Nothing {
         while(true) {
-            startupTimestamp = System.currentTimeMillis()
-
             // For each service connected we are checking its compatible devices
             Service.connectedServices.value.forEach {
                 try {
@@ -60,14 +59,13 @@ object Detection {
      * Analyze the data from the device and find out if there is an intrusion by comparing the device data with the service data
      * This also trigger a notification if there is an intrusion
      */
-    private fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData) {
+    private suspend fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData) {
         try {
             when (val devData = device.data) {
                 is WalletCardData -> {
                     apiData.transactionList.forEach { timestamp ->
-
                         // If the timestamp is in the past, it means that the transaction won't be processed
-                        if(timestamp > startupTimestamp) {
+                        if(timestamp > startupTimestamp && timestamp !in detectedIntrusions) {
 
                             var intrusionDetected = true
                             devData.whenWalletOutArray.forEach { idsTime ->
@@ -80,6 +78,7 @@ object Detection {
                             }
 
                             if (intrusionDetected) {
+                                detectedIntrusions.add(timestamp)
                                 NotificationHandler.triggerNotification(context, timestamp.toString())
                             }
                         }

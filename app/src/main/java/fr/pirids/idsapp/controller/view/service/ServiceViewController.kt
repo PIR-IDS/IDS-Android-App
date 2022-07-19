@@ -21,6 +21,7 @@ object ServiceViewController {
 
     //TODO: adapt this boolean to handle many services
     val isConnected : MutableState<Boolean> = mutableStateOf(false)
+    val isLoading : MutableState<Boolean> = mutableStateOf(false)
     val serviceHistory: MutableState<List<String>> = mutableStateOf(listOf())
     lateinit var serviceScope: CoroutineScope
     lateinit var historyScope: CoroutineScope
@@ -38,6 +39,7 @@ object ServiceViewController {
         notFoundText: String
     ) {
         focusManager.clearFocus()
+        isLoading.value = true
         serviceScope.launch(Dispatchers.IO) {
             val (serviceData, serviceConnected) = ServiceController.getServiceAndStatus(
                 username,
@@ -55,6 +57,7 @@ object ServiceViewController {
                     snackbarHostState.showSnackbar(notFoundText)
                 }
             }
+            isLoading.value = false
         }
     }
 

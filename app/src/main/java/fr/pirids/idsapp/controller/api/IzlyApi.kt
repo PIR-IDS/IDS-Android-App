@@ -5,8 +5,9 @@ import fr.pirids.idsapp.data.api.auth.ApiAuth
 import fr.pirids.idsapp.data.api.auth.IzlyAuth
 import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.items.ServiceId
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import org.jsoup.Connection
+import org.jsoup.Connection.Response
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -30,18 +31,18 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
     override fun authenticate(credentials: ApiAuth) {
         (credentials as? IzlyAuth)?.let { this.credentials = it } ?: throw IllegalArgumentException("Credentials must be IzlyAuth")
 
-        val firstRequestConnection = Jsoup.connect(logonURL).execute()
+        val firstRequestConnection = try { Jsoup.connect(logonURL).execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while fetching URL: ", e) ; null }
 
-        val cookieRequestVerificationToken = firstRequestConnection.cookie("__RequestVerificationToken")
-        val cookieApplicationGatewayAffinity = firstRequestConnection.cookie("ApplicationGatewayAffinity")
-        val cookieApplicationGatewayAffinityCORS = firstRequestConnection.cookie("ApplicationGatewayAffinityCORS")
-        cookieSessionId = firstRequestConnection.cookie("ASP.NET_SessionId")
-        val documentData = firstRequestConnection.parse()
+        val cookieRequestVerificationToken = firstRequestConnection?.cookie("__RequestVerificationToken")
+        val cookieApplicationGatewayAffinity = firstRequestConnection?.cookie("ApplicationGatewayAffinity")
+        val cookieApplicationGatewayAffinityCORS = firstRequestConnection?.cookie("ApplicationGatewayAffinityCORS")
+        cookieSessionId = firstRequestConnection?.cookie("ASP.NET_SessionId")
+        val documentData = firstRequestConnection?.parse()
 
         // We need to get the __RequestVerificationToken from the page before we can logon
         // so we scrape it from the HTML
         val requestedToken = documentData
-            .select("input[name=\"__RequestVerificationToken\"]")
+            ?.select("input[name=\"__RequestVerificationToken\"]")
             ?.toString()
             ?.substringAfter("value=")
             ?.replace("\"", "")
@@ -89,40 +90,49 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
 
             .method(Connection.Method.POST)
 
-        val firstLoginConnection = loginConnection.execute()
-        cookieASPXAUTH = firstLoginConnection.cookie(".ASPXAUTH")
+        val firstLoginConnection = try { loginConnection.execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while logging in: ", e) ; null }
+        cookieASPXAUTH = firstLoginConnection?.cookie(".ASPXAUTH")
     }
 
-    override fun checkConnection(): Boolean =
-        try { getHistoryConnection().statusCode() == HttpURLConnection.HTTP_OK } // HTTP 200, we don't want the 302 status which is obtained when we are not logged in
+    private suspend fun insistToGetHistoryConnection() : Response {
+        var success = false
+        var cptErr = 0
+        lateinit var historyResponse: Response
+
+        while (!success && cptErr < maxRetries) {
+            cptErr++
+            try {
+                historyResponse = getHistoryConnection()
+                success = true
+                delay(1_000)
+            } catch (e: HttpStatusException) {
+                Log.d("IZLY", e.toString())
+                if(cptErr >= maxRetries) {
+                    throw e
+                }
+            }
+        }
+
+        return historyResponse
+    }
+
+    override suspend fun checkConnection(): Boolean =
+        try { insistToGetHistoryConnection().statusCode() == HttpURLConnection.HTTP_OK } // HTTP 200, we don't want the 302 status which is obtained when we are not logged in
         catch(e: HttpStatusException) { e.message?.let { Log.d("IzlyApi", it) } ; false }
         catch(e: Exception) { e.message?.let { Log.d("IzlyApi", it) } ; false }
 
     //TODO: improve this function
     override suspend fun getData(): IzlyData {
         val timeOfEachAction: MutableList<Long> = mutableListOf()
+        val historyData: Document = insistToGetHistoryConnection().parse()
+
         var success = false
-        var cptErr = 0
-        var historyData: Document? = null
-
-        while (!success && cptErr < maxRetries) {
-            cptErr++
-            try {
-                historyData = getHistoryConnection().parse()
-                success = true
-                delay(1_000)
-            } catch (e: HttpStatusException) {
-                Log.d("IZLY", e.toString())
-            }
-        }
-
-        success = false
         var nbrAction = 0
         var index = 1
-        cptErr = 0
+        var cptErr = 0
         while (!success && cptErr < maxRetries) {
             cptErr++
-            val history = historyData?.select(".list-group.list-group-flush li:nth-child($index)")
+            val history = historyData.select(".list-group.list-group-flush li:nth-child($index)")
             if (history.toString() == "") {
                 success = true
             } else {
