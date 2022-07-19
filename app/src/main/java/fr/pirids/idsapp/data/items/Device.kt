@@ -18,7 +18,7 @@ data class Device(val id: DeviceId, val name: String, @StringRes val description
     companion object {
         const val idsPrefix = "PIR-IDS"
         val list = listOf(
-            Device(DeviceId.WALLET_CARD, "$idsPrefix WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_logo, listOf(
+            Device(DeviceId.WALLET_CARD, "$idsPrefix WALLET CARD", R.string.wallet_card_desc, R.drawable.ids_wallet_card_logo, listOf(
                 BluetoothService.get(ServiceId.CURRENT_TIME),
                 BluetoothService.get(ServiceId.CUSTOM_IDS_IMU),
             )),
