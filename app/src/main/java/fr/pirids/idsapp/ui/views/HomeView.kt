@@ -81,7 +81,7 @@ fun TopBar(navController: NavHostController) {
         contentColor = MaterialTheme.colorScheme.onPrimary,
         actions = {
             IconButton(
-                onClick = {}
+                onClick = { HomeViewController.showNotification(navController) }
             ) {
                 Icon(
                     Icons.Outlined.Notifications,
@@ -90,7 +90,7 @@ fun TopBar(navController: NavHostController) {
                 )
             }
             IconButton(
-                onClick = {}
+                onClick = { HomeViewController.showSettings(navController) }
             ) {
                 Icon(
                     Icons.Outlined.Settings,
@@ -290,7 +290,8 @@ fun DevicesScreen(navController: NavHostController) {
                                         onClick = {
                                             HomeViewController.showDevice(
                                                 navController,
-                                                device.id
+                                                device.id,
+                                                it.address
                                             )
                                         }
                                     )

@@ -18,7 +18,15 @@ object HomeViewController {
         navController.navigate(NavRoutes.AddDevice.route)
     }
 
-    fun showDevice(navController: NavHostController, device: DeviceId) {
-        navController.navigate(NavRoutes.Device.route + "/" + device.ordinal)
+    fun showDevice(navController: NavHostController, device: DeviceId, address: String) {
+        navController.navigate(NavRoutes.Device.route + "/" + device.ordinal + "?address=" + address)
+    }
+
+    fun showNotification(navController: NavHostController) {
+        navController.navigate(NavRoutes.Notification.route)
+    }
+
+    fun showSettings(navController: NavHostController) {
+        navController.navigate(NavRoutes.Settings.route)
     }
 }

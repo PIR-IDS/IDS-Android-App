@@ -16,6 +16,7 @@ object Device {
     val knownDevices : MutableState<Set<BluetoothDeviceIDS>> = mutableStateOf(setOf())
     val connectedDevices : MutableState<Set<BluetoothDeviceIDS>> = mutableStateOf(setOf())
 
+    fun getBluetoothDeviceFromAddress(address: String) : BluetoothDeviceIDS? = knownDevices.value.find { it.address == address }
     fun getDeviceItemFromBluetoothDevice(bleDevice: BluetoothDeviceIDS): DeviceItem? = DeviceItem.list.find { it.name == bleDevice.name }
     fun getDeviceItemFromName(name: String): DeviceItem? = DeviceItem.list.find { it.name == name }
 

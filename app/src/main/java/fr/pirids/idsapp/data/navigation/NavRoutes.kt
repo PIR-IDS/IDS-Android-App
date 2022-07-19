@@ -6,4 +6,7 @@ sealed class NavRoutes(val route: String) {
     object Service : NavRoutes("service")
     object AddDevice : NavRoutes("add_device")
     object Device : NavRoutes("device")
+    object Settings : NavRoutes("settings")
+    object Notification : NavRoutes("notification")
+    object NotificationDescription : NavRoutes("notification_description")
 }
