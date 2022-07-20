@@ -95,8 +95,8 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                 bleDevice?.let { bleDev ->
                     when(device.id) {
                         DeviceId.WALLET_CARD -> {
-                            (bleDev.data as WalletCardData).whenWalletOutArray.value.forEach { _ ->
-                                DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon)
+                            (bleDev.data as WalletCardData).whenWalletOutArray.value.forEach { zdt ->
+                                DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.toString())
                             }
                         }
                         else -> {}
@@ -108,7 +108,7 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
 }
 
 @Composable
-fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector) {
+fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector, dateTime: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -126,7 +126,7 @@ fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector) 
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = stringResource(id = message),
+                    text = stringResource(id = message) + dateTime,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .padding(horizontal = 40.dp, vertical = 0.5.dp),
