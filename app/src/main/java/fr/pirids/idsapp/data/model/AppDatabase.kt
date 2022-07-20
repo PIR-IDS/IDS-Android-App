@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
     IzlyData::class,
     ServiceType::class,
     WalletCardData::class,
-], version = 2)
+], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     companion object {
         private var INSTANCE: AppDatabase? = null

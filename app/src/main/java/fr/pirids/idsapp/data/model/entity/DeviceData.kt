@@ -7,7 +7,7 @@ import androidx.room.*
     tableName = "device_data",
     foreignKeys = [
         ForeignKey(
-            entity = DeviceData::class,
+            entity = Device::class,
             parentColumns = ["id"],
             childColumns = ["device_id"],
             onUpdate = ForeignKey.CASCADE,
