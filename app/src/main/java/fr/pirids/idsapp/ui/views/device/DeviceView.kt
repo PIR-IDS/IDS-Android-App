@@ -7,9 +7,9 @@ import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.TopAppBar
@@ -47,7 +47,6 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -93,13 +92,20 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
 
                 //TODO: clean this by doing something better (timestamp array in DeviceData because it's needed everywhere anyway)
                 bleDevice?.let { bleDev ->
-                    when(device.id) {
-                        DeviceId.WALLET_CARD -> {
-                            (bleDev.data as WalletCardData).whenWalletOutArray.value.forEach { zdt ->
-                                DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.toString())
+                    LazyColumn(
+                        modifier = Modifier
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        when(device.id) {
+                            DeviceId.WALLET_CARD -> {
+                                items((bleDev.data as WalletCardData).whenWalletOutArray.value.reversed()) { zdt ->
+                                    DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.toString())
+                                }
                             }
+                            else -> {}
                         }
-                        else -> {}
                     }
                 }
             }

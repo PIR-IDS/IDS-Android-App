@@ -31,9 +31,9 @@ object DeviceDaemon {
                                     AppDatabase.getInstance().deviceDataTypeDao().getByName(WalletCardData.tag).id
                                 ).id
                             val dataList = AppDatabase.getInstance().walletCardDataDao().getAllFromDeviceData(deviceDataId)
-                            dataList.forEach {
+                            dataList.forEach { data ->
                                 val timestamp = Instant
-                                    .ofEpochMilli(it.walletOutTimestamp)
+                                    .ofEpochMilli(data.walletOutTimestamp)
                                     .atZone(ZoneId.of("UTC"))
                                     .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                 deviceData.whenWalletOutArray.value = deviceData.whenWalletOutArray.value.plus(timestamp)
