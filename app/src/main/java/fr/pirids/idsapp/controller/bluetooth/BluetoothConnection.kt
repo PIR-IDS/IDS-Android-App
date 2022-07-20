@@ -408,12 +408,27 @@ class BluetoothConnection(private val mContext: Context) {
                                     // Save in database
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
-                                            val deviceDataId = AppDatabase.getInstance().deviceDataDao().insert(
-                                                DeviceDataEntity(
-                                                    deviceId = AppDatabase.getInstance().deviceDao().getFromAddress(idsDevice.address).id,
-                                                    dataTypeId = AppDatabase.getInstance().deviceDataTypeDao().getByName(WalletCardData.tag).id
-                                                )
+                                            // We define the entity
+                                            val deviceDataEntity = DeviceDataEntity(
+                                                deviceId = AppDatabase.getInstance()
+                                                    .deviceDao()
+                                                    .getFromAddress(idsDevice.address).id,
+                                                dataTypeId = AppDatabase.getInstance()
+                                                    .deviceDataTypeDao()
+                                                    .getByName(WalletCardData.tag).id
                                             )
+
+                                            // We retrieve the data entity or create a new one if it doesn't exist
+                                            val deviceDataId = try {
+                                                AppDatabase.getInstance().deviceDataDao().getFromDeviceAndType(
+                                                    device_id = deviceDataEntity.deviceId,
+                                                    data_type_id = deviceDataEntity.dataTypeId
+                                                ).id
+                                            } catch (e: Exception) {
+                                                AppDatabase.getInstance().deviceDataDao().insert(deviceDataEntity)
+                                            }
+
+                                            // We add the timestamp to the database
                                             AppDatabase.getInstance().walletCardDataDao().insert(
                                                 WalletCardDataEntity(
                                                     deviceDataId = deviceDataId.toInt(),
