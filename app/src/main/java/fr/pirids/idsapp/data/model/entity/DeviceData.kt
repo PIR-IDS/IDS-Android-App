@@ -1,10 +1,7 @@
 package fr.pirids.idsapp.data.model.entity
 
 import androidx.annotation.NonNull
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.room.*
 
 @Entity(
     tableName = "device_data",
@@ -15,8 +12,16 @@ import androidx.room.PrimaryKey
             childColumns = ["device_id"],
             onUpdate = ForeignKey.CASCADE,
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = DeviceDataType::class,
+            parentColumns = ["id"],
+            childColumns = ["data_type_id"],
+            onUpdate = ForeignKey.CASCADE,
+            onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["device_id", "data_type_id"], unique = true)]
 )
 data class DeviceData(
     @NonNull
@@ -25,6 +30,10 @@ data class DeviceData(
     val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "device_id", index = true)
+    @ColumnInfo(name = "device_id")
     val deviceId: Int,
+
+    @NonNull
+    @ColumnInfo(name = "data_type_id", index = true)
+    val dataTypeId: Int
 )

@@ -14,9 +14,7 @@ import androidx.room.*
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = arrayOf(
-        Index(value = arrayOf("api_id"), unique = true)
-    )
+    indices = [Index(value = ["api_id"], unique = true)]
 )
 data class IzlyAuth(
     @NonNull

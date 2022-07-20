@@ -32,7 +32,7 @@ object NotificationHandler {
         notificationManager.createNotificationChannel(channel)
     }
 
-    suspend fun triggerNotification(context: Context, message: String, debug: Boolean = false) {
+    suspend fun triggerNotification(context: Context, message: String) {
         val notifIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
@@ -68,18 +68,10 @@ object NotificationHandler {
             }
         }
 
-        //TODO: delete this if block [for DEBUG purpose only]
-        if(debug) {
-            with(NotificationManagerCompat.from(context)) {
-                notify(notificationId, notifBuilder.setContentText("at $message").build())
-                notificationId++
-            }
-        } else {
-            val time = Instant.ofEpochMilli(message.toLong()).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
-            with(NotificationManagerCompat.from(context)) {
-                notify(notificationId, notifBuilder.setContentText("at $time").build())
-                notificationId++
-            }
+        val time = Instant.ofEpochMilli(message.toLong()).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
+        with(NotificationManagerCompat.from(context)) {
+            notify(notificationId, notifBuilder.setContentText("at $time").build())
+            notificationId++
         }
     }
 }

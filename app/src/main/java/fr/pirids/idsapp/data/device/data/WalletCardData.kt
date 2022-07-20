@@ -17,4 +17,8 @@ class WalletCardData(
     override val dataTitle: Int = R.string.wallet_data,
     override val dataMessage: Int = R.string.wallet_event_message,
     override val eventIcon: ImageVector = Icons.Outlined.Animation
-) : DeviceData()
+) : DeviceData() {
+    companion object {
+        const val tag: String = "wallet_card_data"
+    }
+}

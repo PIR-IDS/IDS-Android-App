@@ -11,6 +11,9 @@ interface DeviceDao {
     @Query("SELECT * FROM device WHERE id = :id")
     fun get(id: Int): Device
 
+    @Query("SELECT * FROM device WHERE address = :address")
+    fun getFromAddress(address: String): Device
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(device: Device) : Long
 

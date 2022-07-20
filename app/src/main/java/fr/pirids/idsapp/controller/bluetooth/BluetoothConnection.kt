@@ -21,6 +21,7 @@ import fr.pirids.idsapp.data.items.bluetooth.BluetoothCharacteristic
 import fr.pirids.idsapp.data.items.bluetooth.BluetoothService
 import fr.pirids.idsapp.data.items.bluetooth.CharacteristicId
 import fr.pirids.idsapp.data.items.bluetooth.ServiceId
+import fr.pirids.idsapp.data.model.AppDatabase
 import fr.pirids.idsapp.extensions.isIndicatable
 import fr.pirids.idsapp.extensions.isNotifiable
 import fr.pirids.idsapp.extensions.isWritable
@@ -36,6 +37,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 import fr.pirids.idsapp.data.items.Device as DeviceItem
+import fr.pirids.idsapp.data.model.entity.DeviceData as DeviceDataEntity
+import fr.pirids.idsapp.data.model.entity.WalletCardData as WalletCardDataEntity
 
 class BluetoothConnection(private val mContext: Context) {
 
@@ -398,9 +401,29 @@ class BluetoothConnection(private val mContext: Context) {
                                 idsDevice.data.whenWalletOutCharacteristic -> {
                                     val dateTime = LocalDateTime.parse(char.getStringValue(0)!!.dropLast(1)).atZone(ZoneId.of("UTC"))
                                     val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
+
+                                    // Add the timestamp to the list
                                     idsDevice.data.whenWalletOutArray.add(localDateTime)
-                                    //TODO: delete this line [for DEBUG purpose only]
-                                    //defaultScope.launch { fr.pirids.idsapp.controller.detection.NotificationHandler.triggerNotification(mContext, localDateTime.toString(), debug=true) }
+
+                                    // Save in database
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            val deviceDataId = AppDatabase.getInstance().deviceDataDao().insert(
+                                                DeviceDataEntity(
+                                                    deviceId = AppDatabase.getInstance().deviceDao().getFromAddress(idsDevice.address).id,
+                                                    dataTypeId = AppDatabase.getInstance().deviceDataTypeDao().getByName(WalletCardData.tag).id
+                                                )
+                                            )
+                                            AppDatabase.getInstance().walletCardDataDao().insert(
+                                                WalletCardDataEntity(
+                                                    deviceDataId = deviceDataId.toInt(),
+                                                    walletOutTimestamp = localDateTime.toInstant().toEpochMilli()
+                                                )
+                                            )
+                                        } catch (e: Exception) {
+                                            Log.e("BluetoothConnection", "Error while saving device data in database: $e")
+                                        }
+                                    }
                                 }
                                 else -> { }
                             }

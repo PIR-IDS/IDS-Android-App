@@ -7,20 +7,16 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "device",
-    indices = [Index(value = ["address"], unique = true)]
+    tableName = "service_type",
+    indices = [Index(value = ["service_name"], unique = true)]
 )
-data class Device(
+data class ServiceType(
     @NonNull
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "name")
-    val name: String,
-
-    @NonNull
-    @ColumnInfo(name = "address")
-    val address: String
+    @ColumnInfo(name = "service_name")
+    val serviceName: String
 )

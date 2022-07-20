@@ -47,7 +47,11 @@ object Service {
                         // Save in database
                         CoroutineScope(Dispatchers.IO).launch {
                             try {
-                                val apiAuthId = AppDatabase.getInstance().apiAuthDao().insert(ApiAuthEntity(serviceName = "izly"))
+                                val apiAuthId = AppDatabase.getInstance().apiAuthDao().insert(
+                                    ApiAuthEntity(
+                                        serviceId = AppDatabase.getInstance().serviceTypeDao().getByName(ServiceId.IZLY.tag).id
+                                    )
+                                )
                                 AppDatabase.getInstance().izlyAuthDao().insert(
                                     IzlyAuthEntity(
                                         apiId = apiAuthId.toInt(),

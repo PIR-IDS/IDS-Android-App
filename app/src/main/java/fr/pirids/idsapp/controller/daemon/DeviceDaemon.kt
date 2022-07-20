@@ -4,7 +4,11 @@ import android.util.Log
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.model.AppDatabase
+import java.time.Instant
+import java.time.ZoneId
+import java.util.*
 
 object DeviceDaemon {
     suspend fun searchForDevice(ble: BluetoothConnection): Boolean {
@@ -15,7 +19,29 @@ object DeviceDaemon {
                     searchForKnownDevices = true
                 }
                 try {
-                    Device.addToKnownDevices(BluetoothDeviceIDS(it.name, it.address, ble.getDeviceDataByName(it.name)))
+                    val deviceData = ble.getDeviceDataByName(it.name)
+
+                    when(deviceData) {
+                        is WalletCardData -> {
+                            val deviceDataId = AppDatabase
+                                .getInstance()
+                                .deviceDataDao()
+                                .getFromDeviceAndType(
+                                    it.id,
+                                    AppDatabase.getInstance().deviceDataTypeDao().getByName(WalletCardData.tag).id
+                                ).id
+                            val dataList = AppDatabase.getInstance().walletCardDataDao().getAllFromDeviceData(deviceDataId)
+                            dataList.forEach {
+                                val timestamp = Instant
+                                    .ofEpochMilli(it.walletOutTimestamp)
+                                    .atZone(ZoneId.of("UTC"))
+                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                deviceData.whenWalletOutArray.add(timestamp)
+                            }
+                        }
+                    }
+
+                    Device.addToKnownDevices(BluetoothDeviceIDS(it.name, it.address, deviceData))
                 } catch (e: Exception) {
                     Log.e("DeviceDaemon", "Error while adding device to known devices", e)
                 }

@@ -4,8 +4,8 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import fr.pirids.idsapp.R
 
-enum class ServiceId {
-    IZLY
+enum class ServiceId(val tag: String) {
+    IZLY("izly")
 }
 
 /**

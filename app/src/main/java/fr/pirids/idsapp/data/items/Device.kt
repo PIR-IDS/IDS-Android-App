@@ -6,8 +6,8 @@ import fr.pirids.idsapp.R
 import fr.pirids.idsapp.data.items.bluetooth.BluetoothService
 import fr.pirids.idsapp.data.items.bluetooth.ServiceId
 
-enum class DeviceId {
-    WALLET_CARD,
+enum class DeviceId(val tag: String) {
+    WALLET_CARD("wallet_card")
 }
 
 /**

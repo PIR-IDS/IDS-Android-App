@@ -1,14 +1,19 @@
 package fr.pirids.idsapp.data.model.entity
 
 import androidx.annotation.NonNull
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 
 @Entity(
     tableName = "api_auth",
-    indices = arrayOf(Index(value = arrayOf("service_name"), unique = true))
+    foreignKeys = [
+        ForeignKey(
+            entity = ServiceType::class,
+            parentColumns = ["id"],
+            childColumns = ["service_id"],
+            onUpdate = ForeignKey.CASCADE,
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
 )
 data class ApiAuth(
     @NonNull
@@ -17,6 +22,6 @@ data class ApiAuth(
     val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "service_name")
-    val serviceName: String
+    @ColumnInfo(name = "service_id", index = true)
+    val serviceId: Int
 )

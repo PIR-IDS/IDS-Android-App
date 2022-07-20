@@ -11,8 +11,8 @@ object ServiceDaemon {
         try {
             AppDatabase.getInstance().apiAuthDao().getAll().forEach {
                 try {
-                    when(it.serviceName) {
-                        "izly" -> {
+                    when(AppDatabase.getInstance().serviceTypeDao().get(it.serviceId).serviceName) {
+                        ServiceId.IZLY.tag -> {
                             val izlyAuth = AppDatabase.getInstance().izlyAuthDao().getFromApi(it.id)
 
                             //FIXME: we should add the known services EVEN IF the user is not YET connected to the service
