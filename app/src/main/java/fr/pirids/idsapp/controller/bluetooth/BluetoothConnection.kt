@@ -403,7 +403,7 @@ class BluetoothConnection(private val mContext: Context) {
                                     val localDateTime = dateTime.withZoneSameInstant(TimeZone.getDefault().toZoneId())
 
                                     // Add the timestamp to the list
-                                    idsDevice.data.whenWalletOutArray.add(localDateTime)
+                                    idsDevice.data.whenWalletOutArray.value = idsDevice.data.whenWalletOutArray.value.plus(localDateTime)
 
                                     // Save in database
                                     CoroutineScope(Dispatchers.IO).launch {

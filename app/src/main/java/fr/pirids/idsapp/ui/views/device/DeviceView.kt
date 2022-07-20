@@ -95,7 +95,7 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                 bleDevice?.let { bleDev ->
                     when(device.id) {
                         DeviceId.WALLET_CARD -> {
-                            (bleDev.data as WalletCardData).whenWalletOutArray.forEach {
+                            (bleDev.data as WalletCardData).whenWalletOutArray.value.forEach { _ ->
                                 DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon)
                             }
                         }

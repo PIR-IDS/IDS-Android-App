@@ -68,7 +68,7 @@ object Detection {
                         if(timestamp > startupTimestamp && timestamp !in detectedIntrusions) {
 
                             var intrusionDetected = true
-                            devData.whenWalletOutArray.forEach { idsTime ->
+                            devData.whenWalletOutArray.value.forEach { idsTime ->
                                 val idsTimestamp = idsTime.toInstant().toEpochMilli()
                                 Log.i("DETECTION", "IDS timestamp : $idsTimestamp")
 

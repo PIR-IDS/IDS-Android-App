@@ -3,12 +3,14 @@ package fr.pirids.idsapp.data.device.data
 import android.bluetooth.BluetoothGattCharacteristic
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Animation
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import fr.pirids.idsapp.R
 import java.time.ZonedDateTime
 
 class WalletCardData(
-    val whenWalletOutArray: MutableSet<ZonedDateTime> = mutableSetOf(),
+    val whenWalletOutArray: MutableState<Set<ZonedDateTime>> = mutableStateOf(setOf()),
     var walletOutCharacteristic: BluetoothGattCharacteristic? = null,
     var whenWalletOutCharacteristic: BluetoothGattCharacteristic? = null,
 

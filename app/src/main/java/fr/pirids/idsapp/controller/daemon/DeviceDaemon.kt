@@ -36,7 +36,7 @@ object DeviceDaemon {
                                     .ofEpochMilli(it.walletOutTimestamp)
                                     .atZone(ZoneId.of("UTC"))
                                     .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                deviceData.whenWalletOutArray.add(timestamp)
+                                deviceData.whenWalletOutArray.value = deviceData.whenWalletOutArray.value.plus(timestamp)
                             }
                         }
                     }
