@@ -65,7 +65,7 @@ val md_theme_dark_surfaceTintColor = Color(0xFFf5f5f5)
 
 val seed = Color(0xFF777777)
 
-val custom_light_success = Color(0xFFAACEC1)
+val custom_light_success = Color(0xFF69C9A6)
 val custom_light_onSuccess = Color(0xFFFFFFFF)
 
 val custom_dark_success = Color(0xFF48D5A2)

@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
             // We check if there is a service to monitor and a device to connect to
             searchForKnownDevices.value = DeviceDaemon.searchForDevice(ble)
             ServiceDaemon.connectToServices()
+            ServiceDaemon.handleServiceStatus()
         }
 
         setContent {

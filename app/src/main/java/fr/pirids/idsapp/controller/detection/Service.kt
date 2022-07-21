@@ -17,10 +17,12 @@ import fr.pirids.idsapp.data.model.entity.ApiAuth as ApiAuthEntity
 import fr.pirids.idsapp.data.model.entity.IzlyAuth as IzlyAuthEntity
 
 object Service {
+    val monitoredServices : MutableState<Set<ApiInterface>> = mutableStateOf(setOf())
     val connectedServices : MutableState<Set<ApiInterface>> = mutableStateOf(setOf())
     val knownServices : MutableState<Set<ApiInterface>> = mutableStateOf(setOf())
 
     fun getServiceItemFromApiService(apiService: ApiInterface): Service? = Service.list.find { it.id == apiService.serviceId }
+    fun getKnownApiServiceFromServiceItem(service: Service): ApiInterface? = knownServices.value.find { it.serviceId == service.id }
 
     suspend fun checkService(username: String, password: String, service: Service, updateDatabase: Boolean = true) : Boolean = getServiceAndStatus(username, password, service, updateDatabase).second
 
@@ -81,16 +83,18 @@ object Service {
      */
     private fun addToServicesList(apiInterface: ApiInterface, list: MutableState<Set<ApiInterface>>) {
         list.value.forEach {
-            //FIXME: this is not working (always true)
-            // Also maybe use something else than reflection to check if the same instance is already connected
-            if (it::class === apiInterface::class) {
+            if (it.serviceId == apiInterface.serviceId) {
                 list.value = list.value.minus(it).plus(apiInterface)
                 return@addToServicesList
             }
         }
+
+        if(apiInterface in list.value) return
+
         list.value = list.value.plus(apiInterface)
     }
 
     private fun addToConnectedServices(apiInterface: ApiInterface) = addToServicesList(apiInterface, connectedServices)
     private fun addToKnownServices(apiInterface: ApiInterface) = addToServicesList(apiInterface, knownServices)
+    fun addToMonitoredServices(apiInterface: ApiInterface) = addToServicesList(apiInterface, monitoredServices)
 }

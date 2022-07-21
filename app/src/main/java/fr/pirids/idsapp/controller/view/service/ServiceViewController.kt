@@ -19,8 +19,6 @@ import fr.pirids.idsapp.controller.detection.Service as ServiceController
 object ServiceViewController {
     private const val checkingDelayMillis = 10_000L
 
-    //TODO: adapt this boolean to handle many services
-    val isConnected : MutableState<Boolean> = mutableStateOf(false)
     val isLoading : MutableState<Boolean> = mutableStateOf(false)
     val serviceHistory: MutableState<List<String>> = mutableStateOf(listOf())
     lateinit var serviceScope: CoroutineScope
@@ -47,12 +45,10 @@ object ServiceViewController {
                 service
             )
             if (serviceConnected) {
-                isConnected.value = true
                 historyScope.launch(Dispatchers.IO) {
                     updateServiceData(serviceData, service)
                 }
             } else {
-                isConnected.value = false
                 serviceScope.launch(Dispatchers.Main) {
                     snackbarHostState.showSnackbar(notFoundText)
                 }
@@ -76,5 +72,14 @@ object ServiceViewController {
             }
             delay(checkingDelayMillis)
         }
+    }
+
+    fun disconnectService(service: Service) {
+        ServiceController.getKnownApiServiceFromServiceItem(service)?.let {
+            if(it in ServiceController.connectedServices.value) {
+                ServiceController.connectedServices.value = ServiceController.connectedServices.value.minus(it)
+            }
+        }
+        //TODO: add database delete
     }
 }

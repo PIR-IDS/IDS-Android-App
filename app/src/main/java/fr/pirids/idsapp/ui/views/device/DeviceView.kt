@@ -3,6 +3,7 @@
 package fr.pirids.idsapp.ui.views.device
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
@@ -14,6 +15,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.DeviceId
+import fr.pirids.idsapp.extensions.custom_success
 import fr.pirids.idsapp.data.items.Device as DeviceItem
 
 @Composable
@@ -56,14 +60,39 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                         .size(130.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = device.logo),
-                        contentDescription = device.name,
-                        //contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(130.dp)
-                            .clip(CircleShape)
-                    )
+                    Box(contentAlignment = Alignment.BottomEnd) {
+                        Image(
+                            painter = painterResource(id = device.logo),
+                            contentDescription = device.name,
+                            //contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(130.dp)
+                                .clip(CircleShape)
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            AnimatedVisibility(visible = bleDevice in Device.connectedDevices.value) {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.CheckCircle,
+                                    tint = androidx.compose.material.MaterialTheme.colors.custom_success,
+                                    contentDescription = stringResource(id = R.string.connected),
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                )
+                            }
+                            AnimatedVisibility(visible = bleDevice !in Device.connectedDevices.value) {
+                                androidx.compose.material3.Icon(
+                                    Icons.Filled.Cancel,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    contentDescription = stringResource(id = R.string.not_connected),
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                )
+                            }
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
@@ -120,7 +149,6 @@ fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector, 
             .fillMaxWidth()
             .padding(15.dp)
     ) {
-        //TODO: add timestamp somewhere
         Row {
             Column {
                 Text(

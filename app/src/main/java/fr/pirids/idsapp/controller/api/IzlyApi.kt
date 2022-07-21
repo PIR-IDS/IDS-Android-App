@@ -16,7 +16,7 @@ import java.sql.Timestamp
 import java.time.LocalDate
 
 class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceId.IZLY) : ApiInterface {
-    private val maxRetries = 50
+    private val maxRetries = 30
     private lateinit var credentials: IzlyAuth
     private var cookieSessionId: String? = null
     private var cookieASPXAUTH: String? = null

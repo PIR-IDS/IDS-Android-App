@@ -2,6 +2,7 @@
 
 package fr.pirids.idsapp.ui.views
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import fr.pirids.idsapp.R
 import androidx.compose.foundation.Image
@@ -12,6 +13,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.TabRow
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.GppBad
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -34,6 +39,7 @@ import fr.pirids.idsapp.controller.view.HomeViewController
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.detection.Service
 import fr.pirids.idsapp.data.view.TabItem
+import fr.pirids.idsapp.extensions.custom_success
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -192,19 +198,67 @@ fun ServicesScreen(navController: NavHostController) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
                         ) {
-                            Image(
-                                painter = painterResource(id = service.logo),
-                                contentDescription = service.name,
-                                //contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(90.dp)
-                                    .clip(CircleShape)
-                                    .clickable(
-                                        enabled = true,
-                                        onClickLabel = service.name,
-                                        onClick = { HomeViewController.showService(navController, service.id) }
-                                    )
-                            )
+                            Box(contentAlignment = Alignment.BottomEnd) {
+                                Image(
+                                    painter = painterResource(id = service.logo),
+                                    contentDescription = service.name,
+                                    //contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            enabled = true,
+                                            onClickLabel = service.name,
+                                            onClick = {
+                                                HomeViewController.showService(
+                                                    navController,
+                                                    service.id
+                                                )
+                                            }
+                                        )
+                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    AnimatedVisibility(visible = it in Service.monitoredServices.value) {
+                                        Icon(
+                                            Icons.Filled.VerifiedUser,
+                                            tint = androidx.compose.material.MaterialTheme.colors.custom_success,
+                                            contentDescription = stringResource(id = R.string.service_monitored),
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                    }
+                                    AnimatedVisibility(visible = it !in Service.monitoredServices.value) {
+                                        Icon(
+                                            Icons.Filled.GppBad,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            contentDescription = stringResource(id = R.string.service_not_monitored),
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                    }
+                                    AnimatedVisibility(visible = it in Service.connectedServices.value) {
+                                        Icon(
+                                            Icons.Filled.CheckCircle,
+                                            tint = androidx.compose.material.MaterialTheme.colors.custom_success,
+                                            contentDescription = stringResource(id = R.string.connected),
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                    }
+                                    AnimatedVisibility(visible = it !in Service.connectedServices.value) {
+                                        Icon(
+                                            Icons.Filled.Cancel,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            contentDescription = stringResource(id = R.string.not_connected),
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
                             Text(
                                 text = service.name,
                                 style = MaterialTheme.typography.bodySmall,
@@ -277,25 +331,50 @@ fun DevicesScreen(navController: NavHostController) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
                         ) {
-                            Image(
-                                painter = painterResource(id = device.logo),
-                                contentDescription = device.name,
-                                //contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(90.dp)
-                                    .clip(CircleShape)
-                                    .clickable(
-                                        enabled = true,
-                                        onClickLabel = device.name,
-                                        onClick = {
-                                            HomeViewController.showDevice(
-                                                navController,
-                                                device.id,
-                                                it.address
-                                            )
-                                        }
-                                    )
-                            )
+                            Box(contentAlignment = Alignment.BottomEnd) {
+                                Image(
+                                    painter = painterResource(id = device.logo),
+                                    contentDescription = device.name,
+                                    //contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            enabled = true,
+                                            onClickLabel = device.name,
+                                            onClick = {
+                                                HomeViewController.showDevice(
+                                                    navController,
+                                                    device.id,
+                                                    it.address
+                                                )
+                                            }
+                                        )
+                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    AnimatedVisibility(visible = it in Device.connectedDevices.value) {
+                                        Icon(
+                                            Icons.Filled.CheckCircle,
+                                            tint = androidx.compose.material.MaterialTheme.colors.custom_success,
+                                            contentDescription = stringResource(id = R.string.connected),
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                    }
+                                    AnimatedVisibility(visible = it !in Device.connectedDevices.value) {
+                                        Icon(
+                                            Icons.Filled.Cancel,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            contentDescription = stringResource(id = R.string.not_connected),
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
                             Text(
                                 text = "${device.name} [${it.address}]",
                                 style = MaterialTheme.typography.bodySmall,
@@ -353,6 +432,18 @@ fun NetworkScreen(navController: NavHostController) {
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineLarge
         )
+        Box(
+            modifier = Modifier
+                .size(300.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Outlined.SensorsOff,
+                contentDescription = "",
+                modifier = Modifier
+                    .size(250.dp)
+            )
+        }
     }
 }
 

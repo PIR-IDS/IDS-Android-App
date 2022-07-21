@@ -244,14 +244,14 @@ class BluetoothConnection(private val mContext: Context) {
                             BluetoothProfile.STATE_DISCONNECTED -> {
                                 Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
                                 bluetoothGatt.close()
-                                Device.connectedDevices.value.minus(idsDevice)
+                                Device.connectedDevices.value = Device.connectedDevices.value.minus(idsDevice)
                             }
                             else -> {}
                         }
                     } else {
                         Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
                         bluetoothGatt.close()
-                        Device.connectedDevices.value.minus(idsDevice)
+                        Device.connectedDevices.value = Device.connectedDevices.value.minus(idsDevice)
                     }
                 } catch (e: SecurityException) {
                     Log.e("BluetoothGattDiscoverServices", "Error while connecting to GATT", e)

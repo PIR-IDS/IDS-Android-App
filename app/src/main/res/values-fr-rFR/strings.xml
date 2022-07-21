@@ -44,4 +44,8 @@
     <string name="data_history">HISTORIQUE DES DONNÉES</string>
     <string name="location">Localisation</string>
     <string name="more_details">Plus de détails</string>
+    <string name="is_connected">Connecté</string>
+    <string name="not_connected">Non connecté</string>
+    <string name="service_monitored">Service monitoré</string>
+    <string name="service_not_monitored">Service non monitoré</string>
 </resources>

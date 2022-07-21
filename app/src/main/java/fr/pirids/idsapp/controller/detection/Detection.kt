@@ -27,6 +27,13 @@ object Detection {
 
     private suspend fun monitorServices(context: Context) : Nothing {
         while(true) {
+            Service.monitoredServices.value.forEach {
+                if(it !in Service.connectedServices.value) {
+                    // We mark the service as not monitored
+                    Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
+                }
+            }
+
             // For each service connected we are checking its compatible devices
             Service.connectedServices.value.forEach {
                 try {
@@ -35,9 +42,18 @@ object Detection {
                         is IzlyData -> {
                             val compatibleDevices = ServiceItem.get(ServiceId.IZLY).compatibleDevices
 
+                            if(it in Service.monitoredServices.value && Device.connectedDevices.value.none { device -> Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices }) {
+                                // We mark the service as not monitored
+                                Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
+                            }
+
                             // We list all the devices connected and we check if some of them are compatible with the service
                             Device.connectedDevices.value.forEach { device ->
                                 if (Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices) {
+                                    // We mark the service as monitored
+                                    if(it !in Service.monitoredServices.value) {
+                                        Service.addToMonitoredServices(it)
+                                    }
                                     // We analyze the data
                                     analyzeIzlyData(context, device, apiData)
                                 }

@@ -16,6 +16,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GppBad
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.*
@@ -43,6 +45,7 @@ import fr.pirids.idsapp.data.items.Device
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.data.items.Service
 import fr.pirids.idsapp.extensions.custom_success
+import fr.pirids.idsapp.controller.detection.Service as ServiceController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,11 +66,50 @@ fun ServiceView(navController: NavHostController, service: Service) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AnimatedVisibility(visible = !ServiceViewController.isConnected.value) {
+                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) !in ServiceController.connectedServices.value) {
                     LoginForm(service = service, snackbarHostState = snackbarHostState)
                 }
-                AnimatedVisibility(visible = ServiceViewController.isConnected.value && !ServiceViewController.isLoading.value) {
+                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) in ServiceController.connectedServices.value && !ServiceViewController.isLoading.value) {
                     ConnectedLabel(service = service)
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) in ServiceController.monitoredServices.value) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Filled.VerifiedUser,
+                            tint = androidx.compose.material.MaterialTheme.colors.custom_success,
+                            contentDescription = stringResource(id = R.string.service_monitored),
+                            modifier = Modifier
+                                .size(80.dp)
+                        )
+                        Text(
+                            text = stringResource(id = R.string.service_monitored),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = androidx.compose.material.MaterialTheme.colors.custom_success
+                        )
+                    }
+                }
+                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) !in ServiceController.monitoredServices.value) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Filled.GppBad,
+                            tint = MaterialTheme.colorScheme.error,
+                            contentDescription = stringResource(id = R.string.service_not_monitored),
+                            modifier = Modifier
+                                .size(80.dp)
+                        )
+                        Text(
+                            text = stringResource(id = R.string.service_not_monitored),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(text = stringResource(id = R.string.history).uppercase(), style = MaterialTheme.typography.titleLarge)
@@ -150,7 +192,7 @@ fun ConnectedLabel(service: Service) {
 
         Spacer(modifier = Modifier.height(5.dp))
         Button(
-            onClick = { ServiceViewController.isConnected.value = false },
+            onClick = { ServiceViewController.disconnectService(service) },
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .fillMaxWidth()

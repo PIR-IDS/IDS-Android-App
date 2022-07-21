@@ -4,32 +4,65 @@ import android.util.Log
 import fr.pirids.idsapp.controller.detection.Service
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
+import fr.pirids.idsapp.data.model.entity.ApiAuth
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.minutes
 import fr.pirids.idsapp.data.items.Service.Companion as ServiceItem
 
 object ServiceDaemon {
+    private const val checkingDelayMinutes = 5
+
     suspend fun connectToServices() {
         try {
             AppDatabase.getInstance().apiAuthDao().getAll().forEach {
-                try {
-                    when(AppDatabase.getInstance().serviceTypeDao().get(it.serviceId).serviceName) {
-                        ServiceId.IZLY.tag -> {
-                            val izlyAuth = AppDatabase.getInstance().izlyAuthDao().getFromApi(it.id)
-
-                            //FIXME: we should add the known services EVEN IF the user is not YET connected to the service
-                            // so we have to refactor the addToKnownServices method with another parameter which doesn't depends on
-                            // ApiInterface as well as the knownServices set ; maybe create a wrapper like we did with BluetoothDeviceIDS?
-
-                            // The checkService function calls the connectToService function
-                            Service.checkService(izlyAuth.identifier, izlyAuth.password, ServiceItem.get(ServiceId.IZLY), false)
-                        }
-                        else -> {}
-                    }
-                } catch (e: Exception) {
-                    Log.e("ServiceDaemon", "Error while connecting to service")
-                }
+                connectToService(it)
             }
         } catch (e: Exception) {
             Log.e("ServiceDaemon", "Error while getting all services")
         }
     }
+
+    private suspend fun connectToService(apiAuth: ApiAuth) {
+        try {
+            when(AppDatabase.getInstance().serviceTypeDao().get(apiAuth.serviceId).serviceName) {
+                ServiceId.IZLY.tag -> {
+                    val izlyAuth = AppDatabase.getInstance().izlyAuthDao().getFromApi(apiAuth.id)
+
+                    //FIXME: we should add the known services EVEN IF the user is not YET connected to the service
+                    // so we have to refactor the addToKnownServices method with another parameter which doesn't depends on
+                    // ApiInterface as well as the knownServices set ; maybe create a wrapper like we did with BluetoothDeviceIDS?
+
+                    // The checkService function calls the connectToService function
+                    Service.checkService(izlyAuth.identifier, izlyAuth.password, ServiceItem.get(ServiceId.IZLY), false)
+                }
+                else -> {}
+            }
+        } catch (e: Exception) {
+            Log.e("ServiceDaemon", "Error while connecting to service")
+        }
+    }
+
+    suspend fun handleServiceStatus() : Nothing {
+        while(true) {
+            delay(checkingDelayMinutes.minutes)
+            Service.connectedServices.value.forEach {
+                try {
+                    if(!it.checkConnection()) {
+                        // If the reconnection failed, we disconnect the service
+                        Service.connectedServices.value = Service.connectedServices.value.minus(it)
+                        // Try to reconnect (maybe the token has expired)
+                        connectToService(
+                            AppDatabase.getInstance().apiAuthDao().get(
+                                AppDatabase.getInstance().serviceTypeDao().getByName(it.serviceId.tag).id
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e("ServiceDaemon", "Error while checking service status", e)
+                }
+            }
+        }
+    }
+
+    //TODO: create the reconnect daemon to retry the connection if internet / connection is lost
 }
