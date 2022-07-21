@@ -23,21 +23,24 @@ object DeviceDaemon {
 
                     when(deviceData) {
                         is WalletCardData -> {
-                            val deviceDataId = AppDatabase
-                                .getInstance()
-                                .deviceDataDao()
-                                .getFromDeviceAndType(
-                                    it.id,
-                                    AppDatabase.getInstance().deviceDataTypeDao().getByName(WalletCardData.tag).id
-                                ).id
-                            val dataList = AppDatabase.getInstance().walletCardDataDao().getAllFromDeviceData(deviceDataId)
-                            dataList.forEach { data ->
-                                val timestamp = Instant
-                                    .ofEpochMilli(data.walletOutTimestamp)
-                                    .atZone(ZoneId.of("UTC"))
-                                    .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                                deviceData.whenWalletOutArray.value = deviceData.whenWalletOutArray.value.plus(timestamp)
-                            }
+                            // If there is data, we load it
+                            try {
+                                val deviceDataId = AppDatabase
+                                    .getInstance()
+                                    .deviceDataDao()
+                                    .getFromDeviceAndType(
+                                        it.id,
+                                        AppDatabase.getInstance().deviceDataTypeDao().getByName(WalletCardData.tag).id
+                                    ).id
+                                val dataList = AppDatabase.getInstance().walletCardDataDao().getAllFromDeviceData(deviceDataId)
+                                dataList.forEach { data ->
+                                    val timestamp = Instant
+                                        .ofEpochMilli(data.walletOutTimestamp)
+                                        .atZone(ZoneId.of("UTC"))
+                                        .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                    deviceData.whenWalletOutArray.value = deviceData.whenWalletOutArray.value.plus(timestamp)
+                                }
+                            } catch(e: Exception) { }
                         }
                     }
 

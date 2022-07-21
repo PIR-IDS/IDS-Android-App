@@ -174,7 +174,7 @@ fun IDSApp(
             }
         ) {
             it.arguments?.getInt("id")
-                ?.let { device -> NotificationDescriptionView(navController) }
+                ?.let { NotificationDescriptionView(navController) }
                 ?: NotFoundView(navController)
         }
     }
