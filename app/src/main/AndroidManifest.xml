@@ -34,6 +34,7 @@
 
     <!-- Needed to access to the internet for the APIs -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Needed to notify in full screen -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />

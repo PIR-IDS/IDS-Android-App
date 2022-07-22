@@ -20,7 +20,7 @@
     <string name="close">Fermer</string>
     <string name="service_not_connected">Erreur : nous ne pouvons pas vous connecter au service !</string>
     <string name="connected">Service Connecté !</string>
-    <string name="reconnect">Se reconnecter au service</string>
+    <string name="reconnect">Se déconnecter du service</string>
     <string name="no_history">Historique vide</string>
     <string name="no_devices">Pas de Sondes Liées</string>
     <string name="scanned_devices">Scan des Sondes…</string>

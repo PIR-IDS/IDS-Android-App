@@ -1,6 +1,7 @@
 package fr.pirids.idsapp.data.model.dao
 
 import androidx.room.*
+import fr.pirids.idsapp.data.model.entity.ApiAuth
 import fr.pirids.idsapp.data.model.entity.ServiceType
 
 @Dao
@@ -13,6 +14,9 @@ interface ServiceTypeDao {
 
     @Query("SELECT * FROM service_type WHERE service_name = :name")
     fun getByName(name: String): ServiceType
+
+    @Query("SELECT api_auth.* FROM service_type, api_auth WHERE service_type.id = :service_id AND api_auth.service_id = service_type.id")
+    fun getApiAuthByServiceType(service_id: Int): ApiAuth
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(serviceType: ServiceType) : Long

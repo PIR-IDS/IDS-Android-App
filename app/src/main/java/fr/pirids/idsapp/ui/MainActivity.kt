@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.navigation.IDSApp
@@ -13,6 +14,8 @@ import fr.pirids.idsapp.controller.daemon.DeviceDaemon
 import fr.pirids.idsapp.controller.daemon.ServiceDaemon
 import fr.pirids.idsapp.controller.detection.Detection
 import fr.pirids.idsapp.controller.detection.NotificationHandler
+import fr.pirids.idsapp.controller.internet.InternetConnection
+import fr.pirids.idsapp.data.internet.InternetState
 import fr.pirids.idsapp.data.model.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +27,7 @@ class MainActivity : ComponentActivity() {
 
         val searchForKnownDevices: MutableState<Boolean> = mutableStateOf(false)
         val ble = BluetoothConnection(this)
+        val internet = InternetConnection(this)
 
         CoroutineScope(Dispatchers.IO).launch {
             // We initialize the database context with the MainActivity
@@ -32,7 +36,10 @@ class MainActivity : ComponentActivity() {
             // We check if there is a service to monitor and a device to connect to
             searchForKnownDevices.value = DeviceDaemon.searchForDevice(ble)
             ServiceDaemon.connectToServices()
-            ServiceDaemon.handleServiceStatus()
+            CoroutineScope(Dispatchers.IO).launch {
+                ServiceDaemon.handleServiceStatus()
+            }
+            ServiceDaemon.handleDisconnectedKnownServices()
         }
 
         setContent {
@@ -42,6 +49,17 @@ class MainActivity : ComponentActivity() {
                 if(searchForKnownDevices.value) { //FIXME: maybe use something else to activate this (visibility?)
                     //FIXME: don't relaunch the search if already searching (onStart?)
                     LaunchBluetooth(ble, daemonMode = true)
+                }
+
+                // We monitor the internet connection
+                val internetConnection by internet.dynamicConnectivityState()
+                val internetConnected = internetConnection === InternetState.Available
+                if(!internetConnected) {
+                    ServiceDaemon.clearAllConnectedServices()
+                    //TODO: display a message to the user
+                } else {
+                    //FIXME: don't relaunch the search if already searching (onStart?)
+                    ServiceDaemon.connectToServices()
                 }
 
                 // We create the main Notification channel

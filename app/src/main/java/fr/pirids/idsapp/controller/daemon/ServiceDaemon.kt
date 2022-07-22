@@ -5,20 +5,26 @@ import fr.pirids.idsapp.controller.detection.Service
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
 import fr.pirids.idsapp.data.model.entity.ApiAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 import fr.pirids.idsapp.data.items.Service.Companion as ServiceItem
 
 object ServiceDaemon {
     private const val checkingDelayMinutes = 5
+    private const val checkingDelayMillis = 15_000L
 
-    suspend fun connectToServices() {
-        try {
-            AppDatabase.getInstance().apiAuthDao().getAll().forEach {
-                connectToService(it)
+    fun connectToServices() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                AppDatabase.getInstance().apiAuthDao().getAll().forEach {
+                    connectToService(it)
+                }
+            } catch (e: Exception) {
+                Log.e("ServiceDaemon", "Error while getting all services")
             }
-        } catch (e: Exception) {
-            Log.e("ServiceDaemon", "Error while getting all services")
         }
     }
 
@@ -49,7 +55,7 @@ object ServiceDaemon {
                 try {
                     if(!it.checkConnection()) {
                         // If the reconnection failed, we disconnect the service
-                        Service.connectedServices.value = Service.connectedServices.value.minus(it)
+                        Service.removeFromConnectedServices(it)
                         // Try to reconnect (maybe the token has expired)
                         connectToService(
                             AppDatabase.getInstance().apiAuthDao().get(
@@ -64,5 +70,24 @@ object ServiceDaemon {
         }
     }
 
-    //TODO: create the reconnect daemon to retry the connection if internet / connection is lost
+    suspend fun handleDisconnectedKnownServices() : Nothing {
+        while(true) {
+            delay(checkingDelayMillis)
+            reconnectToDisconnectedKnownServices()
+        }
+    }
+
+    private suspend fun reconnectToDisconnectedKnownServices() {
+        Service.knownServices.value.filter { it !in Service.connectedServices.value }.forEach {
+            connectToService(
+                AppDatabase.getInstance().apiAuthDao().get(
+                    AppDatabase.getInstance().serviceTypeDao().getByName(it.serviceId.tag).id
+                )
+            )
+        }
+    }
+
+    fun clearAllConnectedServices() {
+        CoroutineScope(Dispatchers.IO).launch { Service.removeAllConnectedServices() }
+    }
 }

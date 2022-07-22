@@ -97,4 +97,13 @@ object Service {
     private fun addToConnectedServices(apiInterface: ApiInterface) = addToServicesList(apiInterface, connectedServices)
     private fun addToKnownServices(apiInterface: ApiInterface) = addToServicesList(apiInterface, knownServices)
     fun addToMonitoredServices(apiInterface: ApiInterface) = addToServicesList(apiInterface, monitoredServices)
+
+    fun removeFromConnectedServices(apiInterface: ApiInterface) {
+        connectedServices.value = connectedServices.value.minus(apiInterface)
+        if(apiInterface in monitoredServices.value) monitoredServices.value = monitoredServices.value.minus(apiInterface)
+    }
+    fun removeAllConnectedServices() {
+        connectedServices.value = setOf()
+        monitoredServices.value = setOf()
+    }
 }
