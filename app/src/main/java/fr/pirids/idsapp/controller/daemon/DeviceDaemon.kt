@@ -11,13 +11,9 @@ import java.time.ZoneId
 import java.util.*
 
 object DeviceDaemon {
-    suspend fun searchForDevice(ble: BluetoothConnection): Boolean {
-        var searchForKnownDevices = false
+    suspend fun searchForDevice(ble: BluetoothConnection) {
         try {
             AppDatabase.getInstance().deviceDao().getAll().forEach {
-                if(!searchForKnownDevices) {
-                    searchForKnownDevices = true
-                }
                 try {
                     val deviceData = ble.getDeviceDataByName(it.name)
 
@@ -52,6 +48,5 @@ object DeviceDaemon {
         } catch (e: Exception) {
             Log.e("DeviceDaemon", "Error while getting all devices", e)
         }
-        return searchForKnownDevices
     }
 }

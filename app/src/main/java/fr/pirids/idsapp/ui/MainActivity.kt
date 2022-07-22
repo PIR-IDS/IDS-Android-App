@@ -3,9 +3,7 @@ package fr.pirids.idsapp.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.navigation.IDSApp
 import fr.pirids.idsapp.ui.theme.IDSAppTheme
@@ -22,19 +20,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private val ble = BluetoothConnection(this)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val searchForKnownDevices: MutableState<Boolean> = mutableStateOf(false)
-        val ble = BluetoothConnection(this)
         val internet = InternetConnection(this)
+
+        ble.registerBroadCast()
 
         CoroutineScope(Dispatchers.IO).launch {
             // We initialize the database context with the MainActivity
             AppDatabase.initInstance(this@MainActivity)
 
             // We check if there is a service to monitor and a device to connect to
-            searchForKnownDevices.value = DeviceDaemon.searchForDevice(ble)
+            DeviceDaemon.searchForDevice(ble)
             ServiceDaemon.connectToServices()
             CoroutineScope(Dispatchers.IO).launch {
                 ServiceDaemon.handleServiceStatus()
@@ -46,10 +46,8 @@ class MainActivity : ComponentActivity() {
             IDSAppTheme {
                 // If a bluetooth connection has already been established,
                 // check bluetooth permissions and start searching for known devices
-                if(searchForKnownDevices.value) { //FIXME: maybe use something else to activate this (visibility?)
-                    //FIXME: don't relaunch the search if already searching (onStart?)
-                    LaunchBluetooth(ble, daemonMode = true)
-                }
+                //FIXME: don't relaunch the search if already searching
+                LaunchBluetooth(ble, daemonMode = true)
 
                 // We monitor the internet connection
                 val internetConnection by internet.dynamicConnectivityState()
@@ -58,7 +56,7 @@ class MainActivity : ComponentActivity() {
                     ServiceDaemon.clearAllConnectedServices()
                     //TODO: display a message to the user
                 } else {
-                    //FIXME: don't relaunch the search if already searching (onStart?)
+                    //FIXME: don't relaunch the search if already searching
                     ServiceDaemon.connectToServices()
                 }
 
@@ -72,5 +70,10 @@ class MainActivity : ComponentActivity() {
                 IDSApp()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ble.unregisterBroadCast()
     }
 }

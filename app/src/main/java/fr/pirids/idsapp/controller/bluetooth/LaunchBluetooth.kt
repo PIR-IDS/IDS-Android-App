@@ -18,13 +18,14 @@ import kotlinx.coroutines.CoroutineScope
 
 @Composable
 fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.current), scope: CoroutineScope = rememberCoroutineScope(), daemonMode: Boolean = false) {
-    val multiplePermissionsState = rememberMultiplePermissionsState(ble.getNecessaryPermissions()) { ble.onPermissionsResult(it) }
+    val multiplePermissionsState = rememberMultiplePermissionsState(ble.getNecessaryPermissions()) { ble.onPermissionsResult(it, daemonMode) }
     if(!multiplePermissionsState.allPermissionsGranted) {
         val lifecycleOwner = LocalLifecycleOwner.current
         DisposableEffect(key1 = lifecycleOwner, effect = {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_START -> {
+                        ble.permissionsGranted = false
                         multiplePermissionsState.launchMultiplePermissionRequest()
                     }
                     else -> {}
@@ -36,11 +37,11 @@ fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.
             }
         })
     } else {
-        ble.onPermissionsResult(multiplePermissionsState.permissions.associate { it.permission to it.status.isGranted })
+        ble.onPermissionsResult(multiplePermissionsState.permissions.associate { it.permission to it.status.isGranted }, daemonMode)
     }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (daemonMode) ble.handleSearchBluetoothIntent(it, Device.knownDevices.value, scope)
+        if (daemonMode) ble.handleSearchBluetoothIntent(it, Device.knownDevices, scope)
         else ble.handleScanBluetoothIntent(it, scope)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -48,7 +49,7 @@ fun LaunchBluetooth(ble: BluetoothConnection = BluetoothConnection(LocalContext.
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    if (daemonMode) ble.searchForKnownDevices(Device.knownDevices.value, launcher, scope)
+                    if (daemonMode) ble.searchForKnownDevices(Device.knownDevices, launcher, scope)
                     else ble.launchScan(launcher, scope)
                 }
                 else -> {}

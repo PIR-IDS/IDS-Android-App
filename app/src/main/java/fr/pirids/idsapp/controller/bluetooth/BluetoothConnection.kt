@@ -7,12 +7,15 @@ import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.runtime.MutableState
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import fr.pirids.idsapp.data.device.data.DeviceData
 import fr.pirids.idsapp.data.device.data.WalletCardData
@@ -41,9 +44,40 @@ import fr.pirids.idsapp.data.model.entity.DeviceData as DeviceDataEntity
 import fr.pirids.idsapp.data.model.entity.WalletCardData as WalletCardDataEntity
 
 class BluetoothConnection(private val mContext: Context) {
-
+    var permissionsGranted = false
     private val defaultScope = CoroutineScope(Dispatchers.IO)
     private lateinit var bluetoothAdapter: BluetoothAdapter
+
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val action = intent?.action
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                when (intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+                    BluetoothAdapter.STATE_OFF -> {
+                        Device.connectedDevices.value = setOf()
+                    }
+                    BluetoothAdapter.STATE_TURNING_OFF -> {}
+                    BluetoothAdapter.STATE_ON -> {
+                        //TODO: do something better than this...
+                        if(permissionsGranted) {
+                            defaultScope.launch {
+                                this@BluetoothConnection.initSearch(Device.knownDevices)
+                            }
+                        }
+                    }
+                    BluetoothAdapter.STATE_TURNING_ON -> {}
+                }
+            }
+        }
+    }
+
+    fun registerBroadCast() {
+        mContext.registerReceiver(bluetoothReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+    }
+
+    fun unregisterBroadCast() {
+        mContext.unregisterReceiver(bluetoothReceiver)
+    }
 
     fun getNecessaryPermissions() : List<String> {
         val permissions: MutableList<String> = mutableListOf()
@@ -61,15 +95,21 @@ class BluetoothConnection(private val mContext: Context) {
         return permissions.toList()
     }
 
-    fun onPermissionsResult(result: Map<String, Boolean>) {
+    fun onPermissionsResult(result: Map<String, Boolean>, daemonMode: Boolean) {
         if(result.all { it.value }) {
+            permissionsGranted = true
+            //TODO: way too hacky, do something better than this...
+            defaultScope.launch {
+                if(daemonMode) this@BluetoothConnection.initSearch(Device.knownDevices) else this@BluetoothConnection.initScan()
+            }
             Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
         } else {
+            permissionsGranted = false
             Log.i("BluetoothGattDiscoverServices", "Bluetooth permission not granted")
         }
     }
 
-    fun searchForKnownDevices(devicesList: Set<BluetoothDeviceIDS>, resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
+    fun searchForKnownDevices(devicesList: MutableState<Set<BluetoothDeviceIDS>>, resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
         val context = Context.BLUETOOTH_SERVICE
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
@@ -82,7 +122,7 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    fun handleSearchBluetoothIntent(result: ActivityResult, devicesList: Set<BluetoothDeviceIDS>, scope: CoroutineScope = defaultScope) {
+    fun handleSearchBluetoothIntent(result: ActivityResult, devicesList: MutableState<Set<BluetoothDeviceIDS>>, scope: CoroutineScope = defaultScope) {
         if (result.resultCode == Activity.RESULT_OK) {
             scope.launch { initSearch(devicesList) }
         }
@@ -115,7 +155,7 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    private suspend fun initSearch(devicesList: Set<BluetoothDeviceIDS>) {
+    private suspend fun initSearch(devicesList: MutableState<Set<BluetoothDeviceIDS>>) {
         try {
             searchLE(devicesList, deviceFlow(bluetoothAdapter.bluetoothLeScanner, true))
         } catch (e: Exception) {
@@ -158,7 +198,6 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    //FIXME: scanned devices not displayed when permission not granted yet, it should wait to have an answer before starting the bluetooth scan
     private suspend fun scanLE(flow: Flow<ScanResult>) {
         flow.collect {
             try {
@@ -172,12 +211,11 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    //FIXME: searched devices not found when permission not granted yet, it should wait to have an answer before starting the bluetooth search
-    private suspend fun searchLE(devicesList: Set<BluetoothDeviceIDS>, flow: Flow<ScanResult>) {
+    private suspend fun searchLE(devicesList: MutableState<Set<BluetoothDeviceIDS>>, flow: Flow<ScanResult>) {
         flow.collect {
             try {
                 Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
-                devicesList.find { found -> found.address == it.device.address }?.let { deviceFound ->
+                devicesList.value.find { found -> found.address == it.device.address }?.let { deviceFound ->
                     deviceFound.device = it.device
                     connect(deviceFound)
                 }
@@ -322,6 +360,7 @@ class BluetoothConnection(private val mContext: Context) {
                 } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
             }
 
+            @Deprecated("Deprecated in Java")
             override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
                 try {
                     gatt?.readCharacteristic(characteristic)
@@ -383,6 +422,7 @@ class BluetoothConnection(private val mContext: Context) {
             /**
              * We will get there when a characteristic is read, notably after one has changed
              */
+            @Deprecated("Deprecated in Java")
             override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
                 Log.i("BluetoothGattCallback", "Characteristic read callback")
                 characteristic?.let { char ->
