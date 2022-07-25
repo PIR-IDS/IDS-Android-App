@@ -41,21 +41,29 @@ object ServiceViewController {
         focusManager.clearFocus()
         isLoading.value = true
         serviceScope.launch(Dispatchers.IO) {
-            val (serviceData, serviceConnected) = ServiceController.getServiceAndStatus(
-                username,
-                password,
-                service
-            )
-            if (serviceConnected) {
-                historyScope.launch(Dispatchers.IO) {
-                    updateServiceData(serviceData, service)
+            try {
+                val (serviceData, serviceConnected) = ServiceController.getServiceAndStatus(
+                    username,
+                    password,
+                    service
+                )
+                if (serviceConnected) {
+                    historyScope.launch(Dispatchers.IO) {
+                        updateServiceData(serviceData, service)
+                    }
+                } else {
+                    serviceScope.launch(Dispatchers.Main) {
+                        snackbarHostState.showSnackbar(notFoundText)
+                    }
                 }
-            } else {
+            } catch (e: Exception) {
+                Log.e("ServiceViewController", "Error while trying to login", e)
                 serviceScope.launch(Dispatchers.Main) {
                     snackbarHostState.showSnackbar(notFoundText)
                 }
+            } finally {
+                isLoading.value = false
             }
-            isLoading.value = false
         }
     }
 

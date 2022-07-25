@@ -18,7 +18,8 @@
     <string name="wallet_card_desc">wallet desc</string>
     <string name="close">Close</string>
     <string name="service_not_connected">Error: we are unable to connect you to the service!</string>
-    <string name="connected">Service Connected!</string>
+    <string name="connected">Service connected!</string>
+    <string name="service_disconnected">Service unavailable!</string>
     <string name="reconnect">Disconnect from the service</string>
     <string name="no_history">Empty History</string>
     <string name="no_devices">No Linked Probes</string>

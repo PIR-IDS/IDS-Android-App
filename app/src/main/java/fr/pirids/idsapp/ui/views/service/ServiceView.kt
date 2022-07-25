@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GppBad
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -66,14 +67,18 @@ fun ServiceView(navController: NavHostController, service: Service) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) !in ServiceController.connectedServices.value) {
+                val serv = ServiceController.getKnownApiServiceFromServiceItem(service)
+                AnimatedVisibility(visible = serv == null) {
                     LoginForm(service = service, snackbarHostState = snackbarHostState)
                 }
-                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) in ServiceController.connectedServices.value && !ServiceViewController.isLoading.value) {
+                AnimatedVisibility(visible = serv != null && serv !in ServiceController.connectedServices.value) {
+                    DisconnectedLabel(service = service)
+                }
+                AnimatedVisibility(visible = serv != null && serv in ServiceController.connectedServices.value && !ServiceViewController.isLoading.value) {
                     ConnectedLabel(service = service)
                 }
                 Spacer(modifier = Modifier.height(20.dp))
-                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) in ServiceController.monitoredServices.value) {
+                AnimatedVisibility(visible = serv != null && serv in ServiceController.monitoredServices.value) {
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -92,7 +97,7 @@ fun ServiceView(navController: NavHostController, service: Service) {
                         )
                     }
                 }
-                AnimatedVisibility(visible = ServiceController.getKnownApiServiceFromServiceItem(service) !in ServiceController.monitoredServices.value) {
+                AnimatedVisibility(visible = serv != null && serv !in ServiceController.monitoredServices.value) {
                     Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -187,7 +192,7 @@ fun ConnectedLabel(service: Service) {
                 .padding(horizontal = 16.dp),
             text = stringResource(id = R.string.connected),
             color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.displaySmall
+            style = MaterialTheme.typography.titleLarge
         )
 
         Spacer(modifier = Modifier.height(5.dp))
@@ -207,6 +212,60 @@ fun ConnectedLabel(service: Service) {
 @Composable
 fun ConnectedLabelPreview() {
     ConnectedLabel(Service.list.first())
+}
+
+@Composable
+fun DisconnectedLabel(service: Service) {
+    Column(
+        modifier = Modifier
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
+            Row(
+                verticalAlignment = CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = service.logo),
+                    contentDescription = service.name
+                )
+                Icon(
+                    Icons.Outlined.Error,
+                    modifier = Modifier.size(65.dp),
+                    contentDescription = stringResource(id = R.string.connected),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            modifier = Modifier
+                .padding(horizontal = 16.dp),
+            text = stringResource(id = R.string.service_disconnected),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Spacer(modifier = Modifier.height(5.dp))
+        Button(
+            onClick = { ServiceViewController.disconnectService(service) },
+            shape = RoundedCornerShape(50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text(text = stringResource(id = R.string.reconnect))
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DisconnectedLabelPreview() {
+    DisconnectedLabel(Service.list.first())
 }
 
 @Composable
