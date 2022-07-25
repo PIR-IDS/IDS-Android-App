@@ -123,7 +123,7 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
 
     //TODO: improve this function
     override suspend fun getData(): IzlyData {
-        val timeOfEachAction: MutableList<Long> = mutableListOf()
+        val timeOfEachAction: MutableSet<Long> = mutableSetOf()
         val historyData: Document = insistToGetHistoryConnection().parse()
 
         var success = false
@@ -190,7 +190,7 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
             index++
         }
 
-        return IzlyData(transactionList = timeOfEachAction)
+        return IzlyData(transactionList = timeOfEachAction.toSet())
     }
 
     private fun getHistoryConnection() = Jsoup.connect(historyURL)

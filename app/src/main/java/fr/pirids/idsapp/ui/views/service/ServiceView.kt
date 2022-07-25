@@ -22,10 +22,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -42,10 +39,15 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.view.service.ServiceViewController
+import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.items.Device
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.data.items.Service
+import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.extensions.custom_success
+import java.time.Instant
+import java.time.ZoneId
+import java.util.*
 import fr.pirids.idsapp.controller.detection.Service as ServiceController
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,7 @@ fun ServiceView(navController: NavHostController, service: Service) {
                 AnimatedVisibility(visible = serv == null) {
                     LoginForm(service = service, snackbarHostState = snackbarHostState)
                 }
-                AnimatedVisibility(visible = serv != null && serv !in ServiceController.connectedServices.value) {
+                AnimatedVisibility(visible = serv != null && serv !in ServiceController.connectedServices.value && !ServiceViewController.isLoading.value) {
                     DisconnectedLabel(service = service)
                 }
                 AnimatedVisibility(visible = serv != null && serv in ServiceController.connectedServices.value && !ServiceViewController.isLoading.value) {
@@ -358,7 +360,18 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
 @Composable
 fun HistoryList(modifier: Modifier = Modifier, service: Service) {
     ServiceViewController.historyScope = rememberCoroutineScope()
-    AnimatedVisibility(visible = ServiceViewController.serviceHistory.value.isEmpty()) {
+
+    //TODO: set timestamp list directly on the ApiInterface as we will always have it anyway
+    val dataList = remember { mutableStateOf<List<Long>> (listOf()) }
+    when(service.id) {
+        ServiceId.IZLY -> {
+            ServiceController.getKnownApiServiceFromServiceItem(service)?.let {
+                dataList.value = (it.data.value as IzlyData).transactionList.toMutableList()
+            }
+        }
+    }
+
+    AnimatedVisibility(visible = dataList.value.isEmpty()) {
         Column(
             modifier = Modifier
                 .then(modifier)
@@ -378,8 +391,14 @@ fun HistoryList(modifier: Modifier = Modifier, service: Service) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(ServiceViewController.serviceHistory.value) {
-            Item(item = it, service = service)
+        items(dataList.value) {
+            Item(
+                item = Instant
+                        .ofEpochMilli(it).atZone(ZoneId.of("UTC"))
+                        .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                        .toString(),
+                service = service
+            )
         }
     }
 }

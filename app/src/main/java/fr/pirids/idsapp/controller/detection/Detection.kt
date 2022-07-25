@@ -37,8 +37,8 @@ object Detection {
             // For each service connected we are checking its compatible devices
             Service.connectedServices.value.forEach {
                 try {
-                    // We retrieve the service data
-                    when (val apiData = it.getData()) {
+                    // We check the service data
+                    when (val apiData = it.data.value) {
                         is IzlyData -> {
                             val compatibleDevices = ServiceItem.get(ServiceId.IZLY).compatibleDevices
 

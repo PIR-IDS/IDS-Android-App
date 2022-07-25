@@ -11,6 +11,9 @@ interface IzlyDataDao {
     @Query("SELECT * FROM izly_data WHERE id = :id")
     fun get(id: Int): IzlyData
 
+    @Query("SELECT * FROM izly_data WHERE api_id = :api_id")
+    fun getFromApi(api_id: Int): IzlyData
+
     @Insert
     fun insert(izlyData: IzlyData) : Long
 

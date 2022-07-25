@@ -11,6 +11,9 @@ interface ApiDataDao {
     @Query("SELECT * FROM api_data WHERE id = :id")
     fun get(id: Int): ApiData
 
+    @Query("SELECT * FROM api_data WHERE service_id = :serviceId")
+    fun getAllFromType(serviceId: Int): List<ApiData>
+
     @Insert
     fun insert(apiData: ApiData) : Long
 

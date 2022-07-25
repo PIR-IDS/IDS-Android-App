@@ -2,18 +2,17 @@ package fr.pirids.idsapp.controller.daemon
 
 import android.util.Log
 import fr.pirids.idsapp.controller.detection.Service
+import fr.pirids.idsapp.data.api.data.ApiData
+import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
 import fr.pirids.idsapp.data.model.entity.ApiAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
-import fr.pirids.idsapp.data.items.Service.Companion as ServiceItem
+import fr.pirids.idsapp.data.model.entity.ApiData as ApiDataEntity
+import fr.pirids.idsapp.data.model.entity.IzlyData as IzlyDataEntity
+import kotlinx.coroutines.*
+import fr.pirids.idsapp.data.items.Service as ServiceItem
 
 object ServiceDaemon {
-    private const val checkingDelayMinutes = 5
     private const val checkingDelayMillis = 15_000L
 
     fun connectToServices() {
@@ -28,45 +27,94 @@ object ServiceDaemon {
         }
     }
 
-    private suspend fun connectToService(apiAuth: ApiAuth) {
-        try {
+    private suspend fun connectToService(apiAuth: ApiAuth) : Boolean {
+        return try {
             when(AppDatabase.getInstance().serviceTypeDao().get(apiAuth.serviceId).serviceName) {
                 ServiceId.IZLY.tag -> {
                     val izlyAuth = AppDatabase.getInstance().izlyAuthDao().getFromApi(apiAuth.id)
-
-                    //FIXME: we should add the known services EVEN IF the user is not YET connected to the service
-                    // so we have to refactor the addToKnownServices method with another parameter which doesn't depends on
-                    // ApiInterface as well as the knownServices set ; maybe create a wrapper like we did with BluetoothDeviceIDS?
-
                     // The checkService function calls the connectToService function
                     Service.checkService(izlyAuth.identifier, izlyAuth.password, ServiceItem.get(ServiceId.IZLY), false)
                 }
-                else -> {}
+                else -> { false }
             }
         } catch (e: Exception) {
             Log.e("ServiceDaemon", "Error while connecting to service")
+            false
         }
     }
 
     suspend fun handleServiceStatus() : Nothing {
         while(true) {
-            delay(checkingDelayMinutes.minutes)
+            delay(checkingDelayMillis)
             Service.connectedServices.value.forEach {
                 try {
-                    if(!it.checkConnection()) {
+                    val api = it.api
+                    var apiConnected = true
+                    if(api?.checkConnection() != true) {
+                        apiConnected = false
                         // If the reconnection failed, we disconnect the service
                         Service.removeFromConnectedServices(it)
-                        // Try to reconnect (maybe the token has expired)
-                        connectToService(
-                            AppDatabase.getInstance().apiAuthDao().get(
-                                AppDatabase.getInstance().serviceTypeDao().getByName(it.serviceId.tag).id
+                        if(api != null) {
+                            // Try to reconnect (maybe the token has expired)
+                            apiConnected = connectToService(
+                                AppDatabase.getInstance().apiAuthDao().get(
+                                    AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id
+                                )
                             )
-                        )
+                        }
+                    }
+
+                    if(apiConnected && api != null) {
+                        // If we are still connected, we update the service data
+                        it.data.value = try {
+                            getMergedRemoteAndLocalData(api.getData(), it.data.value, serviceId = api.serviceId)
+                        } catch (e: Exception) {
+                            Log.e("ServiceDaemon", "Error while updating service data", e)
+                            it.data.value
+                        }
+
+                        // Save the data in the database
+                        try {
+                            when(api.serviceId) {
+                                ServiceId.IZLY -> {
+                                    //TODO: Save the still-not-saved data in the database
+                                    /*
+                                    val apiDataId = AppDatabase.getInstance().apiDataDao().insert(
+                                        ApiDataEntity(
+                                            serviceId = AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id,
+                                        )
+                                    )
+                                    AppDatabase.getInstance().izlyDataDao().insert(
+                                        IzlyDataEntity(
+                                            apiId = apiDataId.toInt(),
+                                            timestamp = 1L,
+                                            amount = null,
+                                            localization = null
+                                        )
+                                    )*/
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ServiceDaemon", "Error while saving service data", e)
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("ServiceDaemon", "Error while checking service status", e)
                 }
             }
+        }
+    }
+
+    private fun getMergedRemoteAndLocalData(remoteData: ApiData?, localData: ApiData, serviceId: ServiceId) : ApiData {
+        return when(serviceId) {
+            ServiceId.IZLY -> {
+                IzlyData(
+                    (localData as IzlyData).transactionList.plus(
+                        (remoteData as IzlyData?)?.transactionList ?: emptySet()
+                    )
+                )
+            }
+            else -> { localData }
         }
     }
 

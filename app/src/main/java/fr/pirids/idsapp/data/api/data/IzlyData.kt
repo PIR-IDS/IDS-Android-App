@@ -1,3 +1,3 @@
 package fr.pirids.idsapp.data.api.data
 
-class IzlyData(val transactionList: MutableList<Long>) : ApiData()
+class IzlyData(val transactionList: Set<Long>) : ApiData()

@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
     tableName = "izly_data",
     foreignKeys = [
         ForeignKey(
-            entity = DeviceData::class,
+            entity = ApiData::class,
             parentColumns = ["id"],
             childColumns = ["api_id"],
             onDelete = ForeignKey.CASCADE
@@ -32,8 +32,8 @@ data class IzlyData(
     val timestamp: Long,
 
     @ColumnInfo(name = "amount")
-    val amount: Int,
+    val amount: Int?,
 
     @ColumnInfo(name = "localization")
-    val localization: String,
+    val localization: String?,
 )
