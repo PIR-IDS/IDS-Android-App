@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.GppBad
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.Close
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -54,6 +56,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import fr.pirids.idsapp.controller.detection.Service as ServiceController
+import fr.pirids.idsapp.controller.bluetooth.Device as DeviceController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -495,7 +498,9 @@ fun ItemDevice(item: Device) {
         Row(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            verticalAlignment = CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(id = item.logo),
@@ -504,14 +509,31 @@ fun ItemDevice(item: Device) {
                     .padding(horizontal = 8.dp)
                     .align(CenterVertically)
             )
+            Spacer(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight())
             Text(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
+                    //.padding(horizontal = 16.dp)
                     .align(CenterVertically),
                 text = item.name,
                 color = MaterialTheme.colorScheme.onTertiary,
+                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall
             )
+            Spacer(modifier = Modifier
+                .weight(2f)
+                .fillMaxHeight())
+            AnimatedVisibility(visible = item in DeviceController.connectedDevices.value.map { DeviceController.getDeviceItemFromBluetoothDevice(it) }) {
+                Icon(
+                    Icons.Filled.CheckCircle,
+                    tint = MaterialTheme.colorScheme.onTertiary,
+                    contentDescription = stringResource(id = R.string.device_connected),
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .align(CenterVertically)
+                )
+            }
         }
     }
 }
