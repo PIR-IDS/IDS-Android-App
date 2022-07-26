@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +39,7 @@ import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.extensions.custom_success
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import fr.pirids.idsapp.data.items.Device as DeviceItem
 
@@ -121,6 +124,7 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                 //TODO: create a tab slider with Detection History linked to the current device
 
                 //TODO: clean this by doing something better (timestamp array in DeviceData because it's needed everywhere anyway)
+                val dataSetEmpty = remember { mutableStateOf(true) }
                 bleDevice?.let { bleDev ->
                     LazyColumn(
                         modifier = Modifier
@@ -130,7 +134,9 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                     ) {
                         when(device.id) {
                             DeviceId.WALLET_CARD -> {
-                                items((bleDev.data as WalletCardData).whenWalletOutArray.value.reversed()) { zdt ->
+                                val dataSet = (bleDev.data as WalletCardData).whenWalletOutArray
+                                items(dataSet.value.reversed()) { zdt ->
+                                    dataSetEmpty.value = dataSet.value.isEmpty()
                                     DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.format(
                                         DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")
                                     ))
@@ -138,6 +144,16 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                             }
                             else -> {}
                         }
+                    }
+                }
+                AnimatedVisibility(visible = dataSetEmpty.value) {
+                    Column(
+                        modifier = Modifier
+                            .heightIn(0.dp, 300.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(stringResource(id = R.string.no_history))
                     }
                 }
             }
