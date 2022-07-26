@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import fr.pirids.idsapp.controller.detection.Service as ServiceController
 
@@ -408,7 +409,7 @@ fun HistoryList(modifier: Modifier = Modifier, service: Service) {
                 item = Instant
                         .ofEpochMilli(it).atZone(ZoneId.of("UTC"))
                         .withZoneSameInstant(TimeZone.getDefault().toZoneId())
-                        .toString(),
+                        .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
                 service = service
             )
         }

@@ -37,6 +37,7 @@ import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.extensions.custom_success
+import java.time.format.DateTimeFormatter
 import fr.pirids.idsapp.data.items.Device as DeviceItem
 
 @Composable
@@ -130,7 +131,9 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                         when(device.id) {
                             DeviceId.WALLET_CARD -> {
                                 items((bleDev.data as WalletCardData).whenWalletOutArray.value.reversed()) { zdt ->
-                                    DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.toString())
+                                    DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.format(
+                                        DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")
+                                    ))
                                 }
                             }
                             else -> {}
@@ -156,15 +159,15 @@ fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector, 
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .padding(horizontal = 35.dp, vertical = 8.dp),
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Left,
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = stringResource(id = message) + dateTime,
+                    text = stringResource(id = message) + " $dateTime",
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .padding(horizontal = 40.dp, vertical = 0.5.dp),
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Left,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
