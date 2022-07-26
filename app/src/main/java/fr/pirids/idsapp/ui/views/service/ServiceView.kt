@@ -45,6 +45,10 @@ import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.data.items.Service
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.extensions.custom_success
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.util.*
@@ -367,6 +371,14 @@ fun HistoryList(modifier: Modifier = Modifier, service: Service) {
         ServiceId.IZLY -> {
             ServiceController.getKnownApiServiceFromServiceItem(service)?.let {
                 dataList.value = (it.data.value as IzlyData).transactionList.toMutableList()
+            } ?: run {
+                CoroutineScope(Dispatchers.IO).launch {
+                    ServiceController.getServiceDataFromDatabase(service.id)?.let {
+                        withContext(Dispatchers.Main) {
+                            dataList.value = (it as IzlyData).transactionList.toMutableList()
+                        }
+                    }
+                }
             }
         }
     }

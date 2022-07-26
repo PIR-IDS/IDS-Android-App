@@ -14,6 +14,9 @@ interface IzlyDataDao {
     @Query("SELECT * FROM izly_data WHERE api_id = :api_id")
     fun getFromApi(api_id: Int): IzlyData
 
+    @Query("SELECT * FROM izly_data WHERE timestamp = :timestamp ORDER BY id DESC LIMIT 1")
+    fun getByTimestamp(timestamp: Long): IzlyData?
+
     @Insert
     fun insert(izlyData: IzlyData) : Long
 

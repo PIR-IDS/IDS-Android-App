@@ -77,21 +77,26 @@ object ServiceDaemon {
                         try {
                             when(api.serviceId) {
                                 ServiceId.IZLY -> {
-                                    //TODO: Save the still-not-saved data in the database
-                                    /*
-                                    val apiDataId = AppDatabase.getInstance().apiDataDao().insert(
-                                        ApiDataEntity(
-                                            serviceId = AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id,
-                                        )
-                                    )
-                                    AppDatabase.getInstance().izlyDataDao().insert(
-                                        IzlyDataEntity(
-                                            apiId = apiDataId.toInt(),
-                                            timestamp = 1L,
-                                            amount = null,
-                                            localization = null
-                                        )
-                                    )*/
+                                    val serviceId = AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id
+                                    //TODO: improve this logic, maybe by including timestamp in ApiData, we will always have it anyway...
+                                    // Also the timestamp probably will be unique for EACH service data, so find a way to handle all of that correctly...
+                                    // Right now this is a bit overkill to check for EACH timestamp EVERY 15 seconds, we have to improve this
+                                    (it.data.value as IzlyData).transactionList.forEach { timestamp ->
+                                        try {
+                                            // If the transaction is already in the database, we don't want to insert it again
+                                            AppDatabase.getInstance().izlyDataDao().getByTimestamp(timestamp)
+                                                ?: AppDatabase.getInstance().izlyDataDao().insert(
+                                                    IzlyDataEntity(
+                                                        apiId = AppDatabase.getInstance().apiDataDao().insert(ApiDataEntity(serviceId = serviceId)).toInt(),
+                                                        timestamp = timestamp,
+                                                        amount = null,
+                                                        localization = null
+                                                    )
+                                            )
+                                        } catch (e: Exception) {
+                                            Log.e("ServiceDaemon", "Error while saving Izly data", e)
+                                        }
+                                    }
                                 }
                             }
                         } catch (e: Exception) {

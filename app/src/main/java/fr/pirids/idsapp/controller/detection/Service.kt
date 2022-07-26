@@ -88,7 +88,7 @@ object Service {
         }
     }
 
-    private suspend fun getServiceDataFromDatabase(serviceId: ServiceId) : ApiData? {
+    suspend fun getServiceDataFromDatabase(serviceId: ServiceId) : ApiData? {
         try {
             val apiData = AppDatabase.getInstance().apiDataDao().getAllFromType(
                 AppDatabase.getInstance().serviceTypeDao().getByName(serviceId.tag).id

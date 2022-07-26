@@ -201,7 +201,7 @@ class BluetoothConnection(private val mContext: Context) {
     private suspend fun scanLE(flow: Flow<ScanResult>) {
         flow.collect {
             try {
-                Log.d("BluetoothGattDiscoverServices", "Scan result: ${it.device.name} [${it.device.address}]")
+                //Log.d("BluetoothGattDiscoverServices", "Scan result: ${it.device.name} [${it.device.address}]")
                 if (it.device.name?.startsWith(DeviceItem.idsPrefix) == true) {
                     Device.addToFoundDevices(BluetoothDeviceIDS(it.device.name, it.device.address, getDeviceData(it.device), it.device))
                 }
@@ -214,7 +214,7 @@ class BluetoothConnection(private val mContext: Context) {
     private suspend fun searchLE(devicesList: MutableState<Set<BluetoothDeviceIDS>>, flow: Flow<ScanResult>) {
         flow.collect {
             try {
-                Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
+                //Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
                 devicesList.value.find { found -> found.address == it.device.address }?.let { deviceFound ->
                     deviceFound.device = it.device
                     connect(deviceFound)
