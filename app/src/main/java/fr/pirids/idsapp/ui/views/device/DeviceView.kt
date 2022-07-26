@@ -39,7 +39,6 @@ import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.extensions.custom_success
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import fr.pirids.idsapp.data.items.Device as DeviceItem
 

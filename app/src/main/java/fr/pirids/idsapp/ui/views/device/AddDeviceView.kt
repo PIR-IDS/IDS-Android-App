@@ -6,6 +6,7 @@
 package fr.pirids.idsapp.ui.views.device
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
@@ -24,11 +25,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -93,7 +97,8 @@ fun AddDeviceView(navController: NavHostController, appSnackbarHostState: Snackb
                     CircularProgressIndicator(
                         modifier = Modifier
                             .padding(horizontal = 18.dp)
-                            .size(25.dp)
+                            .size(25.dp),
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -142,44 +147,75 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
     LazyVerticalGrid(
         columns = GridCells.Adaptive(120.dp),
         horizontalArrangement = Arrangement.Center,
-        modifier = modifier.then(Modifier
-            .padding(top = 116.dp, start = 10.dp, end = 10.dp)
-            .fillMaxSize()
+        modifier = modifier.then(
+            Modifier
+                .padding(top = 116.dp, start = 10.dp, end = 10.dp)
+                .fillMaxSize()
         )) {
         items(Device.foundDevices.value.toList()) {
             val device = Device.getDeviceItemFromBluetoothDevice(it) ?: return@items
+            val connecting = remember { mutableStateOf(false) }
             Box(
                 modifier = Modifier
-                    .size(120.dp),
+                    .size(160.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Image(
-                        painter = painterResource(id = device.logo),
-                        contentDescription = device.name,
-                        //contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(90.dp)
-                            .clip(CircleShape)
-                            .clickable(
-                                enabled = true,
-                                onClickLabel = device.name,
-                                onClick = {
-                                    try {
-                                        Device.connectToDevice(it, ble, scope) { success ->
-                                            scope.launch(Dispatchers.Main) {
-                                                appSnackbarHostState.showSnackbar("${device.name} | " + if (success) successMessage else failMessage)
+                    Box(contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = painterResource(id = device.logo),
+                            contentDescription = device.name,
+                            //contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(90.dp)
+                                .clip(CircleShape)
+                                .clickable(
+                                    enabled = !connecting.value,
+                                    onClickLabel = device.name,
+                                    onClick = {
+                                        connecting.value = true
+                                        try {
+                                            Device.connectToDevice(it, ble, scope) { success ->
+                                                connecting.value = false
+                                                scope.launch(Dispatchers.Main) {
+                                                    appSnackbarHostState.showSnackbar("${device.name} | " + if (success) successMessage else failMessage)
+                                                }
                                             }
+                                        } catch (e: Exception) {
+                                            Log.e(
+                                                "AddDeviceView",
+                                                "Error while connecting to device",
+                                                e
+                                            )
+                                            connecting.value = false
                                         }
-                                    } catch (e: Exception) {
-                                        Log.e("AddDeviceView", "Error while connecting to device", e)
                                     }
-                                }
-                            )
-                    )
+                                )
+                        )
+                        this@Column.AnimatedVisibility(visible = connecting.value) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Image(
+                                    painter = ColorPainter(MaterialTheme.colorScheme.onBackground),
+                                    contentDescription = "",
+                                    //contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .clip(CircleShape)
+                                        .alpha(0.5f)
+                                )
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .size(40.dp),
+                                    color = MaterialTheme.colorScheme.background
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "${device.name} [${it.address}]",
                         style = MaterialTheme.typography.bodySmall,

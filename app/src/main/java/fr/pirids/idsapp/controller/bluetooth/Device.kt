@@ -28,7 +28,7 @@ object Device {
     ) = scope.launch {
             device.device
                 ?.let { ble.connect(device, onConnected) }
-                ?: throw Exception("Device null")
+                ?: run { onConnected(false) ; throw Exception("Device null") }
     }
 
     fun addKnownDeviceToDatabase(device: BluetoothDeviceIDS) {

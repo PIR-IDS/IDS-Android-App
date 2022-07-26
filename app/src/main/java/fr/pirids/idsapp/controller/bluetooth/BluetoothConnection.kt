@@ -290,6 +290,7 @@ class BluetoothConnection(private val mContext: Context) {
                         Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
                         bluetoothGatt.close()
                         Device.connectedDevices.value = Device.connectedDevices.value.minus(idsDevice)
+                        onConnected(false)
                     }
                 } catch (e: SecurityException) {
                     Log.e("BluetoothGattDiscoverServices", "Error while connecting to GATT", e)
@@ -494,7 +495,7 @@ class BluetoothConnection(private val mContext: Context) {
 
         // Connect to the device
         try {
-            bluetoothGatt = idsDevice.device?.connectGatt(mContext, false, gattCallback) ?: throw Exception("Device is null")
+            bluetoothGatt = idsDevice.device?.connectGatt(mContext, false, gattCallback) ?: run { onConnected(false) ; throw Exception("Device null") }
         } catch (e: SecurityException) {
             Log.e("BluetoothGattDiscoverServices", "Error while connecting", e)
         }
