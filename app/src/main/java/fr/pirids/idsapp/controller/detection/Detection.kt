@@ -4,22 +4,26 @@ import android.content.Context
 import android.util.Log
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.data.api.data.IzlyData
+import fr.pirids.idsapp.data.detection.Detection
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.ServiceId
+import fr.pirids.idsapp.data.model.AppDatabase
+import fr.pirids.idsapp.data.model.entity.detection.DetectionDevice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import fr.pirids.idsapp.data.items.Service as ServiceItem
+import fr.pirids.idsapp.data.model.entity.detection.Detection as DetectionEntity
 
 object Detection {
     private const val checkingDelayMillis = 15_000L
     private const val timeTolerance = 10_000.0
     private var startupTimestamp: Long = System.currentTimeMillis()
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val detectedIntrusions = mutableListOf<Long>()
+    private val detectedIntrusions = mutableListOf<Detection>()
 
     fun launchDetection(context: Context) {
         scope.launch { monitorServices(context) }
@@ -42,21 +46,21 @@ object Detection {
                         is IzlyData -> {
                             val compatibleDevices = ServiceItem.get(ServiceId.IZLY).compatibleDevices
 
-                            if(it in Service.monitoredServices.value && Device.connectedDevices.value.none { device -> Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices }) {
+                            // We list all the devices connected and we check if some of them are compatible with the service
+                            val currentlyConnectedCompatibleDevices = Device.connectedDevices.value.filter { device -> Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices }
+
+                            if(it in Service.monitoredServices.value && currentlyConnectedCompatibleDevices.isEmpty()) {
                                 // We mark the service as not monitored
                                 Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
                             }
 
-                            // We list all the devices connected and we check if some of them are compatible with the service
-                            Device.connectedDevices.value.forEach { device ->
-                                if (Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices) {
-                                    // We mark the service as monitored
-                                    if(it !in Service.monitoredServices.value) {
-                                        Service.addToMonitoredServices(it)
-                                    }
-                                    // We analyze the data
-                                    analyzeIzlyData(context, device, apiData)
+                            currentlyConnectedCompatibleDevices.forEach { device ->
+                                // We mark the service as monitored
+                                if(it !in Service.monitoredServices.value) {
+                                    Service.addToMonitoredServices(it)
                                 }
+                                // We analyze the data
+                                analyzeIzlyData(context, device, apiData, ServiceItem.get(it.serviceId), currentlyConnectedCompatibleDevices)
                             }
                         }
                         else -> {
@@ -75,27 +79,49 @@ object Detection {
      * Analyze the data from the device and find out if there is an intrusion by comparing the device data with the service data
      * This also trigger a notification if there is an intrusion
      */
-    private suspend fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData) {
+    private suspend fun analyzeIzlyData(context: Context, device: BluetoothDeviceIDS, apiData: IzlyData, service: ServiceItem, currentlyConnectedCompatibleDevices: List<BluetoothDeviceIDS>) {
         try {
             when (val devData = device.data) {
                 is WalletCardData -> {
                     apiData.transactionList.forEach { timestamp ->
                         // If the timestamp is in the past, it means that the transaction won't be processed
-                        if(timestamp > startupTimestamp && timestamp !in detectedIntrusions) {
+                        if(timestamp > startupTimestamp && timestamp !in detectedIntrusions.map { it.timestamp }) {
 
                             var intrusionDetected = true
                             devData.whenWalletOutArray.value.forEach { idsTime ->
                                 val idsTimestamp = idsTime.toInstant().toEpochMilli()
-                                Log.i("DETECTION", "IDS timestamp : $idsTimestamp")
-
                                 if (abs(timestamp - idsTimestamp) < timeTolerance) {
                                     intrusionDetected = false
                                 }
                             }
 
                             if (intrusionDetected) {
-                                detectedIntrusions.add(timestamp)
+                                Log.i("DETECTION", "IDS timestamp : $timestamp")
+                                val detection = Detection(timestamp, service, currentlyConnectedCompatibleDevices)
+                                detectedIntrusions.add(detection)
+                                // Trigger a notification
                                 NotificationHandler.triggerNotification(context, timestamp.toString())
+                                try {
+                                    // Save in database
+                                    val detectionId = AppDatabase.getInstance().detectionDao().insert(
+                                        DetectionEntity(
+                                            //TODO: improve this, maybe by including timestamp in ApiData, we will always have it anyway...
+                                            // Also the timestamp probably will be unique for EACH service data, so that's why we are doing this
+                                            apiDataId =  AppDatabase.getInstance().izlyDataDao().getByTimestamp(detection.timestamp)!!.id,
+                                            timestamp = detection.timestamp,
+                                        )
+                                    )
+                                    detection.connectedDevicesDuringDetection.forEach {
+                                        AppDatabase.getInstance().detectionDeviceDao().insert(
+                                            DetectionDevice(
+                                                detectionId = detectionId.toInt(),
+                                                deviceId = AppDatabase.getInstance().deviceDao().getFromAddress(it.address).id,
+                                            )
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("Detection", "Error while saving detection in database", e)
+                                }
                             }
                         }
                     }
@@ -103,23 +129,6 @@ object Detection {
             }
         } catch (e: Exception) {
             Log.e("Detection", "Error while getting data from device", e)
-        }
-    }
-
-    private suspend fun updateDeviceData(context: Context) : Nothing {
-        while(true) {
-            Device.connectedDevices.value.forEach {
-                try {
-                    when (val data = it.data) {
-                        is WalletCardData -> {
-
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("Detection", "Error while getting data from device", e)
-                }
-            }
-            delay(checkingDelayMillis)
         }
     }
 }

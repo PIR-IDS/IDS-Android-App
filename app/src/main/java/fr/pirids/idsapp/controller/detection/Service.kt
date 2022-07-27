@@ -24,6 +24,10 @@ object Service {
 
     fun getServiceItemFromApiService(apiService: ApiServiceIDS): Service? = Service.list.find { it.id == apiService.serviceId }
     fun getKnownApiServiceFromServiceItem(service: Service): ApiServiceIDS? = knownServices.value.find { it.serviceId == service.id }
+    fun getServiceItemFromApiData(apiData: ApiData): Service? = when(apiData) {
+        is IzlyData -> Service.get(ServiceId.IZLY)
+        else -> null
+    }
 
     suspend fun checkService(username: String, password: String, service: Service, updateDatabase: Boolean = true) : Boolean = getServiceAndStatus(username, password, service, updateDatabase).second
 
