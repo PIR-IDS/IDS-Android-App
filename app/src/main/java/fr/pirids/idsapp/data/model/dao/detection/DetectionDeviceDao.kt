@@ -14,6 +14,9 @@ interface DetectionDeviceDao {
     @Query("SELECT * FROM detection_device WHERE id = :id")
     fun get(id: Int): DetectionDevice
 
+    @Query("SELECT * FROM detection_device WHERE detection_id = :detection_id")
+    fun getAllFromDetectionId(detection_id: Int): List<DetectionDevice>
+
     @Insert
     fun insert(detectionDevice: DetectionDevice) : Long
 

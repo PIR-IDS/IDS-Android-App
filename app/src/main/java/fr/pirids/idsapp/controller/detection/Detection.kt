@@ -2,6 +2,7 @@ package fr.pirids.idsapp.controller.detection
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.detection.Detection
@@ -23,10 +24,42 @@ object Detection {
     private const val timeTolerance = 10_000.0
     private var startupTimestamp: Long = System.currentTimeMillis()
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val detectedIntrusions = mutableListOf<Detection>()
+    val detectedIntrusions = mutableStateOf(setOf<Detection>())
 
     fun launchDetection(context: Context) {
-        scope.launch { monitorServices(context) }
+        scope.launch {
+            try {
+                AppDatabase.getInstance(context).detectionDao().getAll().forEach {
+                    detectedIntrusions.value = detectedIntrusions.value.plus(
+                        Detection(
+                            it.timestamp,
+                            Service.getServiceItemFromTag(
+                                AppDatabase.getInstance(context).serviceTypeDao().get(
+                                    AppDatabase.getInstance(context).apiDataDao()
+                                        .get(it.apiDataId).serviceId
+                                ).serviceName
+                            )!!,
+                            AppDatabase.getInstance(context).detectionDeviceDao().getAllFromDetectionId(it.id).map { dd ->
+                                Device.getBluetoothDeviceFromAddress(AppDatabase.getInstance(context).deviceDao().get(dd.deviceId).address)!!
+                            }
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("Detection", "Error while loading past detected intrusions", e)
+            }
+            monitorServices(context)
+        }
+    }
+
+    suspend fun removeDetectionData(detection: Detection) {
+        detectedIntrusions.value = detectedIntrusions.value.minus(detection)
+        //TODO: delete from database
+    }
+
+    suspend fun removeAllDetectionData() {
+        detectedIntrusions.value = setOf()
+        //TODO: delete from database
     }
 
     private suspend fun monitorServices(context: Context) : Nothing {
@@ -85,7 +118,7 @@ object Detection {
                 is WalletCardData -> {
                     apiData.transactionList.forEach { timestamp ->
                         // If the timestamp is in the past, it means that the transaction won't be processed
-                        if(timestamp > startupTimestamp && timestamp !in detectedIntrusions.map { it.timestamp }) {
+                        if(timestamp > startupTimestamp && timestamp !in detectedIntrusions.value.map { it.timestamp }) {
 
                             var intrusionDetected = true
                             devData.whenWalletOutArray.value.forEach { idsTime ->
@@ -98,7 +131,7 @@ object Detection {
                             if (intrusionDetected) {
                                 Log.i("DETECTION", "IDS timestamp : $timestamp")
                                 val detection = Detection(timestamp, service, currentlyConnectedCompatibleDevices)
-                                detectedIntrusions.add(detection)
+                                detectedIntrusions.value = detectedIntrusions.value.plus(detection)
                                 // Trigger a notification
                                 NotificationHandler.triggerNotification(context, timestamp.toString())
                                 try {

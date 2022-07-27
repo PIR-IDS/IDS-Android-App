@@ -24,6 +24,7 @@ object Service {
 
     fun getServiceItemFromApiService(apiService: ApiServiceIDS): Service? = Service.list.find { it.id == apiService.serviceId }
     fun getKnownApiServiceFromServiceItem(service: Service): ApiServiceIDS? = knownServices.value.find { it.serviceId == service.id }
+    fun getServiceItemFromTag(tag: String): Service? = Service.list.find { it.id.tag == tag }
     fun getServiceItemFromApiData(apiData: ApiData): Service? = when(apiData) {
         is IzlyData -> Service.get(ServiceId.IZLY)
         else -> null

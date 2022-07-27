@@ -2,6 +2,8 @@
 
 package fr.pirids.idsapp.ui.views.menus
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
@@ -25,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -32,7 +35,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import fr.pirids.idsapp.controller.detection.Detection
 import fr.pirids.idsapp.controller.view.menus.NotificationViewController
+import fr.pirids.idsapp.data.notifications.Notification
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 
 @Composable
@@ -48,10 +53,11 @@ fun NotificationView(navController: NavHostController) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(items = NotificationViewController.notificationList.value) { item ->
+                items(items = Detection.detectedIntrusions.value.toList()) { detection ->
+                    val notification = NotificationViewController.getNotificationFromDetection(detection)
                     val dismissState = rememberDismissState(
                         confirmStateChange = {
-                            NotificationViewController.notificationList.value = NotificationViewController.notificationList.value.minus(item)
+                            NotificationViewController.removeDetectionData(detection)
                             true
                         }
                     )
@@ -81,7 +87,7 @@ fun NotificationView(navController: NavHostController) {
                             }
                         },
                         dismissContent = {
-                            NotificationCard(navController = navController)
+                            NotificationCard(navController = navController, notification)
                         },
                         directions = setOf(DismissDirection.EndToStart)
                     )
@@ -92,7 +98,7 @@ fun NotificationView(navController: NavHostController) {
 }
 
 @Composable
-fun NotificationCard(navController: NavHostController) {
+fun NotificationCard(navController: NavHostController, info: Notification) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -104,7 +110,7 @@ fun NotificationCard(navController: NavHostController) {
         Row {
             Column {
                 Text(
-                    text = stringResource(id = R.string.wallet_intrusion),
+                    text = stringResource(id = info.title),
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .padding(horizontal = 35.dp, vertical = 8.dp),
@@ -112,7 +118,7 @@ fun NotificationCard(navController: NavHostController) {
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = stringResource(id = R.string.suspicious_transaction),
+                    text = stringResource(id = info.message),
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .padding(horizontal = 40.dp, vertical = 0.5.dp),
@@ -129,10 +135,9 @@ fun NotificationCard(navController: NavHostController) {
                     .size(70.dp),
                 contentAlignment = Alignment.Center
             ) {
-                val izlyTest = ServiceItem.list.first()
                 Image(
-                    painter = painterResource(id = izlyTest.logo),
-                    contentDescription = izlyTest.name,
+                    painter = painterResource(id = info.service.logo),
+                    contentDescription = info.service.name,
                     //contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(60.dp)
@@ -179,7 +184,7 @@ private fun TopBar(navController: NavHostController) {
         contentColor = MaterialTheme.colorScheme.onPrimary,
         actions = {
             IconButton(
-                onClick = {}
+                onClick = { NotificationViewController.removeAllDetectionData() }
             ) {
                 Icon(
                     Icons.Outlined.Delete,
