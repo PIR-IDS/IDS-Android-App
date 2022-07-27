@@ -40,8 +40,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 import fr.pirids.idsapp.data.items.Device as DeviceItem
-import fr.pirids.idsapp.data.model.entity.DeviceData as DeviceDataEntity
-import fr.pirids.idsapp.data.model.entity.WalletCardData as WalletCardDataEntity
+import fr.pirids.idsapp.data.model.entity.device.DeviceData as DeviceDataEntity
+import fr.pirids.idsapp.data.model.entity.device.WalletCardData as WalletCardDataEntity
 
 class BluetoothConnection(private val mContext: Context) {
     var permissionsGranted = false

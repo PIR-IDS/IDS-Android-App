@@ -1,8 +1,8 @@
-package fr.pirids.idsapp.data.model.dao
+package fr.pirids.idsapp.data.model.dao.service
 
 import androidx.room.*
-import fr.pirids.idsapp.data.model.entity.ApiAuth
-import fr.pirids.idsapp.data.model.entity.ServiceType
+import fr.pirids.idsapp.data.model.entity.service.ApiAuth
+import fr.pirids.idsapp.data.model.entity.service.ServiceType
 
 @Dao
 interface ServiceTypeDao {

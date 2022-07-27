@@ -1,7 +1,7 @@
-package fr.pirids.idsapp.data.model.dao
+package fr.pirids.idsapp.data.model.dao.service
 
 import androidx.room.*
-import fr.pirids.idsapp.data.model.entity.ApiData
+import fr.pirids.idsapp.data.model.entity.service.ApiData
 
 @Dao
 interface ApiDataDao {

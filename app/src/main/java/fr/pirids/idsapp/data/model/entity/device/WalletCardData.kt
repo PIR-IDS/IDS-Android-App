@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.data.model.entity
+package fr.pirids.idsapp.data.model.entity.device
 
 import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
@@ -7,33 +7,28 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "izly_data",
+    tableName = "wallet_card_data",
     foreignKeys = [
         ForeignKey(
-            entity = ApiData::class,
+            entity = DeviceData::class,
             parentColumns = ["id"],
-            childColumns = ["api_id"],
+            childColumns = ["device_data_id"],
+            onUpdate = ForeignKey.CASCADE,
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
-data class IzlyData(
+data class WalletCardData(
     @NonNull
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "api_id", index = true)
-    val apiId: Int,
+    @ColumnInfo(name = "device_data_id", index = true)
+    val deviceDataId: Int,
 
     @NonNull
-    @ColumnInfo(name = "timestamp")
-    val timestamp: Long,
-
-    @ColumnInfo(name = "amount")
-    val amount: Int?,
-
-    @ColumnInfo(name = "localization")
-    val localization: String?,
+    @ColumnInfo(name = "wallet_out_timestamp")
+    val walletOutTimestamp: Long,
 )

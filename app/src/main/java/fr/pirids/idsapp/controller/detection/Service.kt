@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.controller.api.IzlyApi
-import fr.pirids.idsapp.controller.daemon.ServiceDaemon
 import fr.pirids.idsapp.data.api.auth.IzlyAuth
 import fr.pirids.idsapp.data.api.data.ApiData
 import fr.pirids.idsapp.data.api.data.IzlyData
@@ -15,8 +14,8 @@ import fr.pirids.idsapp.data.model.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import fr.pirids.idsapp.data.model.entity.ApiAuth as ApiAuthEntity
-import fr.pirids.idsapp.data.model.entity.IzlyAuth as IzlyAuthEntity
+import fr.pirids.idsapp.data.model.entity.service.ApiAuth as ApiAuthEntity
+import fr.pirids.idsapp.data.model.entity.service.IzlyAuth as IzlyAuthEntity
 
 object Service {
     val monitoredServices : MutableState<Set<ApiServiceIDS>> = mutableStateOf(setOf())

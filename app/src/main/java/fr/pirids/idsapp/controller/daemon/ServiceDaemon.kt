@@ -6,9 +6,9 @@ import fr.pirids.idsapp.data.api.data.ApiData
 import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
-import fr.pirids.idsapp.data.model.entity.ApiAuth
-import fr.pirids.idsapp.data.model.entity.ApiData as ApiDataEntity
-import fr.pirids.idsapp.data.model.entity.IzlyData as IzlyDataEntity
+import fr.pirids.idsapp.data.model.entity.service.ApiAuth
+import fr.pirids.idsapp.data.model.entity.service.ApiData as ApiDataEntity
+import fr.pirids.idsapp.data.model.entity.service.IzlyData as IzlyDataEntity
 import kotlinx.coroutines.*
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 

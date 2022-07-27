@@ -1,7 +1,7 @@
-package fr.pirids.idsapp.data.model.dao
+package fr.pirids.idsapp.data.model.dao.device
 
 import androidx.room.*
-import fr.pirids.idsapp.data.model.entity.DeviceDataType
+import fr.pirids.idsapp.data.model.entity.device.DeviceDataType
 
 @Dao
 interface DeviceDataTypeDao {

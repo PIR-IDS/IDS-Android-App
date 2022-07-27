@@ -5,7 +5,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import fr.pirids.idsapp.data.model.AppDatabase
-import fr.pirids.idsapp.data.model.entity.Device
+import fr.pirids.idsapp.data.model.entity.device.Device
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

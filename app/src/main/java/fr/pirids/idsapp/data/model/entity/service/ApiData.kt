@@ -1,10 +1,13 @@
-package fr.pirids.idsapp.data.model.entity
+package fr.pirids.idsapp.data.model.entity.service
 
 import androidx.annotation.NonNull
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "api_auth",
+    tableName = "api_data",
     foreignKeys = [
         ForeignKey(
             entity = ServiceType::class,
@@ -15,7 +18,7 @@ import androidx.room.*
         )
     ]
 )
-data class ApiAuth(
+data class ApiData(
     @NonNull
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")

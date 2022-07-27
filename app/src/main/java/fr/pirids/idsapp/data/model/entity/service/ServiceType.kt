@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.data.model.entity
+package fr.pirids.idsapp.data.model.entity.service
 
 import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
@@ -7,16 +7,16 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "device_data_type",
-    indices = [Index(value = ["data_name"], unique = true)]
+    tableName = "service_type",
+    indices = [Index(value = ["service_name"], unique = true)]
 )
-data class DeviceDataType(
+data class ServiceType(
     @NonNull
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     val id: Int = 0,
 
     @NonNull
-    @ColumnInfo(name = "data_name")
-    val dataName: String
+    @ColumnInfo(name = "service_name")
+    val serviceName: String
 )

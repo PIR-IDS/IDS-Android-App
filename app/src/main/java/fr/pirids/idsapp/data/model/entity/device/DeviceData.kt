@@ -1,4 +1,4 @@
-package fr.pirids.idsapp.data.model.entity
+package fr.pirids.idsapp.data.model.entity.device
 
 import androidx.annotation.NonNull
 import androidx.room.*

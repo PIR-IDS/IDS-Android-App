@@ -1,11 +1,10 @@
-package fr.pirids.idsapp.data.model.dao
+package fr.pirids.idsapp.data.model.dao.device
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import fr.pirids.idsapp.data.model.entity.DeviceData
-import fr.pirids.idsapp.data.model.entity.WalletCardData
+import fr.pirids.idsapp.data.model.entity.device.WalletCardData
 
 @Dao
 interface WalletCardDataDao {
