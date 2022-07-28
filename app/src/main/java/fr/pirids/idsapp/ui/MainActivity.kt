@@ -29,6 +29,9 @@ class MainActivity : ComponentActivity() {
 
         ble.registerBroadCast()
 
+        // We create the main Notification channel
+        NotificationHandler.createNotificationChannel(this)
+
         CoroutineScope(Dispatchers.IO).launch {
             // We initialize the database context with the MainActivity
             AppDatabase.initInstance(this@MainActivity)
@@ -36,10 +39,11 @@ class MainActivity : ComponentActivity() {
             // We check if there is a service to monitor and a device to connect to
             DeviceDaemon.searchForDevice(ble)
             ServiceDaemon.connectToServices()
-            CoroutineScope(Dispatchers.IO).launch {
-                ServiceDaemon.handleServiceStatus()
-            }
-            ServiceDaemon.handleDisconnectedKnownServices()
+            CoroutineScope(Dispatchers.IO).launch { ServiceDaemon.handleServiceStatus() }
+            CoroutineScope(Dispatchers.IO).launch { ServiceDaemon.handleDisconnectedKnownServices() }
+
+            // We launch the IDS monitoring
+            Detection.launchDetection(this@MainActivity)
         }
 
         setContent {
@@ -59,12 +63,6 @@ class MainActivity : ComponentActivity() {
                     //FIXME: don't relaunch the search if already searching
                     ServiceDaemon.connectToServices()
                 }
-
-                // We create the main Notification channel
-                NotificationHandler.createNotificationChannel(this)
-
-                // We launch the IDS monitoring
-                Detection.launchDetection(this)
 
                 // We launch the router
                 IDSApp()

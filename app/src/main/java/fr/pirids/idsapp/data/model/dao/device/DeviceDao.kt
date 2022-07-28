@@ -12,12 +12,15 @@ interface DeviceDao {
     fun get(id: Int): Device
 
     @Query("SELECT * FROM device WHERE address = :address")
-    fun getFromAddress(address: String): Device
+    fun getFromAddress(address: String): Device?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Update
+    fun update(device: Device)
+
+    @Insert
     fun insert(device: Device) : Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     fun insertAll(vararg devices: Device) : List<Long>
 
     @Delete

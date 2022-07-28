@@ -33,11 +33,18 @@ object Device {
 
     fun addKnownDeviceToDatabase(device: BluetoothDeviceIDS) {
         CoroutineScope(Dispatchers.IO).launch {
+            val deviceEntity = Device(name = device.name, address = device.address)
             try {
-                AppDatabase.getInstance().deviceDao().insert(Device(
-                    name = device.name,
-                    address = device.address
-                ))
+                AppDatabase.getInstance().deviceDao().getFromAddress(device.address)
+                    ?.let {
+                        AppDatabase.getInstance().deviceDao().update(
+                            Device(
+                                id = it.id,
+                                name = deviceEntity.name,
+                                address = deviceEntity.address
+                            )
+                        )
+                    } ?: AppDatabase.getInstance().deviceDao().insert(deviceEntity)
             } catch (e: Exception) {
                 Log.e("Service", "Error while saving device in database: $e")
             }

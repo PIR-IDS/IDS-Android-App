@@ -148,7 +148,7 @@ object Detection {
                                         AppDatabase.getInstance().detectionDeviceDao().insert(
                                             DetectionDevice(
                                                 detectionId = detectionId.toInt(),
-                                                deviceId = AppDatabase.getInstance().deviceDao().getFromAddress(it.address).id,
+                                                deviceId = AppDatabase.getInstance().deviceDao().getFromAddress(it.address)!!.id,
                                             )
                                         )
                                     }

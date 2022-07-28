@@ -453,7 +453,7 @@ class BluetoothConnection(private val mContext: Context) {
                                             val deviceDataEntity = DeviceDataEntity(
                                                 deviceId = AppDatabase.getInstance()
                                                     .deviceDao()
-                                                    .getFromAddress(idsDevice.address).id,
+                                                    .getFromAddress(idsDevice.address)!!.id,
                                                 dataTypeId = AppDatabase.getInstance()
                                                     .deviceDataTypeDao()
                                                     .getByName(WalletCardData.tag).id
