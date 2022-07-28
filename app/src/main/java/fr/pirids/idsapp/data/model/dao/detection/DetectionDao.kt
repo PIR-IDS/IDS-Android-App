@@ -14,6 +14,9 @@ interface DetectionDao {
     @Query("SELECT * FROM detection WHERE id = :id")
     fun get(id: Int): Detection
 
+    @Query("SELECT * FROM detection WHERE api_data_id = :api_data_id AND timestamp = :timestamp")
+    fun getFromApiDataIdAndTimestamp(api_data_id: Int, timestamp: Long): Detection
+
     @Insert
     fun insert(detection: Detection) : Long
 

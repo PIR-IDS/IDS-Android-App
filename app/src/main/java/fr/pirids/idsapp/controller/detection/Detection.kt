@@ -54,12 +54,30 @@ object Detection {
 
     suspend fun removeDetectionData(detection: Detection) {
         detectedIntrusions.value = detectedIntrusions.value.minus(detection)
-        //TODO: delete from database
+        try {
+            //TODO: improve this, once again we still don't know if we want the timestamp in the ApiData or in the Detection etc...
+            var apiDataId = -1
+            when(detection.service.id) {
+                ServiceId.IZLY -> {
+                    AppDatabase.getInstance().izlyDataDao().getByTimestamp(detection.timestamp)?.let {
+                        apiDataId = it.apiId
+                    }
+                }
+            }
+            AppDatabase.getInstance().detectionDao().delete(
+                AppDatabase.getInstance().detectionDao().getFromApiDataIdAndTimestamp(
+                    apiDataId,
+                    detection.timestamp
+                )
+            )
+        } catch (e: Exception) {
+            Log.e("Detection", "Error while deleting detection data", e)
+        }
     }
 
     suspend fun removeAllDetectionData() {
         detectedIntrusions.value = setOf()
-        //TODO: delete from database
+        AppDatabase.getInstance().detectionDao().getAll().forEach { AppDatabase.getInstance().detectionDao().delete(it) }
     }
 
     private suspend fun monitorServices(context: Context) : Nothing {
