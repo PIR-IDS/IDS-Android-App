@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalAnimationApi::class)
+@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 
 package fr.pirids.idsapp.ui.views.service
 

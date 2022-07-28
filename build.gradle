@@ -4,9 +4,8 @@ buildscript {
     ext {
         kotlin_version = '1.7.0'
         ksp_version = "$kotlin_version-1.0.6"
-        compose_version = '1.2.0-rc03'
-        accompanist_version = '0.24.13-rc'
-        room_version = '2.4.2'
+        accompanist_version = '0.25.0'
+        room_version = '2.4.3'
     }
 }
 

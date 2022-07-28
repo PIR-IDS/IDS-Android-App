@@ -55,7 +55,7 @@ object Detection {
     suspend fun removeDetectionData(detection: Detection) {
         detectedIntrusions.value = detectedIntrusions.value.minus(detection)
         try {
-            //TODO: improve this, once again we still don't know if we want the timestamp in the ApiData or in the Detection etc...
+            //TODO: improve this, once again we still don't know if we want the timestamp in the ApiData or in the Detection, etc...
             var apiDataId = -1
             when(detection.service.id) {
                 ServiceId.IZLY -> {
