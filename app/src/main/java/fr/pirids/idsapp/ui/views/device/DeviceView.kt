@@ -134,7 +134,7 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                         when(device.id) {
                             DeviceId.WALLET_CARD -> {
                                 val dataSet = (bleDev.data as WalletCardData).whenWalletOutArray
-                                items(dataSet.value.reversed()) { zdt ->
+                                items(dataSet.value.sortedByDescending { zdt -> zdt }) { zdt ->
                                     dataSetEmpty.value = dataSet.value.isEmpty()
                                     DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.format(
                                         DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")

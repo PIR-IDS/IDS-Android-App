@@ -407,7 +407,7 @@ fun HistoryList(modifier: Modifier = Modifier, service: Service) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(dataList.value) {
+        items(dataList.value.sortedByDescending { it }) {
             Item(
                 item = Instant
                         .ofEpochMilli(it).atZone(ZoneId.of("UTC"))

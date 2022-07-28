@@ -53,7 +53,7 @@ fun NotificationView(navController: NavHostController) {
                     .padding(top = it.calculateTopPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items(items = Detection.detectedIntrusions.value.toList()) { detection ->
+                items(items = Detection.detectedIntrusions.value.sortedByDescending { i -> i.timestamp }.toList()) { detection ->
                     val notification = NotificationViewController.getNotificationFromDetection(detection)
                     val dismissState = rememberDismissState(
                         confirmStateChange = {
