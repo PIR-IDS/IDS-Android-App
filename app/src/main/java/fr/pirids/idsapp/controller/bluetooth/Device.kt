@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
+import fr.pirids.idsapp.data.device.data.DeviceData
+import fr.pirids.idsapp.data.device.data.WalletCardData
+import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.data.model.AppDatabase
 import fr.pirids.idsapp.data.model.entity.device.Device
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +22,12 @@ object Device {
     fun getBluetoothDeviceFromAddress(address: String) : BluetoothDeviceIDS? = knownDevices.value.find { it.address == address }
     fun getDeviceItemFromBluetoothDevice(bleDevice: BluetoothDeviceIDS): DeviceItem? = DeviceItem.list.find { it.name == bleDevice.name }
     fun getDeviceItemFromName(name: String): DeviceItem? = DeviceItem.list.find { it.name == name }
+
+    fun getDeviceDataByName(name: String) : DeviceData =
+        when(getDeviceItemFromName(name)?.id) {
+            DeviceId.WALLET_CARD -> WalletCardData()
+            else -> throw Exception("Unknown device type")
+        }
 
     fun connectToDevice(
         device: BluetoothDeviceIDS,

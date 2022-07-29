@@ -227,16 +227,10 @@ class BluetoothConnection(private val mContext: Context) {
 
     private fun getDeviceData(device: BluetoothDevice) : DeviceData =
         try {
-            getDeviceDataByName(device.name)
+            Device.getDeviceDataByName(device.name)
         } catch (e: SecurityException) {
             Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
             throw e
-        }
-
-    fun getDeviceDataByName(name: String) : DeviceData =
-        when(Device.getDeviceItemFromName(name)?.id) {
-            DeviceId.WALLET_CARD -> WalletCardData()
-            else -> throw Exception("Unknown device type")
         }
 
     fun connect(idsDevice: BluetoothDeviceIDS, onConnected: (Boolean) -> Unit = {}) {

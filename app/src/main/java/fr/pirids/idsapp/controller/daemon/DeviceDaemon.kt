@@ -11,11 +11,11 @@ import java.time.ZoneId
 import java.util.*
 
 object DeviceDaemon {
-    suspend fun searchForDevice(ble: BluetoothConnection) {
+    suspend fun searchForDevice() {
         try {
             AppDatabase.getInstance().deviceDao().getAll().forEach {
                 try {
-                    val deviceData = ble.getDeviceDataByName(it.name)
+                    val deviceData = Device.getDeviceDataByName(it.name)
 
                     when(deviceData) {
                         is WalletCardData -> {

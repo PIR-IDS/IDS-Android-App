@@ -13,7 +13,7 @@ import kotlinx.coroutines.*
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 
 object ServiceDaemon {
-    private const val checkingDelayMillis = 15_000L
+    const val CHECKING_DELAY_MILLIS = 15_000L
 
     fun connectToServices() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -43,69 +43,66 @@ object ServiceDaemon {
         }
     }
 
-    suspend fun handleServiceStatus() : Nothing {
-        while(true) {
-            delay(checkingDelayMillis)
-            Service.connectedServices.value.forEach {
-                try {
-                    val api = it.api
-                    var apiConnected = true
-                    if(api?.checkConnection() != true) {
-                        apiConnected = false
-                        // If the reconnection failed, we disconnect the service
-                        Service.removeFromConnectedServices(it)
-                        if(api != null) {
-                            // Try to reconnect (maybe the token has expired)
-                            apiConnected = connectToService(
-                                AppDatabase.getInstance().apiAuthDao().get(
-                                    AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id
-                                )
+    suspend fun handleServiceStatus() {
+        Service.connectedServices.value.forEach {
+            try {
+                val api = it.api
+                var apiConnected = true
+                if(api?.checkConnection() != true) {
+                    apiConnected = false
+                    // If the reconnection failed, we disconnect the service
+                    Service.removeFromConnectedServices(it)
+                    if(api != null) {
+                        // Try to reconnect (maybe the token has expired)
+                        apiConnected = connectToService(
+                            AppDatabase.getInstance().apiAuthDao().get(
+                                AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id
                             )
-                        }
+                        )
+                    }
+                }
+
+                if(apiConnected && api != null) {
+                    // If we are still connected, we update the service data
+                    it.data.value = try {
+                        getMergedRemoteAndLocalData(api.getData(), it.data.value, serviceId = api.serviceId)
+                    } catch (e: Exception) {
+                        Log.e("ServiceDaemon", "Error while updating service data", e)
+                        it.data.value
                     }
 
-                    if(apiConnected && api != null) {
-                        // If we are still connected, we update the service data
-                        it.data.value = try {
-                            getMergedRemoteAndLocalData(api.getData(), it.data.value, serviceId = api.serviceId)
-                        } catch (e: Exception) {
-                            Log.e("ServiceDaemon", "Error while updating service data", e)
-                            it.data.value
-                        }
-
-                        // Save the data in the database
-                        try {
-                            when(api.serviceId) {
-                                ServiceId.IZLY -> {
-                                    val serviceId = AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id
-                                    //TODO: improve this logic, maybe by including timestamp in ApiData, we will always have it anyway...
-                                    // Also the timestamp probably will be unique for EACH service data, so find a way to handle all of that correctly...
-                                    // Right now this is a bit overkill to check for EACH timestamp EVERY 15 seconds, we have to improve this
-                                    (it.data.value as IzlyData).transactionList.forEach { timestamp ->
-                                        try {
-                                            // If the transaction is already in the database, we don't want to insert it again
-                                            AppDatabase.getInstance().izlyDataDao().getByTimestamp(timestamp)
-                                                ?: AppDatabase.getInstance().izlyDataDao().insert(
-                                                    IzlyDataEntity(
-                                                        apiId = AppDatabase.getInstance().apiDataDao().insert(ApiDataEntity(serviceId = serviceId)).toInt(),
-                                                        timestamp = timestamp,
-                                                        amount = null,
-                                                        localization = null
-                                                    )
-                                            )
-                                        } catch (e: Exception) {
-                                            Log.e("ServiceDaemon", "Error while saving Izly data", e)
-                                        }
+                    // Save the data in the database
+                    try {
+                        when(api.serviceId) {
+                            ServiceId.IZLY -> {
+                                val serviceId = AppDatabase.getInstance().serviceTypeDao().getByName(api.serviceId.tag).id
+                                //TODO: improve this logic, maybe by including timestamp in ApiData, we will always have it anyway...
+                                // Also the timestamp probably will be unique for EACH service data, so find a way to handle all of that correctly...
+                                // Right now this is a bit overkill to check for EACH timestamp EVERY 15 seconds, we have to improve this
+                                (it.data.value as IzlyData).transactionList.forEach { timestamp ->
+                                    try {
+                                        // If the transaction is already in the database, we don't want to insert it again
+                                        AppDatabase.getInstance().izlyDataDao().getByTimestamp(timestamp)
+                                            ?: AppDatabase.getInstance().izlyDataDao().insert(
+                                                IzlyDataEntity(
+                                                    apiId = AppDatabase.getInstance().apiDataDao().insert(ApiDataEntity(serviceId = serviceId)).toInt(),
+                                                    timestamp = timestamp,
+                                                    amount = null,
+                                                    localization = null
+                                                )
+                                        )
+                                    } catch (e: Exception) {
+                                        Log.e("ServiceDaemon", "Error while saving Izly data", e)
                                     }
                                 }
                             }
-                        } catch (e: Exception) {
-                            Log.e("ServiceDaemon", "Error while saving service data", e)
                         }
+                    } catch (e: Exception) {
+                        Log.e("ServiceDaemon", "Error while saving service data", e)
                     }
-                } catch (e: Exception) {
-                    Log.e("ServiceDaemon", "Error while checking service status", e)
                 }
+            } catch (e: Exception) {
+                Log.e("ServiceDaemon", "Error while checking service status", e)
             }
         }
     }
@@ -123,11 +120,8 @@ object ServiceDaemon {
         }
     }
 
-    suspend fun handleDisconnectedKnownServices() : Nothing {
-        while(true) {
-            delay(checkingDelayMillis)
-            reconnectToDisconnectedKnownServices()
-        }
+    suspend fun handleDisconnectedKnownServices() {
+        reconnectToDisconnectedKnownServices()
     }
 
     private suspend fun reconnectToDisconnectedKnownServices() {

@@ -20,35 +20,31 @@ import fr.pirids.idsapp.data.items.Service as ServiceItem
 import fr.pirids.idsapp.data.model.entity.detection.Detection as DetectionEntity
 
 object Detection {
-    private const val checkingDelayMillis = 15_000L
-    private const val timeTolerance = 10_000.0
+    const val CHECKING_DELAY_MILLIS = 15_000L
+    private const val TIME_TOLERANCE = 10_000.0
     private var startupTimestamp: Long = System.currentTimeMillis()
-    private val scope = CoroutineScope(Dispatchers.Default)
     val detectedIntrusions = mutableStateOf(setOf<Detection>())
 
-    fun launchDetection(context: Context) {
-        scope.launch {
-            try {
-                AppDatabase.getInstance(context).detectionDao().getAll().forEach {
-                    detectedIntrusions.value = detectedIntrusions.value.plus(
-                        Detection(
-                            it.timestamp,
-                            Service.getServiceItemFromTag(
-                                AppDatabase.getInstance(context).serviceTypeDao().get(
-                                    AppDatabase.getInstance(context).apiDataDao()
-                                        .get(it.apiDataId).serviceId
-                                ).serviceName
-                            )!!,
-                            AppDatabase.getInstance(context).detectionDeviceDao().getAllFromDetectionId(it.id).map { dd ->
-                                Device.getBluetoothDeviceFromAddress(AppDatabase.getInstance(context).deviceDao().get(dd.deviceId).address)!!
-                            }
-                        )
+    suspend fun loadPastDetections(context: Context) {
+        try {
+            AppDatabase.getInstance(context).detectionDao().getAll().forEach {
+                detectedIntrusions.value = detectedIntrusions.value.plus(
+                    Detection(
+                        it.timestamp,
+                        Service.getServiceItemFromTag(
+                            AppDatabase.getInstance(context).serviceTypeDao().get(
+                                AppDatabase.getInstance(context).apiDataDao()
+                                    .get(it.apiDataId).serviceId
+                            ).serviceName
+                        )!!,
+                        AppDatabase.getInstance(context).detectionDeviceDao().getAllFromDetectionId(it.id).map { dd ->
+                            Device.getBluetoothDeviceFromAddress(AppDatabase.getInstance(context).deviceDao().get(dd.deviceId).address)!!
+                        }
                     )
-                }
-            } catch (e: Exception) {
-                Log.e("Detection", "Error while loading past detected intrusions", e)
+                )
             }
-            monitorServices(context)
+        } catch (e: Exception) {
+            Log.e("Detection", "Error while loading past detected intrusions", e)
         }
     }
 
@@ -80,49 +76,46 @@ object Detection {
         AppDatabase.getInstance().detectionDao().getAll().forEach { AppDatabase.getInstance().detectionDao().delete(it) }
     }
 
-    private suspend fun monitorServices(context: Context) : Nothing {
-        while(true) {
-            Service.monitoredServices.value.forEach {
-                if(it !in Service.connectedServices.value) {
-                    // We mark the service as not monitored
-                    Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
-                }
+    suspend fun monitorServices(context: Context) {
+        Service.monitoredServices.value.forEach {
+            if(it !in Service.connectedServices.value) {
+                // We mark the service as not monitored
+                Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
             }
+        }
 
-            // For each service connected we are checking its compatible devices
-            Service.connectedServices.value.forEach {
-                try {
-                    // We check the service data
-                    when (val apiData = it.data.value) {
-                        is IzlyData -> {
-                            val compatibleDevices = ServiceItem.get(ServiceId.IZLY).compatibleDevices
+        // For each service connected we are checking its compatible devices
+        Service.connectedServices.value.forEach {
+            try {
+                // We check the service data
+                when (val apiData = it.data.value) {
+                    is IzlyData -> {
+                        val compatibleDevices = ServiceItem.get(ServiceId.IZLY).compatibleDevices
 
-                            // We list all the devices connected and we check if some of them are compatible with the service
-                            val currentlyConnectedCompatibleDevices = Device.connectedDevices.value.filter { device -> Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices }
+                        // We list all the devices connected and we check if some of them are compatible with the service
+                        val currentlyConnectedCompatibleDevices = Device.connectedDevices.value.filter { device -> Device.getDeviceItemFromBluetoothDevice(device) in compatibleDevices }
 
-                            if(it in Service.monitoredServices.value && currentlyConnectedCompatibleDevices.isEmpty()) {
-                                // We mark the service as not monitored
-                                Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
-                            }
-
-                            currentlyConnectedCompatibleDevices.forEach { device ->
-                                // We mark the service as monitored
-                                if(it !in Service.monitoredServices.value) {
-                                    Service.addToMonitoredServices(it)
-                                }
-                                // We analyze the data
-                                analyzeIzlyData(context, device, apiData, ServiceItem.get(it.serviceId), currentlyConnectedCompatibleDevices)
-                            }
+                        if(it in Service.monitoredServices.value && currentlyConnectedCompatibleDevices.isEmpty()) {
+                            // We mark the service as not monitored
+                            Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
                         }
-                        else -> {
-                            Log.e("Detection", "Unsupported service data type")
+
+                        currentlyConnectedCompatibleDevices.forEach { device ->
+                            // We mark the service as monitored
+                            if(it !in Service.monitoredServices.value) {
+                                Service.addToMonitoredServices(it)
+                            }
+                            // We analyze the data
+                            analyzeIzlyData(context, device, apiData, ServiceItem.get(it.serviceId), currentlyConnectedCompatibleDevices)
                         }
                     }
-                } catch (e: Exception) {
-                    Log.e("Detection", "Error while getting data from service", e)
+                    else -> {
+                        Log.e("Detection", "Unsupported service data type")
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e("Detection", "Error while getting data from service", e)
             }
-            delay(checkingDelayMillis)
         }
     }
 
@@ -141,7 +134,7 @@ object Detection {
                             var intrusionDetected = true
                             devData.whenWalletOutArray.value.forEach { idsTime ->
                                 val idsTimestamp = idsTime.toInstant().toEpochMilli()
-                                if (abs(timestamp - idsTimestamp) < timeTolerance) {
+                                if (abs(timestamp - idsTimestamp) < TIME_TOLERANCE) {
                                     intrusionDetected = false
                                 }
                             }
