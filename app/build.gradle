@@ -116,7 +116,7 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:1.2.0"
     debugImplementation "androidx.compose.ui:ui-test-manifest:1.2.0"
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.0"
     testImplementation "androidx.room:room-testing:$room_version"
 
     androidTestImplementation "androidx.test.ext:junit:1.1.3"
