@@ -60,7 +60,6 @@ class BluetoothConnection(private val mContext: Context) {
         val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
 
         fun launchChooser(chooserLauncher: IntentSender) {
-            //chooserLauncher.writeToParcel()
             //TODO: override the chooser launcher to use the custom chooser
             managedActivity.launch(IntentSenderRequest.Builder(chooserLauncher).build())
         }
@@ -179,10 +178,10 @@ class BluetoothConnection(private val mContext: Context) {
         val permissions: MutableList<String> = mutableListOf()
         permissions.add(Manifest.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND)
         permissions.add(Manifest.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= 31) {
             permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
             permissions.add(Manifest.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE)
-        } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+        } else if (Build.VERSION.SDK_INT <= 30) {
             permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
             permissions.add(Manifest.permission.BLUETOOTH)
         }

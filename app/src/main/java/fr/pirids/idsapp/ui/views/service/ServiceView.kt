@@ -334,8 +334,6 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
         AnimatedVisibility(visible = !ServiceViewController.isLoading.value) {
             Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
                 Button(
-                    //TODO: trigger this onclick at each modal opening if
-                    // this service was previously connected (credentials in database)
                     onClick = { ServiceViewController.onLoginAction(
                         focusManager,
                         service,

@@ -42,6 +42,11 @@ class BluetoothCompanionService: CompanionDeviceService() {
         try {
             //TODO: optimize this: indeed for now we are launching the detection every time a device is connected
             // which means that we are calling the APIs every time a device is connected
+            // Also, find a fix to correctly add the connectedDevicesDuringDetection, because here each device is processed separately
+            // To improve this we could:
+            // - launch a Worker that will fetch the APIs regularly, and save the data in the database
+            // - instead of launching the service scan, retrieve the data from the database and use it in Detection
+            // - use knownServices instead of connectedServices in monitorServices
 
             // We initialize the app
             Initiator.init(this)
