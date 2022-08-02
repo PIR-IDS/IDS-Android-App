@@ -3,6 +3,7 @@ package fr.pirids.idsapp.controller.detection
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.detection.Detection
@@ -11,10 +12,10 @@ import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
 import fr.pirids.idsapp.data.model.entity.detection.DetectionDevice
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.math.abs
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 import fr.pirids.idsapp.data.model.entity.detection.Detection as DetectionEntity
@@ -143,8 +144,21 @@ object Detection {
                                 Log.i("DETECTION", "IDS timestamp : $timestamp")
                                 val detection = Detection(timestamp, service, currentlyConnectedCompatibleDevices)
                                 detectedIntrusions.value = detectedIntrusions.value.plus(detection)
+
                                 // Trigger a notification
-                                NotificationHandler.triggerNotification(context, timestamp.toString())
+                                NotificationHandler.triggerNotification(
+                                    context = context,
+                                    title = context.resources.getString(R.string.alert_notify),
+                                    message =
+                                        context.resources.getString(R.string.suspicious_transaction) +
+                                        " " + Instant
+                                            .ofEpochMilli(timestamp)
+                                            .atZone(ZoneId.of("UTC"))
+                                            .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                                            .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
+                                    idsAlert = true
+                                )
+
                                 try {
                                     // Save in database
                                     val detectionId = AppDatabase.getInstance().detectionDao().insert(

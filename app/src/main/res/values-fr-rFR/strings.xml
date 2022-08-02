@@ -49,4 +49,5 @@
     <string name="not_connected">Non connecté</string>
     <string name="service_monitored">Service monitoré</string>
     <string name="service_not_monitored">Service non monitoré</string>
+    <string name="important_ids_channel_description">Canal prioritaire IDS</string>
 </resources>

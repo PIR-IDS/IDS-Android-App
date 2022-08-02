@@ -3,23 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- BLE is necessary to use the app -->
-    <uses-feature
-        android:name="android.hardware.bluetooth_le"
-        android:required="true" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 
-    <!-- Request legacy Bluetooth permissions on older devices. -->
-    <uses-permission
-        android:name="android.permission.ACCESS_COARSE_LOCATION"
-        android:maxSdkVersion="28" />
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="30" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
-    <uses-permission
-        android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30" />
+    <!-- Needed to handle our BLE devices -->
+    <uses-feature android:name="android.software.companion_device_setup"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE" />
+
     <!--
          Needed to look for Bluetooth devices.
          The app doesn't use Bluetooth scan results to derive physical
@@ -29,8 +21,15 @@
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation"
-        tools:targetApi="s" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+        tools:targetApi="29" />
+
+    <!-- Request legacy Bluetooth permissions on older devices. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
 
     <!-- Needed to access to the internet for the APIs -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -49,7 +48,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.IDSApp"
-        tools:targetApi="31">
+        tools:targetApi="29">
+        <service
+            android:name=".controller.daemon.services.BluetoothCompanionService"
+            android:label="@string/app_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_COMPANION_DEVICE_SERVICE">
+            <intent-filter>
+                <action android:name="android.companion.CompanionDeviceService" />
+            </intent-filter>
+            <property
+                android:name="android.companion.PROPERTY_PRIMARY_COMPANION_DEVICE_SERVICE"
+                android:value="true" />
+        </service>
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

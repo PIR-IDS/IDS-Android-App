@@ -3,19 +3,18 @@ package fr.pirids.idsapp.controller.bluetooth
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.*
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.companion.AssociationRequest
+import android.companion.BluetoothLeDeviceFilter
+import android.companion.CompanionDeviceManager
+import android.content.*
 import android.os.Build
+import android.os.ParcelUuid
 import android.util.Log
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.runtime.MutableState
+import androidx.activity.result.IntentSenderRequest
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import fr.pirids.idsapp.data.device.data.DeviceData
 import fr.pirids.idsapp.data.device.data.WalletCardData
@@ -31,14 +30,11 @@ import fr.pirids.idsapp.extensions.isWritable
 import fr.pirids.idsapp.extensions.printGattTable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
+import java.util.regex.Pattern
 import fr.pirids.idsapp.data.items.Device as DeviceItem
 import fr.pirids.idsapp.data.model.entity.device.DeviceData as DeviceDataEntity
 import fr.pirids.idsapp.data.model.entity.device.WalletCardData as WalletCardDataEntity
@@ -46,7 +42,107 @@ import fr.pirids.idsapp.data.model.entity.device.WalletCardData as WalletCardDat
 class BluetoothConnection(private val mContext: Context) {
     var permissionsGranted = false
     private val defaultScope = CoroutineScope(Dispatchers.IO)
-    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private var bluetoothAdapter: BluetoothAdapter? = null
+
+    private fun initiateAssociation(managedActivity: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>) {
+        val deviceFilter: BluetoothLeDeviceFilter = BluetoothLeDeviceFilter.Builder()
+            // Match only Bluetooth devices whose name matches the pattern.
+            .setNamePattern(Pattern.compile(DeviceItem.idsPrefix + " *"))
+            // Match only Bluetooth devices whose service UUID matches this pattern.
+            //.addServiceUuid(ParcelUuid.fromString(), null)
+            .build()
+
+        val pairingRequest: AssociationRequest = AssociationRequest.Builder()
+            // Find only devices that match this request filter.
+            .addDeviceFilter(deviceFilter)
+            .build()
+
+        val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+
+        fun launchChooser(chooserLauncher: IntentSender) {
+            //chooserLauncher.writeToParcel()
+            //TODO: override the chooser launcher to use the custom chooser
+            managedActivity.launch(IntentSenderRequest.Builder(chooserLauncher).build())
+        }
+
+        deviceManager.associate(pairingRequest,
+            if(Build.VERSION.SDK_INT >= 33) {
+                object : CompanionDeviceManager.Callback() {
+                    // Called when a device is found. Launch the IntentSender so the user
+                    // can select the device they want to pair with.
+                    override fun onAssociationPending(chooserLauncher: IntentSender) = launchChooser(chooserLauncher)
+
+                    override fun onFailure(error: CharSequence?) {
+                        Log.e("BluetoothConnection", "onFailure: $error")
+                    }
+                }
+            } else {
+                object : CompanionDeviceManager.Callback() {
+                    // Called when a device is found. Launch the IntentSender so the user
+                    // can select the device they want to pair with.
+                    @Deprecated("Deprecated in API 33", ReplaceWith(
+                        "managedActivity.launch(IntentSenderRequest.Builder(chooserLauncher).build())",
+                        "androidx.activity.result.IntentSenderRequest"
+                    ))
+                    override fun onDeviceFound(chooserLauncher: IntentSender) = launchChooser(chooserLauncher)
+
+                    override fun onFailure(error: CharSequence?) {
+                        Log.e("BluetoothConnection", "onFailure: $error")
+                    }
+                }
+            }, null)
+    }
+
+    fun pair(result: ActivityResult) {
+        try {
+            val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+
+            // The user chose to pair the app with a Bluetooth device.
+            val deviceToPair: BluetoothDevice? = if (Build.VERSION.SDK_INT >= 33) {
+                (result.data?.getParcelableExtra(CompanionDeviceManager.EXTRA_ASSOCIATION, BluetoothDevice::class.java) as ScanResult?)?.device
+            } else {
+                (result.data?.getParcelableExtra(CompanionDeviceManager.EXTRA_DEVICE) as ScanResult?)?.device
+            }
+
+            deviceToPair?.let { device ->
+                try {
+                    val bleDevice = BluetoothDeviceIDS(device.name, device.address, getDeviceData(device), device)
+                    Device.addToFoundDevices(bleDevice)
+                    // Pair with the device.
+                    device.createBond()
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        deviceManager.startObservingDevicePresence(bleDevice.address)
+                    } else {
+                        //TODO: observe with another way
+                    }
+
+                    // Connect
+                    connect(bleDevice)
+                } catch (e: SecurityException) {
+                    Log.e("BluetoothConnection", "Unable to pair with device", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("BluetoothConnection", "Unable to pair with device", e)
+        }
+    }
+
+    fun unpair(address: String) {
+        val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+        if (Build.VERSION.SDK_INT >= 33) {
+            deviceManager.myAssociations.find { it.deviceMacAddress.toString() == address }?.let {
+                deviceManager.stopObservingDevicePresence(it.deviceMacAddress.toString())
+                deviceManager.disassociate(it.id)
+            }
+        } else {
+            deviceManager.associations.find { it == address }?.let {
+                if (Build.VERSION.SDK_INT >= 31) {
+                    deviceManager.stopObservingDevicePresence(it)
+                }
+                deviceManager.disassociate(it)
+            }
+        }
+    }
 
     private val bluetoothReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -61,7 +157,7 @@ class BluetoothConnection(private val mContext: Context) {
                         //TODO: do something better than this...
                         if(permissionsGranted) {
                             defaultScope.launch {
-                                this@BluetoothConnection.initSearch(Device.knownDevices)
+                                this@BluetoothConnection.initSearch()
                             }
                         }
                     }
@@ -81,26 +177,26 @@ class BluetoothConnection(private val mContext: Context) {
 
     fun getNecessaryPermissions() : List<String> {
         val permissions: MutableList<String> = mutableListOf()
+        permissions.add(Manifest.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND)
+        permissions.add(Manifest.permission.REQUEST_COMPANION_USE_DATA_IN_BACKGROUND)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
-            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-                permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
-                permissions.add(Manifest.permission.BLUETOOTH)
-            }
+            permissions.add(Manifest.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE)
+        } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+            permissions.add(Manifest.permission.BLUETOOTH)
         }
         return permissions.toList()
     }
 
-    fun onPermissionsResult(result: Map<String, Boolean>, daemonMode: Boolean) {
+    fun onPermissionsResult(result: Map<String, Boolean>, daemonMode: Boolean, resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope, managedActivity: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>) {
         if(result.all { it.value }) {
             permissionsGranted = true
-            //TODO: way too hacky, do something better than this...
-            defaultScope.launch {
-                if(daemonMode) this@BluetoothConnection.initSearch(Device.knownDevices) else this@BluetoothConnection.initScan()
+            scope.launch {
+                if(daemonMode)
+                    this@BluetoothConnection.searchForKnownDevices(resultLauncher, scope)
+                else
+                    this@BluetoothConnection.launchScan(resultLauncher, scope, managedActivity)
             }
             Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
         } else {
@@ -109,119 +205,82 @@ class BluetoothConnection(private val mContext: Context) {
         }
     }
 
-    fun searchForKnownDevices(devicesList: MutableState<Set<BluetoothDeviceIDS>>, resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
+    private fun searchForKnownDevices(resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
         val context = Context.BLUETOOTH_SERVICE
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
 
-        if (!bluetoothAdapter.isEnabled) {
+        if (!bluetoothAdapter!!.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             resultLauncher.launch(enableBtIntent)
         } else {
-            scope.launch { initSearch(devicesList) }
+            scope.launch { initSearch() }
         }
     }
 
-    fun handleSearchBluetoothIntent(result: ActivityResult, devicesList: MutableState<Set<BluetoothDeviceIDS>>, scope: CoroutineScope = defaultScope) {
+    fun handleSearchBluetoothIntent(result: ActivityResult, scope: CoroutineScope = defaultScope) {
         if (result.resultCode == Activity.RESULT_OK) {
-            scope.launch { initSearch(devicesList) }
+            scope.launch { initSearch() }
         }
     }
 
-    fun launchScan(resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope) {
+    private fun launchScan(resultLauncher: ActivityResultLauncher<Intent>, scope: CoroutineScope = defaultScope, managedActivity: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>) {
         val context = Context.BLUETOOTH_SERVICE
         val bluetoothManager = mContext.getSystemService(context) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
 
-        if (!bluetoothAdapter.isEnabled) {
+        if (!bluetoothAdapter!!.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             resultLauncher.launch(enableBtIntent)
         } else {
-            scope.launch { initScan() }
+            scope.launch { initScan(managedActivity) }
         }
     }
 
-    fun handleScanBluetoothIntent(result: ActivityResult, scope: CoroutineScope = defaultScope) {
+    fun handleScanBluetoothIntent(result: ActivityResult, scope: CoroutineScope = defaultScope, managedActivity: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>) {
         if (result.resultCode == Activity.RESULT_OK) {
-            scope.launch { initScan() }
+            scope.launch { initScan(managedActivity) }
         }
     }
 
-    private suspend fun initScan() {
+    private fun initScan(managedActivity: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>) {
+        initiateAssociation(managedActivity)
+    }
+
+    fun initSearch() {
+        // We only need to do this if we are not already observing the devices presence with the API 31 observers
+        if(Build.VERSION.SDK_INT < 31) {
+            try {
+                searchLE()
+            } catch (e: Exception) {
+                Log.e("BluetoothConnection", "Error while searching for devices", e)
+            }
+        }
+    }
+
+    fun connectFromAddress(macAddress: String) {
         try {
-            scanLE(deviceFlow(bluetoothAdapter.bluetoothLeScanner))
+            val deviceFound = Device.getBluetoothDeviceFromAddress(macAddress)
+            deviceFound!!.device = (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter).getRemoteDevice(deviceFound.address)
+            connect(deviceFound)
         } catch (e: Exception) {
-            Log.e("BluetoothConnection", "Error while scanning for devices", e)
+            Log.e("BluetoothGattDiscoverServices", "Error while connecting to device", e)
         }
     }
 
-    private suspend fun initSearch(devicesList: MutableState<Set<BluetoothDeviceIDS>>) {
+    private fun searchLE() {
         try {
-            searchLE(devicesList, deviceFlow(bluetoothAdapter.bluetoothLeScanner, true))
-        } catch (e: Exception) {
-            Log.e("BluetoothConnection", "Error while searching for devices", e)
-        }
-    }
-
-    private fun deviceFlow(scanner: BluetoothLeScanner, background: Boolean = false) : Flow<ScanResult> = callbackFlow {
-        val scanCallback = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                trySend(result).onFailure {
-                    Log.e("BluetoothGattDiscoverServices", "Error while sending scan result", it)
-                }
+            val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
+            val macList = if (Build.VERSION.SDK_INT >= 33) {
+                deviceManager.myAssociations.map { it.deviceMacAddress.toString() }
+            } else {
+                deviceManager.associations
             }
-            override fun onBatchScanResults(results: MutableList<ScanResult>?) {
-                results?.forEach { trySend(it) }
+            macList.filter { it !in Device.connectedDevices.value.map { d -> d.address } }.forEach { macAddress ->
+                connectFromAddress(macAddress)
             }
-            override fun onScanFailed(errorCode: Int) {
-                Log.e("BluetoothGattDiscoverServices", "Scan failed with error code $errorCode")
-            }
-        }
-
-        val settings = ScanSettings.Builder()
-            .setScanMode(if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .setReportDelay(0)
-            .build()
-
-        try {
-            scanner.startScan(null, settings, scanCallback)
         } catch (e: SecurityException) {
-            Log.e("BluetoothGattDiscoverServices", "Error while starting scan", e)
-        }
-
-        awaitClose {
-            try {
-                scanner.stopScan(scanCallback)
-            } catch (e: SecurityException) {
-                Log.e("BluetoothGattDiscoverServices", "Error while stopping scan", e)
-            }
-        }
-    }
-
-    private suspend fun scanLE(flow: Flow<ScanResult>) {
-        flow.collect {
-            try {
-                //Log.d("BluetoothGattDiscoverServices", "Scan result: ${it.device.name} [${it.device.address}]")
-                if (it.device.name?.startsWith(DeviceItem.idsPrefix) == true) {
-                    Device.addToFoundDevices(BluetoothDeviceIDS(it.device.name, it.device.address, getDeviceData(it.device), it.device))
-                }
-            } catch (e: SecurityException) {
-                Log.e("BluetoothGattDiscoverServices", "Error while collecting scan result", e)
-            }
-        }
-    }
-
-    private suspend fun searchLE(devicesList: MutableState<Set<BluetoothDeviceIDS>>, flow: Flow<ScanResult>) {
-        flow.collect {
-            try {
-                //Log.d("BluetoothGattDiscoverServices", "Search result: ${it.device.name}")
-                devicesList.value.find { found -> found.address == it.device.address }?.let { deviceFound ->
-                    deviceFound.device = it.device
-                    connect(deviceFound)
-                }
-            } catch (e: SecurityException) {
-                Log.e("BluetoothGattDiscoverServices", "Error while collecting search result", e)
-            }
+            Log.e("BluetoothGattDiscoverServices", "Error while collecting search result", e)
         }
     }
 
@@ -355,7 +414,7 @@ class BluetoothConnection(private val mContext: Context) {
                 } ?: Log.e("ConnectionManager", "${characteristic.uuid} doesn't contain the CCC descriptor!")
             }
 
-            @Deprecated("Deprecated in Java")
+            @Deprecated("Deprecated in API 33")
             override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
                 try {
                     gatt?.readCharacteristic(characteristic)
@@ -417,7 +476,7 @@ class BluetoothConnection(private val mContext: Context) {
             /**
              * We will get there when a characteristic is read, notably after one has changed
              */
-            @Deprecated("Deprecated in Java")
+            @Deprecated("Deprecated in API 33")
             override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
                 Log.i("BluetoothGattCallback", "Characteristic read callback")
                 characteristic?.let { char ->

@@ -23,7 +23,7 @@ object NotificationHandler {
 
     fun createNotificationChannel(context: Context) {
         val name = "IDS"
-        val descriptionText = context.resources.getString(R.string.alert_notify)
+        val descriptionText = context.resources.getString(R.string.important_ids_channel_description)
         val importance = NotificationManager.IMPORTANCE_HIGH
         val channel = NotificationChannel(channelID, name, importance).apply {
             description = descriptionText
@@ -32,7 +32,7 @@ object NotificationHandler {
         notificationManager.createNotificationChannel(channel)
     }
 
-    suspend fun triggerNotification(context: Context, message: String) {
+    suspend fun triggerNotification(context: Context, title: String, message: String, idsAlert: Boolean = false) {
         val notifIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
@@ -49,28 +49,30 @@ object NotificationHandler {
 
         val notifBuilder = NotificationCompat.Builder(context, channelID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(context.resources.getString(R.string.alert_notify))
+            .setContentTitle(title)
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setContentIntent(pendingIntent)
 
-        // Get the user preferences for the fullscreen notification
-        val userPreferences = UserPreferencesRepository(context)
-        try {
-            if (userPreferences.userPreferencesFlow.first().fullscreenNotification) {
-                notifBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
-            }
-        } catch (e: NoSuchElementException) {
-            if(UserPreferencesRepository.DEFAULT_FULLSCREEN_NOTIFICATION) {
-                notifBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+        if(idsAlert) {
+            // Get the user preferences for the fullscreen notification
+            val userPreferences = UserPreferencesRepository(context)
+            try {
+                if (userPreferences.userPreferencesFlow.first().fullscreenNotification) {
+                    notifBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+                }
+            } catch (e: NoSuchElementException) {
+                if (UserPreferencesRepository.DEFAULT_FULLSCREEN_NOTIFICATION) {
+                    notifBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+                }
             }
         }
 
-        val time = Instant.ofEpochMilli(message.toLong()).atZone(ZoneId.of("UTC")).withZoneSameInstant(TimeZone.getDefault().toZoneId())
         with(NotificationManagerCompat.from(context)) {
-            notify(notificationId, notifBuilder.setContentText("at $time").build())
+            notify(notificationId, notifBuilder.build())
             notificationId++
         }
     }
