@@ -50,7 +50,7 @@ class BluetoothCompanionService: CompanionDeviceService() {
 
             // We initialize the app
             Initiator.init(this)
-            Initiator.handleServices()
+            Initiator.handleServices(this)
             //TODO: improve this, it's way too dirty
             while(!Initiator.initialized.value) {
                 runBlocking { delay(100) }

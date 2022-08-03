@@ -16,7 +16,7 @@ import java.sql.Timestamp
 import java.time.LocalDate
 
 class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceId.IZLY) : ApiInterface {
-    private val maxRetries = 15
+    private val maxRetries = 25
     private lateinit var credentials: IzlyAuth
     private var cookieSessionId: String? = null
     private var cookieASPXAUTH: String? = null
@@ -31,7 +31,7 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
     override fun authenticate(credentials: ApiAuth) {
         (credentials as? IzlyAuth)?.let { this.credentials = it } ?: throw IllegalArgumentException("Credentials must be IzlyAuth")
 
-        val firstRequestConnection = try { Jsoup.connect(logonURL).execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while fetching URL: ", e) ; null }
+        val firstRequestConnection = try { Jsoup.connect(logonURL).execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while fetching URL") ; null }
 
         val cookieRequestVerificationToken = firstRequestConnection?.cookie("__RequestVerificationToken")
         val cookieApplicationGatewayAffinity = firstRequestConnection?.cookie("ApplicationGatewayAffinity")
@@ -90,7 +90,7 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
 
             .method(Connection.Method.POST)
 
-        val firstLoginConnection = try { loginConnection.execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while logging in: ", e) ; null }
+        val firstLoginConnection = try { loginConnection.execute() } catch (e: HttpStatusException) { Log.e("IzlyApi", "Error while logging in") ; null }
         cookieASPXAUTH = firstLoginConnection?.cookie(".ASPXAUTH")
     }
 
@@ -106,7 +106,6 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
                 success = true
                 delay(1_000)
             } catch (e: HttpStatusException) {
-                Log.d("IZLY", e.toString())
                 if(cptErr >= maxRetries) {
                     throw e
                 }
@@ -118,8 +117,8 @@ class IzlyApi(credentials: ApiAuth, override val serviceId: ServiceId = ServiceI
 
     override suspend fun checkConnection(): Boolean =
         try { insistToGetHistoryConnection().statusCode() == HttpURLConnection.HTTP_OK } // HTTP 200, we don't want the 302 status which is obtained when we are not logged in
-        catch(e: HttpStatusException) { e.message?.let { Log.d("IzlyApi", it) } ; false }
-        catch(e: Exception) { e.message?.let { Log.d("IzlyApi", it) } ; false }
+        catch(e: HttpStatusException) { e.message?.let { Log.d("IzlyApi", "URL error") } ; false }
+        catch(e: Exception) { e.message?.let { Log.d("IzlyApi", "URL error") } ; false }
 
     //TODO: improve this function
     override suspend fun getData(): IzlyData {

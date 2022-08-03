@@ -15,6 +15,8 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import fr.pirids.idsapp.R
+import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
 import fr.pirids.idsapp.data.device.data.DeviceData
 import fr.pirids.idsapp.data.device.data.WalletCardData
@@ -55,6 +57,13 @@ class BluetoothConnection(private val mContext: Context) {
                 when (intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                     BluetoothAdapter.STATE_OFF -> {
                         Device.connectedDevices.value = setOf()
+                        defaultScope.launch {
+                            NotificationHandler.triggerNotification(
+                                context = mContext,
+                                title = mContext.resources.getString(R.string.device_connection_failed),
+                                message = mContext.resources.getString(R.string.device_connection_failed),
+                            )
+                        }
                     }
                     BluetoothAdapter.STATE_TURNING_OFF -> {}
                     BluetoothAdapter.STATE_ON -> {
@@ -434,14 +443,32 @@ class BluetoothConnection(private val mContext: Context) {
                             BluetoothProfile.STATE_DISCONNECTED -> {
                                 Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
                                 bluetoothGatt.close()
-                                Device.connectedDevices.value = Device.connectedDevices.value.minus(idsDevice)
+                                if(Device.removeFromConnectedDevices(idsDevice)) {
+                                    defaultScope.launch {
+                                        NotificationHandler.triggerNotification(
+                                            context = mContext,
+                                            title = mContext.resources.getString(R.string.device_connection_failed),
+                                            message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connection_failed),
+                                            icon = Device.getDeviceItemFromBluetoothDevice(idsDevice)?.logo
+                                        )
+                                    }
+                                }
                             }
                             else -> {}
                         }
                     } else {
                         Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
                         bluetoothGatt.close()
-                        Device.connectedDevices.value = Device.connectedDevices.value.minus(idsDevice)
+                        if(Device.removeFromConnectedDevices(idsDevice)) {
+                            defaultScope.launch {
+                                NotificationHandler.triggerNotification(
+                                    context = mContext,
+                                    title = mContext.resources.getString(R.string.device_connection_failed),
+                                    message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connection_failed),
+                                    icon = Device.getDeviceItemFromBluetoothDevice(idsDevice)?.logo
+                                )
+                            }
+                        }
                         onConnected(false)
                     }
                 } catch (e: SecurityException) {
@@ -558,7 +585,16 @@ class BluetoothConnection(private val mContext: Context) {
                     // We add the newly initialized device to the list of connected devices
                     Device.foundDevices.value = setOf()
                     Device.addToKnownDevices(idsDevice)
-                    Device.addToConnectedDevices(idsDevice)
+                    if(Device.addToConnectedDevices(idsDevice)) {
+                        defaultScope.launch {
+                            NotificationHandler.triggerNotification(
+                                context = mContext,
+                                title = mContext.resources.getString(R.string.device_connected),
+                                message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connected),
+                                icon = Device.getDeviceItemFromBluetoothDevice(idsDevice)?.logo
+                            )
+                        }
+                    }
 
                     // Save in database
                     Device.addKnownDeviceToDatabase(idsDevice)

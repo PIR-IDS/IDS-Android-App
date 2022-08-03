@@ -81,7 +81,14 @@ object Detection {
         Service.monitoredServices.value.forEach {
             if(it !in Service.connectedServices.value) {
                 // We mark the service as not monitored
-                Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
+                if(Service.removeFromMonitoredServices(it)) {
+                    NotificationHandler.triggerNotification(
+                        context = context,
+                        title = context.resources.getString(R.string.service_not_monitored),
+                        message = it.serviceId.name + " | " + context.resources.getString(R.string.service_disconnected),
+                        icon = ServiceItem.get(it.serviceId).logo
+                    )
+                }
             }
         }
 
@@ -98,13 +105,26 @@ object Detection {
 
                         if(it in Service.monitoredServices.value && currentlyConnectedCompatibleDevices.isEmpty()) {
                             // We mark the service as not monitored
-                            Service.monitoredServices.value = Service.monitoredServices.value.minus(it)
+                            if(Service.removeFromMonitoredServices(it)) {
+                                NotificationHandler.triggerNotification(
+                                    context = context,
+                                    title = context.resources.getString(R.string.service_not_monitored),
+                                    message = it.serviceId.name + " | " + context.resources.getString(R.string.service_disconnected),
+                                    icon = ServiceItem.get(it.serviceId).logo
+                                )
+                            }
                         }
 
                         currentlyConnectedCompatibleDevices.forEach { device ->
                             // We mark the service as monitored
                             if(it !in Service.monitoredServices.value) {
                                 Service.addToMonitoredServices(it)
+                                NotificationHandler.triggerNotification(
+                                    context = context,
+                                    title = context.resources.getString(R.string.service_monitored),
+                                    message = it.serviceId.name,
+                                    icon = ServiceItem.get(it.serviceId).logo
+                                )
                             }
                             // We analyze the data
                             analyzeIzlyData(context, device, apiData, ServiceItem.get(it.serviceId), currentlyConnectedCompatibleDevices)
@@ -156,6 +176,7 @@ object Detection {
                                             .atZone(ZoneId.of("UTC"))
                                             .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                             .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
+                                    icon = service.logo,
                                     idsAlert = true
                                 )
 

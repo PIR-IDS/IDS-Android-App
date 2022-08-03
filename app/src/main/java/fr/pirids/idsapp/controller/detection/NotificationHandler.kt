@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
+import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import fr.pirids.idsapp.R
@@ -12,9 +14,6 @@ import fr.pirids.idsapp.data.preferences.UserPreferencesRepository
 import fr.pirids.idsapp.ui.MainActivity
 import fr.pirids.idsapp.ui.views.notifications.AlertNotificationActivity
 import kotlinx.coroutines.flow.first
-import java.time.Instant
-import java.time.ZoneId
-import java.util.*
 import kotlin.NoSuchElementException
 
 object NotificationHandler {
@@ -32,7 +31,7 @@ object NotificationHandler {
         notificationManager.createNotificationChannel(channel)
     }
 
-    suspend fun triggerNotification(context: Context, title: String, message: String, idsAlert: Boolean = false) {
+    suspend fun triggerNotification(context: Context, title: String, message: String, @DrawableRes icon: Int? = null, idsAlert: Boolean = false) {
         val notifIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
@@ -48,14 +47,18 @@ object NotificationHandler {
         )
 
         val notifBuilder = NotificationCompat.Builder(context, channelID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ids_logo_flat)
             .setContentTitle(title)
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setAutoCancel(false)
+            .setPriority(if(idsAlert) NotificationCompat.PRIORITY_MAX else NotificationCompat.PRIORITY_MIN)
+            .setCategory(if(idsAlert) NotificationCompat.CATEGORY_ALARM else NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(if(idsAlert) NotificationCompat.VISIBILITY_PUBLIC else NotificationCompat.VISIBILITY_PRIVATE)
+            .setAutoCancel(!idsAlert)
             .setContentIntent(pendingIntent)
+
+        icon?.let {
+            notifBuilder.setLargeIcon(BitmapFactory.decodeResource(context.resources, icon))
+        }
 
         if(idsAlert) {
             // Get the user preferences for the fullscreen notification

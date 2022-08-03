@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
         // We initialize the app
         Initiator.init(this)
-        Initiator.handleServices()
+        Initiator.handleServices(this)
 
         setContent {
             IDSAppTheme {

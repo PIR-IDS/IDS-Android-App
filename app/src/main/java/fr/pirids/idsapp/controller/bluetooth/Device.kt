@@ -68,10 +68,10 @@ object Device {
      * We have to compare manually the content of the Set because the unicity of the Set is not based
      * on the address of the device even when the Comparator is based on it.
      */
-    private fun addToDevicesList(newDevice: BluetoothDeviceIDS, list: MutableState<Set<BluetoothDeviceIDS>>) {
+    private fun addToDevicesList(newDevice: BluetoothDeviceIDS, list: MutableState<Set<BluetoothDeviceIDS>>) : Boolean{
         list.value.forEach {
             // If that's the same device, we don't add it
-            if (BluetoothDeviceIDS.comparator.compare(it, newDevice) == 0) return@addToDevicesList
+            if (BluetoothDeviceIDS.comparator.compare(it, newDevice) == 0) return@addToDevicesList false
         }
 
         // If we try to add a known device in the found list, we don't add it
@@ -79,13 +79,21 @@ object Device {
             knownDevices.value.any { knownDev ->
                 BluetoothDeviceIDS.comparator.compare(knownDev, newDevice) == 0
             }
-        ) return
+        ) return false
 
         list.value = list.value.plus(newDevice)
         Log.i("Device", "Added ${newDevice.address} to list #${list.hashCode()}")
+
+        return true
     }
 
-    fun addToFoundDevices(newDevice: BluetoothDeviceIDS) = addToDevicesList(newDevice, foundDevices)
-    fun addToKnownDevices(newDevice: BluetoothDeviceIDS) = addToDevicesList(newDevice, knownDevices)
-    fun addToConnectedDevices(newDevice: BluetoothDeviceIDS) = addToDevicesList(newDevice, connectedDevices)
+    fun addToFoundDevices(newDevice: BluetoothDeviceIDS) : Boolean = addToDevicesList(newDevice, foundDevices)
+    fun addToKnownDevices(newDevice: BluetoothDeviceIDS) : Boolean = addToDevicesList(newDevice, knownDevices)
+    fun addToConnectedDevices(newDevice: BluetoothDeviceIDS) : Boolean = addToDevicesList(newDevice, connectedDevices)
+
+    fun removeFromConnectedDevices(device: BluetoothDeviceIDS) : Boolean =
+        if(device in connectedDevices.value) {
+            connectedDevices.value = connectedDevices.value.minus(device)
+            true
+        } else false
 }

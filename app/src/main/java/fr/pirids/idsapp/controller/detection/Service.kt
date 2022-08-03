@@ -121,27 +121,42 @@ object Service {
     /**
      * This should guarantee that the service is unique in the set and update it if it's already connected
      */
-    private fun addToServicesList(apiInterface: ApiServiceIDS, list: MutableState<Set<ApiServiceIDS>>) {
+    private fun addToServicesList(apiInterface: ApiServiceIDS, list: MutableState<Set<ApiServiceIDS>>) : Boolean {
         list.value.forEach {
             if (it.serviceId == apiInterface.serviceId) {
                 list.value = list.value.minus(it).plus(apiInterface)
-                return@addToServicesList
+                return@addToServicesList false
             }
         }
 
-        if(apiInterface in list.value) return
+        if(apiInterface in list.value) return false
 
         list.value = list.value.plus(apiInterface)
+
+        return true
     }
 
-    private fun addToConnectedServices(apiInterface: ApiServiceIDS) = addToServicesList(apiInterface, connectedServices)
-    private fun addToKnownServices(apiInterface: ApiServiceIDS) = addToServicesList(apiInterface, knownServices)
-    fun addToMonitoredServices(apiInterface: ApiServiceIDS) = addToServicesList(apiInterface, monitoredServices)
+    private fun addToConnectedServices(apiInterface: ApiServiceIDS) : Boolean = addToServicesList(apiInterface, connectedServices)
+    private fun addToKnownServices(apiInterface: ApiServiceIDS) : Boolean = addToServicesList(apiInterface, knownServices)
+    fun addToMonitoredServices(apiInterface: ApiServiceIDS) : Boolean = addToServicesList(apiInterface, monitoredServices)
 
-    fun removeFromConnectedServices(apiInterface: ApiServiceIDS) {
-        connectedServices.value = connectedServices.value.minus(apiInterface)
-        if(apiInterface in monitoredServices.value) monitoredServices.value = monitoredServices.value.minus(apiInterface)
+    fun removeFromConnectedServices(apiInterface: ApiServiceIDS) : Boolean {
+        if(apiInterface in connectedServices.value) {
+            connectedServices.value = connectedServices.value.minus(apiInterface)
+            removeFromMonitoredServices(apiInterface)
+            return true
+        }
+        return false
     }
+
+    fun removeFromMonitoredServices(apiInterface: ApiServiceIDS) : Boolean {
+        if(apiInterface in monitoredServices.value) {
+            monitoredServices.value = monitoredServices.value.minus(apiInterface)
+            return true
+        }
+        return false
+    }
+
     fun removeAllConnectedServices() {
         connectedServices.value = setOf()
         monitoredServices.value = setOf()

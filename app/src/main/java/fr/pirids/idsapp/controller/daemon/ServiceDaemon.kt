@@ -1,6 +1,9 @@
 package fr.pirids.idsapp.controller.daemon
 
+import android.content.Context
 import android.util.Log
+import fr.pirids.idsapp.R
+import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.controller.detection.Service
 import fr.pirids.idsapp.data.api.data.ApiData
 import fr.pirids.idsapp.data.api.data.IzlyData
@@ -43,7 +46,7 @@ object ServiceDaemon {
         }
     }
 
-    suspend fun handleServiceStatus() : Nothing {
+    suspend fun handleServiceStatus(context: Context) : Nothing {
         while (true) {
             delay(CHECKING_DELAY_MILLIS)
             Service.connectedServices.value.forEach {
@@ -53,7 +56,14 @@ object ServiceDaemon {
                     if(api?.checkConnection() != true) {
                         apiConnected = false
                         // If the reconnection failed, we disconnect the service
-                        Service.removeFromConnectedServices(it)
+                        if(Service.removeFromConnectedServices(it)) {
+                            NotificationHandler.triggerNotification(
+                                context = context,
+                                title = context.resources.getString(R.string.service_not_monitored),
+                                message = it.serviceId.name + " | " + context.resources.getString(R.string.service_disconnected),
+                                icon = ServiceItem.get(it.serviceId).logo,
+                            )
+                        }
                         if(api != null) {
                             // Try to reconnect (maybe the token has expired)
                             apiConnected = connectToService(
@@ -102,6 +112,8 @@ object ServiceDaemon {
                         } catch (e: Exception) {
                             Log.e("ServiceDaemon", "Error while saving service data", e)
                         }
+                    } else {
+                        //TODO: notify when service not monitored anymore
                     }
                 } catch (e: Exception) {
                     Log.e("ServiceDaemon", "Error while checking service status", e)

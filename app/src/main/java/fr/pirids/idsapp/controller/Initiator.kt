@@ -64,9 +64,9 @@ object Initiator {
         }
     }
 
-    fun handleServices() {
+    fun handleServices(applicationContext: Context) {
         scope.launch {
-            ServiceDaemon.handleServiceStatus()
+            ServiceDaemon.handleServiceStatus(applicationContext)
         }
         scope.launch {
             ServiceDaemon.handleDisconnectedKnownServices()
