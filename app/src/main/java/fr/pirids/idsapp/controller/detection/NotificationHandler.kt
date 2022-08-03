@@ -6,10 +6,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.net.toUri
 import fr.pirids.idsapp.R
+import fr.pirids.idsapp.data.navigation.NavRoutes
 import fr.pirids.idsapp.data.preferences.UserPreferencesRepository
 import fr.pirids.idsapp.ui.MainActivity
 import fr.pirids.idsapp.ui.views.notifications.AlertNotificationActivity
@@ -18,41 +21,53 @@ import kotlin.NoSuchElementException
 
 object NotificationHandler {
     private var notificationId = 0
-    private const val channelID = "IDS_DETECTION"
+    private const val idChannelIDS = "IDS_DETECTION"
+    private const val idChannelStatus = "IDS_STATUS"
 
-    fun createNotificationChannel(context: Context) {
-        val name = "IDS"
-        val descriptionText = context.resources.getString(R.string.important_ids_channel_description)
-        val importance = NotificationManager.IMPORTANCE_HIGH
-        val channel = NotificationChannel(channelID, name, importance).apply {
-            description = descriptionText
+    fun createNotificationChannels(context: Context) {
+        val channelIDS = NotificationChannel(idChannelIDS, "IDS DETECTION", NotificationManager.IMPORTANCE_HIGH).apply {
+            description = context.resources.getString(R.string.important_ids_channel_description)
         }
+        val channelStatus = NotificationChannel(idChannelStatus, "IDS STATUS", NotificationManager.IMPORTANCE_LOW).apply {
+            description = context.resources.getString(R.string.important_ids_channel_description)
+        }
+
         val notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
+        notificationManager.createNotificationChannel(channelIDS)
+        notificationManager.createNotificationChannel(channelStatus)
     }
 
-    suspend fun triggerNotification(context: Context, title: String, message: String, @DrawableRes icon: Int? = null, idsAlert: Boolean = false) {
-        val notifIntent = Intent(context, MainActivity::class.java).apply {
+    suspend fun triggerNotification(context: Context, title: String, message: String, @DrawableRes icon: Int? = null, uri: Uri = NavRoutes.Home.deepLink.toUri(), idsAlert: Boolean = false) {
+        val notifIntent = Intent(
+            Intent.ACTION_MAIN,
+            uri,
+            context,
+            MainActivity::class.java
+        ).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         }
-        notifIntent.setAction(Intent.ACTION_MAIN)
         notifIntent.addCategory(Intent.CATEGORY_LAUNCHER)
         val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, notifIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val fullScreenIntent = Intent(context, AlertNotificationActivity::class.java).apply {
+        val fullScreenIntent = Intent(
+            Intent.ACTION_MAIN,
+            uri,
+            context,
+            AlertNotificationActivity::class.java
+        ).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 1, fullScreenIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notifBuilder = NotificationCompat.Builder(context, channelID)
+        val notifBuilder = NotificationCompat.Builder(context, if(idsAlert) idChannelIDS else idChannelStatus)
             .setSmallIcon(R.drawable.ids_logo_flat)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(if(idsAlert) NotificationCompat.PRIORITY_MAX else NotificationCompat.PRIORITY_MIN)
             .setCategory(if(idsAlert) NotificationCompat.CATEGORY_ALARM else NotificationCompat.CATEGORY_STATUS)
-            .setVisibility(if(idsAlert) NotificationCompat.VISIBILITY_PUBLIC else NotificationCompat.VISIBILITY_PRIVATE)
+            .setVisibility(if(idsAlert) NotificationCompat.VISIBILITY_PUBLIC else NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(!idsAlert)
             .setContentIntent(pendingIntent)
 
@@ -78,5 +93,14 @@ object NotificationHandler {
             notify(notificationId, notifBuilder.build())
             notificationId++
         }
+    }
+
+    fun clearAllStatusNotifications(context: Context) {
+        val notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.deleteNotificationChannel(idChannelStatus)
+        val channelStatus = NotificationChannel(idChannelStatus, "IDS STATUS", NotificationManager.IMPORTANCE_LOW).apply {
+            description = context.resources.getString(R.string.important_ids_channel_description)
+        }
+        notificationManager.createNotificationChannel(channelStatus)
     }
 }

@@ -23,6 +23,7 @@ import fr.pirids.idsapp.ui.theme.IDSAppTheme
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
 import fr.pirids.idsapp.controller.daemon.ServiceDaemon
 import fr.pirids.idsapp.controller.daemon.workers.*
+import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.controller.internet.InternetConnection
 import fr.pirids.idsapp.data.internet.InternetState
 
@@ -104,6 +105,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // We clear the potential notifications in the notification center
+        NotificationHandler.clearAllStatusNotifications(this)
     }
 
     override fun onDestroy() {

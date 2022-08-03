@@ -8,6 +8,7 @@ import android.companion.AssociationRequest
 import android.companion.BluetoothLeDeviceFilter
 import android.companion.CompanionDeviceManager
 import android.content.*
+import android.net.Uri
 import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
@@ -15,6 +16,7 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.core.net.toUri
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
@@ -26,6 +28,7 @@ import fr.pirids.idsapp.data.items.bluetooth.BluetoothService
 import fr.pirids.idsapp.data.items.bluetooth.CharacteristicId
 import fr.pirids.idsapp.data.items.bluetooth.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
+import fr.pirids.idsapp.data.navigation.NavRoutes
 import fr.pirids.idsapp.extensions.isIndicatable
 import fr.pirids.idsapp.extensions.isNotifiable
 import fr.pirids.idsapp.extensions.isWritable
@@ -444,12 +447,14 @@ class BluetoothConnection(private val mContext: Context) {
                                 Log.w("BluetoothGattCallback", "Successfully disconnected from $deviceAddress")
                                 bluetoothGatt.close()
                                 if(Device.removeFromConnectedDevices(idsDevice)) {
+                                    val devItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
                                     defaultScope.launch {
                                         NotificationHandler.triggerNotification(
                                             context = mContext,
                                             title = mContext.resources.getString(R.string.device_connection_failed),
                                             message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connection_failed),
-                                            icon = Device.getDeviceItemFromBluetoothDevice(idsDevice)?.logo
+                                            icon = devItem?.logo,
+                                            uri = (NavRoutes.Device.deepLink + "/${devItem?.id?.ordinal ?: -1}?address=${Uri.encode(idsDevice.address)}").toUri(),
                                         )
                                     }
                                 }
@@ -460,12 +465,14 @@ class BluetoothConnection(private val mContext: Context) {
                         Log.e("BluetoothGattCallback", "Error $status encountered for $deviceAddress! Disconnecting...")
                         bluetoothGatt.close()
                         if(Device.removeFromConnectedDevices(idsDevice)) {
+                            val devItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
                             defaultScope.launch {
                                 NotificationHandler.triggerNotification(
                                     context = mContext,
                                     title = mContext.resources.getString(R.string.device_connection_failed),
                                     message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connection_failed),
-                                    icon = Device.getDeviceItemFromBluetoothDevice(idsDevice)?.logo
+                                    icon = devItem?.logo,
+                                    uri = (NavRoutes.Device.deepLink + "/${devItem?.id?.ordinal ?: -1}?address=" + Uri.encode(idsDevice.address)).toUri(),
                                 )
                             }
                         }
@@ -586,12 +593,14 @@ class BluetoothConnection(private val mContext: Context) {
                     Device.foundDevices.value = setOf()
                     Device.addToKnownDevices(idsDevice)
                     if(Device.addToConnectedDevices(idsDevice)) {
+                        val devItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
                         defaultScope.launch {
                             NotificationHandler.triggerNotification(
                                 context = mContext,
                                 title = mContext.resources.getString(R.string.device_connected),
                                 message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connected),
-                                icon = Device.getDeviceItemFromBluetoothDevice(idsDevice)?.logo
+                                icon = devItem?.logo,
+                                uri = (NavRoutes.Device.deepLink + "/${devItem?.id?.ordinal ?: -1}?address=" + Uri.encode(idsDevice.address)).toUri(),
                             )
                         }
                     }

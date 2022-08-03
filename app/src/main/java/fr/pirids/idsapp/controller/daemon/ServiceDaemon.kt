@@ -2,6 +2,7 @@ package fr.pirids.idsapp.controller.daemon
 
 import android.content.Context
 import android.util.Log
+import androidx.core.net.toUri
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.controller.detection.Service
@@ -10,6 +11,7 @@ import fr.pirids.idsapp.data.api.data.IzlyData
 import fr.pirids.idsapp.data.items.ServiceId
 import fr.pirids.idsapp.data.model.AppDatabase
 import fr.pirids.idsapp.data.model.entity.service.ApiAuth
+import fr.pirids.idsapp.data.navigation.NavRoutes
 import fr.pirids.idsapp.data.model.entity.service.ApiData as ApiDataEntity
 import fr.pirids.idsapp.data.model.entity.service.IzlyData as IzlyDataEntity
 import kotlinx.coroutines.*
@@ -62,6 +64,7 @@ object ServiceDaemon {
                                 title = context.resources.getString(R.string.service_not_monitored),
                                 message = it.serviceId.name + " | " + context.resources.getString(R.string.service_disconnected),
                                 icon = ServiceItem.get(it.serviceId).logo,
+                                uri = (NavRoutes.Service.deepLink + "/" + it.serviceId.ordinal).toUri(),
                             )
                         }
                         if(api != null) {

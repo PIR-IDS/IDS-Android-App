@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -39,11 +40,13 @@ fun IDSApp(
 
     AnimatedNavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
         composable(
-            NavRoutes.Home.route
+            route = NavRoutes.Home.route,
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.Home.deepLink }),
         ) { HomeView(navController) }
 
         composable(
-            NavRoutes.AddService.route,
+            route = NavRoutes.AddService.route,
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.AddService.deepLink }),
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
@@ -59,7 +62,8 @@ fun IDSApp(
         ) { AddServiceView(navController) }
 
         composable(
-            NavRoutes.Service.route + "/{id}",
+            route = NavRoutes.Service.route + "/{id}",
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.Service.deepLink + "/{id}" }),
             arguments = listOf(navArgument("id") { type = NavType.IntType }),
             enterTransition = {
                 when (initialState.destination.route) {
@@ -84,7 +88,8 @@ fun IDSApp(
         }
 
         composable(
-            NavRoutes.AddDevice.route,
+            route = NavRoutes.AddDevice.route,
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.AddDevice.deepLink }),
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
@@ -100,7 +105,8 @@ fun IDSApp(
         ) { AddDeviceView(navController, appSnackbarHostState = appSnackbarHostState) }
 
         composable(
-            NavRoutes.Device.route + "/{id}?address={address}",
+            route = NavRoutes.Device.route + "/{id}?address={address}",
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.Device.deepLink + "/{id}?address={address}" }),
             arguments = listOf(
                 navArgument("id") { type = NavType.IntType },
                 navArgument("address") { type = NavType.StringType },
@@ -126,7 +132,8 @@ fun IDSApp(
         }
 
         composable(
-            NavRoutes.Settings.route,
+            route = NavRoutes.Settings.route,
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.Settings.deepLink }),
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Start, animationSpec = tween(tweenDuration))
@@ -142,7 +149,8 @@ fun IDSApp(
         ) { SettingsView(navController) }
 
         composable(
-            NavRoutes.Notification.route,
+            route = NavRoutes.Notification.route,
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.Notification.deepLink }),
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Start, animationSpec = tween(tweenDuration))
@@ -158,17 +166,20 @@ fun IDSApp(
         ) { NotificationView(navController) }
 
         composable(
-            NavRoutes.NotificationDescription.route + "/{id}",
+            route = NavRoutes.NotificationDescription.route + "/{id}",
+            deepLinks = listOf(navDeepLink { uriPattern = NavRoutes.NotificationDescription.deepLink + "/{id}" }),
             arguments = listOf(navArgument("id") { type = NavType.IntType }),
             enterTransition = {
                 when (initialState.destination.route) {
                     NavRoutes.Notification.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
+                    NavRoutes.Home.route -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(tweenDuration))
                     else -> null
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
                     NavRoutes.Notification.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(tweenDuration))
+                    NavRoutes.Home.route -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(tweenDuration))
                     else -> null
                 }
             }

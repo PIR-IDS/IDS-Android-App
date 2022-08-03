@@ -21,7 +21,7 @@ object Initiator {
             joinAll(
                 scope.launch {
                     // We create the main Notification channel
-                    NotificationHandler.createNotificationChannel(applicationContext)
+                    NotificationHandler.createNotificationChannels(applicationContext)
                 },
                 scope.launch {
                     // We initialize the database context with the MainActivity
