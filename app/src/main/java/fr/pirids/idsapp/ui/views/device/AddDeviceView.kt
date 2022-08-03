@@ -5,7 +5,11 @@
 
 package fr.pirids.idsapp.ui.views.device
 
+import android.app.Activity
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -46,6 +50,7 @@ import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
+import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -155,6 +160,22 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
         items(Device.foundDevices.value.toList()) {
             val device = Device.getDeviceItemFromBluetoothDevice(it) ?: return@items
             val connecting = remember { mutableStateOf(false) }
+            fun onConnected(success: Boolean) {
+                connecting.value = false
+                scope.launch(Dispatchers.Main) {
+                    appSnackbarHostState.showSnackbar("${device.name} | " + if (success) successMessage else failMessage)
+                }
+            }
+            val scanResult = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { activityResult ->
+                when (activityResult.resultCode) {
+                    Activity.RESULT_OK -> {
+                        ble.pair(activityResult) { success -> onConnected(success)}
+                    }
+                    Activity.RESULT_CANCELED -> {
+                        onConnected(false)
+                    }
+                }
+            }
             Box(
                 modifier = Modifier
                     .size(160.dp),
@@ -178,12 +199,7 @@ fun DevicesList(navController: NavHostController, ble: BluetoothConnection, scop
                                     onClick = {
                                         connecting.value = true
                                         try {
-                                            Device.connectToDevice(it, ble, scope) { success ->
-                                                connecting.value = false
-                                                scope.launch(Dispatchers.Main) {
-                                                    appSnackbarHostState.showSnackbar("${device.name} | " + if (success) successMessage else failMessage)
-                                                }
-                                            }
+                                            Device.connectToDevice(it, ble, scope, scanResult) { success -> onConnected(success)}
                                         } catch (e: Exception) {
                                             Log.e(
                                                 "AddDeviceView",

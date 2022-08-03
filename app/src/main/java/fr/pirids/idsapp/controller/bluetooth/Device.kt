@@ -1,6 +1,9 @@
 package fr.pirids.idsapp.controller.bluetooth
 
 import android.util.Log
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import fr.pirids.idsapp.data.device.bluetooth.BluetoothDeviceIDS
@@ -33,10 +36,11 @@ object Device {
         device: BluetoothDeviceIDS,
         ble: BluetoothConnection,
         scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        managedActivity: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>,
         onConnected: (Boolean) -> Unit
     ) = scope.launch {
             device.device
-                ?.let { ble.connect(device, onConnected) }
+                ?.let { ble.initiateAssociation(managedActivity, device.address, onConnected) }
                 ?: run { onConnected(false) ; throw Exception("Device null") }
     }
 

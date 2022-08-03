@@ -1,6 +1,7 @@
 package fr.pirids.idsapp.controller.daemon
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.bluetooth.Device
@@ -54,11 +55,15 @@ object DeviceDaemon {
     fun searchForDevice(ctx: Context) {
         val bleBackground = BluetoothConnection(ctx)
         try {
-            bleBackground.registerBroadCast()
+            if(Build.VERSION.SDK_INT < 31) {
+                bleBackground.registerBroadCast()
+            }
             bleBackground.initSearch()
         } catch (e: Exception) {
             Log.e("DeviceDaemon", "Error while searching for devices", e)
-            bleBackground.unregisterBroadCast()
+            if(Build.VERSION.SDK_INT < 31) {
+                bleBackground.unregisterBroadCast()
+            }
         }
     }
 }

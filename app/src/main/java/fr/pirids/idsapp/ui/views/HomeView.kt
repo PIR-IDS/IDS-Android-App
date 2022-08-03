@@ -191,7 +191,7 @@ fun ServicesScreen(navController: NavHostController) {
                 Service.getServiceItemFromApiService(it)?.let { service ->
                     Box(
                         modifier = Modifier
-                            .size(120.dp),
+                            .size(160.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -204,7 +204,7 @@ fun ServicesScreen(navController: NavHostController) {
                                     contentDescription = service.name,
                                     //contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(90.dp)
+                                        .size(110.dp)
                                         .clip(CircleShape)
                                         .clickable(
                                             enabled = true,
@@ -271,7 +271,7 @@ fun ServicesScreen(navController: NavHostController) {
             }
             Box(
                 modifier = Modifier
-                    .size(120.dp),
+                    .size(160.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -279,7 +279,7 @@ fun ServicesScreen(navController: NavHostController) {
                     contentDescription = stringResource(id = R.string.add_service),
                     //contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(90.dp)
+                        .size(110.dp)
                         .clip(CircleShape)
                         .clickable(
                             enabled = true,
@@ -318,13 +318,13 @@ fun DevicesScreen(navController: NavHostController) {
         )
         FlowRow(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Device.knownDevices.value.forEach {
                 Device.getDeviceItemFromBluetoothDevice(it)?.let { device ->
                     Box(
                         modifier = Modifier
-                            .size(120.dp),
+                            .size(160.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -337,7 +337,7 @@ fun DevicesScreen(navController: NavHostController) {
                                     contentDescription = device.name,
                                     //contentScale = ContentScale.Crop,
                                     modifier = Modifier
-                                        .size(90.dp)
+                                        .size(110.dp)
                                         .clip(CircleShape)
                                         .clickable(
                                             enabled = true,
@@ -387,7 +387,7 @@ fun DevicesScreen(navController: NavHostController) {
             }
             Box(
                 modifier = Modifier
-                    .size(120.dp),
+                    .size(160.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -395,7 +395,7 @@ fun DevicesScreen(navController: NavHostController) {
                     contentDescription = stringResource(id = R.string.add_device),
                     //contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(90.dp)
+                        .size(110.dp)
                         .clip(CircleShape)
                         .clickable(
                             enabled = true,
