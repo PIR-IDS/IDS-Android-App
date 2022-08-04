@@ -1,5 +1,6 @@
 package fr.pirids.idsapp.controller.view.menus
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavHostController
 import fr.pirids.idsapp.R
 import fr.pirids.idsapp.data.detection.Detection
@@ -12,6 +13,8 @@ import kotlinx.coroutines.launch
 import fr.pirids.idsapp.controller.detection.Detection as DetectionController
 
 object NotificationViewController {
+    val deleteAllDialog = mutableStateOf(false)
+
     fun goBack(navController: NavHostController) = navController.popBackStack()
 
     fun showDescription(navController: NavHostController) {
@@ -22,6 +25,7 @@ object NotificationViewController {
         val errorNotification = Notification(
             R.string.not_found,
             R.string.not_found,
+            detection.timestamp,
             detection.service
         )
 
@@ -33,6 +37,7 @@ object NotificationViewController {
                 is WalletCardData -> Notification(
                     it.data.intrusionTitle,
                     it.data.intrusionMessage,
+                    detection.timestamp,
                     detection.service
                 )
                 else -> errorNotification

@@ -1,9 +1,13 @@
-@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@file:OptIn(
+    ExperimentalAnimationApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class
+)
 
 package fr.pirids.idsapp.ui.views.menus
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
@@ -15,19 +19,21 @@ import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -38,68 +44,124 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import fr.pirids.idsapp.controller.detection.Detection
 import fr.pirids.idsapp.controller.view.menus.NotificationViewController
 import fr.pirids.idsapp.data.notifications.Notification
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
+import androidx.compose.material3.Text as Material3Text
+import androidx.compose.material3.TextButton as Material3TextButton
+import fr.pirids.idsapp.data.detection.Detection as DetectionData
 import fr.pirids.idsapp.data.items.Service as ServiceItem
 
 @Composable
-fun NotificationView(navController: NavHostController) {
+fun NotificationView(navController: NavHostController, appSnackbarHostState: SnackbarHostState) {
+    ConfirmDialog()
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(appSnackbarHostState) },
             topBar = { TopBar(navController) }
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(top = it.calculateTopPadding()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                items(items = Detection.detectedIntrusions.value.sortedByDescending { i -> i.timestamp }.toList()) { detection ->
-                    val notification = NotificationViewController.getNotificationFromDetection(detection)
-                    val dismissState = rememberDismissState(
-                        confirmStateChange = {
-                            NotificationViewController.removeDetectionData(detection)
-                            true
-                        }
+            AnimatedVisibility(visible = Detection.detectedIntrusions.value.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = it.calculateTopPadding(), bottom = 200.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    androidx.compose.material3.Icon(
+                        Icons.Filled.VerifiedUser,
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        contentDescription = stringResource(id = R.string.no_detection),
+                        modifier = Modifier
+                            .size(110.dp)
+                            .alpha(0.2f)
                     )
-                    SwipeToDismiss(
-                        state = dismissState,
-                        background = {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(15.dp)
-                                    .background(color = Transparent)
-                            ) {
-                                Column(modifier = Modifier.align(Alignment.CenterEnd)) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onBackground,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                                    )
-                                    Spacer(modifier = Modifier.heightIn(5.dp))
-                                    Text(
-                                        text = stringResource(id = R.string.delete),
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
+                    Material3Text(
+                        text = stringResource(id = R.string.no_detection),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.alpha(0.3f)
+                    )
+                }
+            }
+            AnimatedVisibility(visible = Detection.detectedIntrusions.value.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(top = it.calculateTopPadding()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(
+                        items = Detection.detectedIntrusions.value.sortedByDescending { i -> i.timestamp }.toList(),
+                        { listDetection : DetectionData -> listDetection.timestamp }
+                    ) { detection ->
+                        val notification = NotificationViewController.getNotificationFromDetection(detection)
+                        val message = stringResource(id = R.string.detection_removed)
+                        val dismissState = rememberDismissState(
+                            confirmStateChange = { dv ->
+                                if(dv == DismissValue.DismissedToStart) {
+                                    NotificationViewController.removeDetectionData(detection)
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        appSnackbarHostState.showSnackbar(message)
+                                    }
                                 }
+                                true
                             }
-                        },
-                        dismissContent = {
-                            NotificationCard(navController = navController, notification)
-                        },
-                        directions = setOf(DismissDirection.EndToStart)
-                    )
+                        )
+                        SwipeToDismiss(
+                            state = dismissState,
+                            modifier = Modifier
+                                .animateItemPlacement(),
+                            background = {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(15.dp)
+                                        .background(color = Transparent),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Column(modifier = Modifier.align(Alignment.CenterEnd)) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = stringResource(R.string.delete),
+                                            tint = MaterialTheme.colorScheme.onBackground,
+                                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        )
+                                        Spacer(modifier = Modifier.heightIn(5.dp))
+                                        Material3Text(
+                                            text = stringResource(id = R.string.delete),
+                                            textAlign = TextAlign.Center,
+                                            color = MaterialTheme.colorScheme.onBackground
+                                        )
+                                    }
+                                }
+                            },
+                            dismissContent = {
+                                NotificationCard(navController = navController, notification)
+                            },
+                            directions = setOf(DismissDirection.EndToStart)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+@Preview
+@Composable
+fun NotificationViewPreview() {
+    NotificationView(navController = rememberAnimatedNavController(), appSnackbarHostState = remember { SnackbarHostState() })
+}
+
 @Composable
 fun NotificationCard(navController: NavHostController, info: Notification) {
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
@@ -108,20 +170,23 @@ fun NotificationCard(navController: NavHostController, info: Notification) {
         }
     ) {
         Row {
-            Column {
-                Text(
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
+            ) {
+                Material3Text(
                     text = stringResource(id = info.title),
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .padding(horizontal = 35.dp, vertical = 8.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyLarge
                 )
-                Text(
-                    text = stringResource(id = info.message),
+                Spacer(modifier = Modifier.height(5.dp))
+                Material3Text(
+                    text = stringResource(id = info.message) + " " + Instant
+                        .ofEpochMilli(info.timestamp).atZone(ZoneId.of("UTC"))
+                        .withZoneSameInstant(TimeZone.getDefault().toZoneId())
+                        .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .padding(horizontal = 40.dp, vertical = 0.5.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -129,10 +194,12 @@ fun NotificationCard(navController: NavHostController, info: Notification) {
             Spacer(modifier = Modifier.height(15.dp))
             Spacer(modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight())
+                .fillMaxHeight()
+            )
             Box(
                 modifier = Modifier
-                    .size(70.dp),
+                    .size(70.dp)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -150,15 +217,23 @@ fun NotificationCard(navController: NavHostController, info: Notification) {
 
 @Preview
 @Composable
-fun NotificationViewPreview() {
-    NotificationView(navController = rememberAnimatedNavController())
+fun NotificationCardPreview() {
+    NotificationCard(
+        navController = rememberAnimatedNavController(),
+        info = Notification(
+            title = R.string.wallet_intrusion,
+            message = R.string.suspicious_transaction,
+            timestamp = System.currentTimeMillis(),
+            service = ServiceItem.list.first()
+        )
+    )
 }
 
 @Composable
 private fun TopBar(navController: NavHostController) {
     TopAppBar(
         title = {
-            Text(
+            Material3Text(
                 text = stringResource(id = R.string.notifications),
                 color = MaterialTheme.colorScheme.onPrimary,
                 textAlign = TextAlign.Left,
@@ -184,7 +259,7 @@ private fun TopBar(navController: NavHostController) {
         contentColor = MaterialTheme.colorScheme.onPrimary,
         actions = {
             IconButton(
-                onClick = { NotificationViewController.removeAllDetectionData() }
+                onClick = { NotificationViewController.deleteAllDialog.value = true }
             ) {
                 Icon(
                     Icons.Outlined.Delete,
@@ -200,4 +275,50 @@ private fun TopBar(navController: NavHostController) {
 @Composable
 private fun TopBarPreview() {
     TopBar(navController = rememberAnimatedNavController())
+}
+
+@Composable
+fun ConfirmDialog() {
+    if (NotificationViewController.deleteAllDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                // Dismiss the dialog when the user clicks outside the dialog or on the back
+                // button. If you want to disable that functionality, simply use an empty
+                // onDismissRequest.
+                NotificationViewController.deleteAllDialog.value = false
+            },
+            icon = {
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = stringResource(id = R.string.delete),
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            },
+            title = {
+                Material3Text(text = stringResource(id = R.string.delete_title))
+            },
+            text = {
+                Material3Text(text = stringResource(id = R.string.delete_message))
+            },
+            confirmButton = {
+                Material3TextButton(
+                    onClick = {
+                        NotificationViewController.deleteAllDialog.value = false
+                        NotificationViewController.removeAllDetectionData()
+                    }
+                ) {
+                    Material3Text(text = stringResource(id = R.string.confirm))
+                }
+            },
+            dismissButton = {
+                Material3TextButton(
+                    onClick = {
+                        NotificationViewController.deleteAllDialog.value = false
+                    }
+                ) {
+                    Material3Text(text = stringResource(id = R.string.cancel))
+                }
+            }
+        )
+    }
 }

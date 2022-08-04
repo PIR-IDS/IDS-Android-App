@@ -2,6 +2,7 @@
 
 package fr.pirids.idsapp.ui.views.service
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -13,7 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,40 +56,73 @@ fun AddServiceView(navController: NavHostController) {
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge
                 )
+
                 //TODO: Add a search bar to search for services
-                FlowRow(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Service.getNotAddedCompatibleServices().forEach {
-                        Box(
+
+                AnimatedVisibility(visible = Service.getNotAddedCompatibleServices().isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = it.calculateTopPadding(), bottom = 200.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
                             modifier = Modifier
-                                .size(120.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
+                                .size(width = 150.dp, height = 150.dp),
+                            painter = painterResource(id = R.drawable.ids_logo_flat),
+                            contentDescription = stringResource(id = R.string.app_name),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
+                            alpha = 0.3f
+                        )
+                        Text(
+                            text = stringResource(id = R.string.no_compatible_services),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.alpha(0.3f)
+                        )
+                    }
+                }
+                AnimatedVisibility(visible = Service.getNotAddedCompatibleServices().isNotEmpty()) {
+                    FlowRow(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Service.getNotAddedCompatibleServices().forEach {
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Image(
-                                    painter = painterResource(id = it.logo),
-                                    contentDescription = it.name,
-                                    //contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(90.dp)
-                                        .clip(CircleShape)
-                                        .clickable(
-                                            enabled = true,
-                                            onClickLabel = it.name,
-                                            onClick = { AddServiceViewController.showService(navController, it.id) }
-                                        )
-                                )
-                                Text(
-                                    text = it.name,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    textAlign = TextAlign.Center
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = it.logo),
+                                        contentDescription = it.name,
+                                        //contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(90.dp)
+                                            .clip(CircleShape)
+                                            .clickable(
+                                                enabled = true,
+                                                onClickLabel = it.name,
+                                                onClick = {
+                                                    AddServiceViewController.showService(
+                                                        navController,
+                                                        it.id
+                                                    )
+                                                }
+                                            )
+                                    )
+                                    Text(
+                                        text = it.name,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }

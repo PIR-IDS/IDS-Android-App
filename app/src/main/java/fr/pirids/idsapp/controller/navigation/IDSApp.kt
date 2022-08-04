@@ -163,7 +163,7 @@ fun IDSApp(
                     else -> null
                 }
             }
-        ) { NotificationView(navController) }
+        ) { NotificationView(navController, appSnackbarHostState = appSnackbarHostState) }
 
         composable(
             route = NavRoutes.NotificationDescription.route + "/{id}",

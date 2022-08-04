@@ -49,4 +49,11 @@
     <string name="service_monitored">Service monitored</string>
     <string name="service_not_monitored">Service not monitored</string>
     <string name="important_ids_channel_description">Important IDS Channel</string>
+    <string name="detection_removed">Detection removed!</string>
+    <string name="no_detection">You are safe</string>
+    <string name="delete_title">Delete all detected intrusions?</string>
+    <string name="delete_message">This will be irreversible.</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="no_compatible_services">No other compatible service found!</string>
 </resources>

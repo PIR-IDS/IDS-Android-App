@@ -184,12 +184,13 @@ fun ConnectedLabel(service: Service) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
+                    modifier = Modifier.size(80.dp),
                     painter = painterResource(id = service.logo),
                     contentDescription = service.name
                 )
                 Icon(
                     Icons.Outlined.TaskAlt,
-                    modifier = Modifier.size(65.dp),
+                    modifier = Modifier.size(55.dp),
                     contentDescription = stringResource(id = R.string.connected),
                     tint = androidx.compose.material.MaterialTheme.colors.custom_success
                 )
@@ -238,12 +239,13 @@ fun DisconnectedLabel(service: Service) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
+                    modifier = Modifier.size(80.dp),
                     painter = painterResource(id = service.logo),
                     contentDescription = service.name
                 )
                 Icon(
                     Icons.Outlined.Error,
-                    modifier = Modifier.size(65.dp),
+                    modifier = Modifier.size(55.dp),
                     contentDescription = stringResource(id = R.string.connected),
                     tint = MaterialTheme.colorScheme.error
                 )
@@ -294,6 +296,7 @@ fun LoginForm(modifier: Modifier = Modifier, service: Service, snackbarHostState
 
         Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
             Image(
+                modifier = Modifier.size(80.dp),
                 painter = painterResource(id = service.logo),
                 contentDescription = service.name
             )

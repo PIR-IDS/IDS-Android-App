@@ -50,4 +50,11 @@
     <string name="service_monitored">Service monitoré</string>
     <string name="service_not_monitored">Service non monitoré</string>
     <string name="important_ids_channel_description">Canal prioritaire IDS</string>
+    <string name="detection_removed">Détection supprimée !</string>
+    <string name="no_detection">Vous êtes en sécurité</string>
+    <string name="delete_title">Supprimer toutes les détections d\'intrusion ?</string>
+    <string name="delete_message">Cette action sera irréversible.</string>
+    <string name="confirm">Confirmer</string>
+    <string name="cancel">Annuler</string>
+    <string name="no_compatible_services">Pas d\'autres services compatibles disponibles !</string>
 </resources>

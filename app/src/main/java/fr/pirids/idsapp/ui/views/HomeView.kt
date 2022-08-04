@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -280,6 +281,7 @@ fun ServicesScreen(navController: NavHostController) {
                     //contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(110.dp)
+                        .alpha(0.8f)
                         .clip(CircleShape)
                         .clickable(
                             enabled = true,
@@ -396,6 +398,7 @@ fun DevicesScreen(navController: NavHostController) {
                     //contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(110.dp)
+                        .alpha(0.8f)
                         .clip(CircleShape)
                         .clickable(
                             enabled = true,
@@ -442,6 +445,7 @@ fun NetworkScreen(navController: NavHostController) {
                 contentDescription = "",
                 modifier = Modifier
                     .size(250.dp)
+                    .alpha(0.3f)
             )
         }
     }
