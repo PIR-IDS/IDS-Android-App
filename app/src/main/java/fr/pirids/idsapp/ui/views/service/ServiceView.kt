@@ -1,19 +1,18 @@
-@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
 
 package fr.pirids.idsapp.ui.views.service
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -414,40 +413,45 @@ fun HistoryList(modifier: Modifier = Modifier, service: Service) {
                         .ofEpochMilli(it).atZone(ZoneId.of("UTC"))
                         .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                         .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
-                service = service
+                service = service,
+                modifier = Modifier.animateItemPlacement()
             )
         }
     }
 }
 
 @Composable
-fun Item(item: String, service: Service) {
-    Box(
+fun Item(item: String, service: Service, modifier: Modifier = Modifier) {
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp)
-            .height(40.dp)
-            .background(color = MaterialTheme.colorScheme.secondary)
+            .height(60.dp)
+            .then(modifier),
+        /*colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary
+        )*/
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .fillMaxWidth()
+            verticalAlignment = CenterVertically,
+            horizontalArrangement = Arrangement.Center,
         ) {
             Image(
                 painter = painterResource(id = service.logo),
                 contentDescription = item,
                 modifier = Modifier
-                    .padding(horizontal = 8.dp)
+                    .padding(8.dp)
                     .align(CenterVertically)
+                    .size(50.dp)
             )
             Text(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
+                    .padding(16.dp)
                     .align(CenterVertically),
                 text = item,
-                color = MaterialTheme.colorScheme.onSecondary,
-                style = MaterialTheme.typography.bodySmall
+                //color = MaterialTheme.colorScheme.onSecondary,
+                style = MaterialTheme.typography.bodyMedium
             )
         }
     }
@@ -482,24 +486,25 @@ fun ProbesList(modifier: Modifier = Modifier, service: Service) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         items(ServiceViewController.getProbesList(service)) {
-            ItemDevice(item = it)
+            ItemDevice(item = it, Modifier.animateItemPlacement())
         }
     }
 }
 
 @Composable
-fun ItemDevice(item: Device) {
-    Box(
+fun ItemDevice(item: Device, modifier: Modifier = Modifier) {
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp)
-            .height(40.dp)
-            .background(color = MaterialTheme.colorScheme.tertiary)
+            .height(60.dp)
+            .then(modifier),
+        /*colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary
+        )*/
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .fillMaxWidth(),
             verticalAlignment = CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -512,23 +517,24 @@ fun ItemDevice(item: Device) {
             )
             Spacer(modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight())
+                .fillMaxHeight()
+            )
             Text(
                 modifier = Modifier
-                    //.padding(horizontal = 16.dp)
                     .align(CenterVertically),
                 text = item.name,
-                color = MaterialTheme.colorScheme.onTertiary,
+                //color = MaterialTheme.colorScheme.onTertiary,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier
                 .weight(2f)
-                .fillMaxHeight())
+                .fillMaxHeight()
+            )
             AnimatedVisibility(visible = item in DeviceController.connectedDevices.value.map { DeviceController.getDeviceItemFromBluetoothDevice(it) }) {
                 Icon(
                     Icons.Filled.CheckCircle,
-                    tint = MaterialTheme.colorScheme.onTertiary,
+                    //tint = MaterialTheme.colorScheme.onTertiary,
                     contentDescription = stringResource(id = R.string.device_connected),
                     modifier = Modifier
                         .padding(horizontal = 8.dp)

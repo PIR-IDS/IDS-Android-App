@@ -18,7 +18,8 @@ object NotificationViewController {
     fun goBack(navController: NavHostController) = navController.popBackStack()
 
     fun showDescription(navController: NavHostController) {
-        navController.navigate(NavRoutes.NotificationDescription.route + "/" + 1) //TODO: replace 1 with id
+        //TODO: implement the UI for this route
+        //navController.navigate(NavRoutes.NotificationDescription.route + "/" + 1) //TODO: replace 1 with id
     }
 
     fun getNotificationFromDetection(detection: Detection) : Notification {

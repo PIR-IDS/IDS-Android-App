@@ -182,7 +182,8 @@ object Detection {
                                             .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                                             .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
                                     icon = service.logo,
-                                    uri = (NavRoutes.NotificationDescription.deepLink + "/1").toUri(),
+                                    //TODO: implement the UI for this route, for now we are just going to show the notification list
+                                    uri = (if(false) (NavRoutes.NotificationDescription.deepLink + "/1") else NavRoutes.Notification.deepLink).toUri(),
                                     idsAlert = true
                                 )
 

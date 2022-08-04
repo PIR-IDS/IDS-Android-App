@@ -7,9 +7,10 @@
 
 package fr.pirids.idsapp.ui.views.menus
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.TweenSpec
 import fr.pirids.idsapp.R
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -98,13 +100,15 @@ fun NotificationView(navController: NavHostController, appSnackbarHostState: Sna
                 ) {
                     items(
                         items = Detection.detectedIntrusions.value.sortedByDescending { i -> i.timestamp }.toList(),
-                        { listDetection : DetectionData -> listDetection.timestamp }
+                        { detectionData : DetectionData -> detectionData.timestamp }
                     ) { detection ->
                         val notification = NotificationViewController.getNotificationFromDetection(detection)
                         val message = stringResource(id = R.string.detection_removed)
+                        val visible = remember { mutableStateOf(true) }
                         val dismissState = rememberDismissState(
                             confirmStateChange = { dv ->
                                 if(dv == DismissValue.DismissedToStart) {
+                                    visible.value = false
                                     NotificationViewController.removeDetectionData(detection)
                                     CoroutineScope(Dispatchers.IO).launch {
                                         appSnackbarHostState.showSnackbar(message)
@@ -142,7 +146,13 @@ fun NotificationView(navController: NavHostController, appSnackbarHostState: Sna
                                 }
                             },
                             dismissContent = {
-                                NotificationCard(navController = navController, notification)
+                                AnimatedVisibility(visible = visible.value,
+                                    exit = fadeOut(
+                                        animationSpec = TweenSpec(200, 200, FastOutLinearInEasing)
+                                    )
+                                ) {
+                                    NotificationCard(navController = navController, notification)
+                                }
                             },
                             directions = setOf(DismissDirection.EndToStart)
                         )
@@ -169,15 +179,19 @@ fun NotificationCard(navController: NavHostController, info: Notification) {
             NotificationViewController.showDescription(navController)
         }
     ) {
-        Row {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
             Column(
                 modifier = Modifier
+                    .widthIn(0.dp, 275.dp)
                     .padding(horizontal = 20.dp, vertical = 20.dp),
             ) {
                 Material3Text(
                     text = stringResource(id = info.title),
                     color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Start,
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Spacer(modifier = Modifier.height(5.dp))
@@ -187,7 +201,7 @@ fun NotificationCard(navController: NavHostController, info: Notification) {
                         .withZoneSameInstant(TimeZone.getDefault().toZoneId())
                         .format(DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")),
                     color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Start,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -199,13 +213,14 @@ fun NotificationCard(navController: NavHostController, info: Notification) {
             Box(
                 modifier = Modifier
                     .size(70.dp)
+                    .width(IntrinsicSize.Min)
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = info.service.logo),
                     contentDescription = info.service.name,
-                    //contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)

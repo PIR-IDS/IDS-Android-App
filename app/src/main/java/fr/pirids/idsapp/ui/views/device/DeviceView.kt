@@ -1,4 +1,6 @@
-@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
 
 package fr.pirids.idsapp.ui.views.device
 
@@ -6,6 +8,7 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import fr.pirids.idsapp.R
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,9 +27,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -39,6 +45,7 @@ import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import fr.pirids.idsapp.data.device.data.WalletCardData
 import fr.pirids.idsapp.data.items.DeviceId
 import fr.pirids.idsapp.extensions.custom_success
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import fr.pirids.idsapp.data.items.Device as DeviceItem
 
@@ -134,11 +141,21 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
                         when(device.id) {
                             DeviceId.WALLET_CARD -> {
                                 val dataSet = (bleDev.data as WalletCardData).whenWalletOutArray
-                                items(dataSet.value.sortedByDescending { zdt -> zdt }) { zdt ->
+                                items(
+                                    dataSet.value.sortedByDescending { zdt -> zdt },
+                                    { zdt: ZonedDateTime -> zdt }
+                                ) { zdt ->
                                     dataSetEmpty.value = dataSet.value.isEmpty()
-                                    DataCard(bleDev.data.dataTitle, bleDev.data.dataMessage, bleDev.data.eventIcon, zdt.format(
-                                        DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")
-                                    ))
+                                    DataCard(
+                                        bleDev.data.dataTitle,
+                                        bleDev.data.dataMessage,
+                                        bleDev.data.eventIcon,
+                                        zdt.format(
+                                            DateTimeFormatter.ofPattern("HH'H'mm:ss (d MMMM yyyy)")
+                                        ),
+                                        //TODO: maybe find a way to display the new ones instead of only filling the invisible top
+                                        Modifier.animateItemPlacement()
+                                    )
                                 }
                             }
                             else -> {}
@@ -161,28 +178,33 @@ fun DeviceView(navController: NavHostController, device: DeviceItem, address: St
 }
 
 @Composable
-fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector, dateTime: String) {
-    Card(
+fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector, dateTime: String, modifier: Modifier = Modifier) {
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(15.dp)
+            .padding(8.dp)
+            .then(modifier)
     ) {
-        Row {
-            Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(0.dp, 275.dp)
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
+            ) {
                 Text(
                     text = stringResource(id = title),
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .padding(horizontal = 35.dp, vertical = 8.dp),
-                    textAlign = TextAlign.Left,
+                    textAlign = TextAlign.Start,
                     style = MaterialTheme.typography.bodyLarge
                 )
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = stringResource(id = message) + " $dateTime",
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .padding(horizontal = 40.dp, vertical = 0.5.dp),
-                    textAlign = TextAlign.Left,
+                    textAlign = TextAlign.Start,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -190,19 +212,24 @@ fun DataCard(@StringRes title: Int, @StringRes message: Int, icon: ImageVector, 
             Spacer(modifier = Modifier.height(15.dp))
             Spacer(modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight())
+                .fillMaxHeight()
+            )
             Box(
                 modifier = Modifier
-                    .size(70.dp),
+                    .size(90.dp)
+                    .width(IntrinsicSize.Min)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = rememberVectorPainter(icon),
                     contentDescription = "",
-                    //contentScale = ContentScale.Crop,
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
+                        .size(30.dp)
+                        .alpha(0.7f)
+                        .clip(CircleShape),
                 )
 
             }
