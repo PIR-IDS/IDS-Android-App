@@ -17,7 +17,7 @@
     ·
     <a href="https://github.com/PIR-IDS/IDS-Android-App/actions/workflows/test.yml">Test Results</a>
     ·
-    <a href="https://github.com/PIR-IDS/IDS-Android-App/projects">Show Project</a>
+    <a href="https://github.com/PIR-IDS/.github/blob/main/profile/README.md">See Global Usage</a>
   </p>
 
 <!-- TABLE OF CONTENTS -->
