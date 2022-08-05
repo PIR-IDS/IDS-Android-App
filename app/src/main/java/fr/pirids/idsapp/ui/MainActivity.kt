@@ -70,7 +70,8 @@ class MainActivity : ComponentActivity() {
                                     CircularProgressIndicator(
                                         modifier = Modifier
                                             .padding(horizontal = 18.dp)
-                                            .size(50.dp)
+                                            .size(50.dp),
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }

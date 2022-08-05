@@ -13,7 +13,9 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val DarkColorScheme = darkColorScheme(
     primary = md_theme_dark_primary,
@@ -89,10 +91,70 @@ fun IDSAppTheme(
         else -> LightColorScheme
     }
     val view = LocalView.current
+    val systemUiController = rememberSystemUiController()
+    val useDarkIconsPrimary = (ColorUtils.calculateLuminance(colorScheme.onPrimary.toArgb()) < 0.5)
+    val colorPrimary = colorScheme.primary
+    val useDarkIconsBackground = (ColorUtils.calculateLuminance(colorScheme.onBackground.toArgb()) < 0.5)
+    val colorBackground = colorScheme.background
     if (!view.isInEditMode) {
         SideEffect {
-            (view.context as Activity).window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController((view.context as Activity).window, view).isAppearanceLightStatusBars = darkTheme
+            systemUiController.setSystemBarsColor(
+                color = colorPrimary,
+                darkIcons = useDarkIconsPrimary
+            )
+            systemUiController.setStatusBarColor(
+                color = colorPrimary,
+                darkIcons = useDarkIconsPrimary
+            )
+            systemUiController.setNavigationBarColor(
+                color = colorBackground,
+                darkIcons = useDarkIconsBackground
+            )
+            WindowCompat.getInsetsController((view.context as Activity).window, view).isAppearanceLightStatusBars = useDarkIconsPrimary
+        }
+    }
+
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
+}
+
+@Composable
+fun IDSAlertTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    // Dynamic color is available on Android 12+
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
+    val view = LocalView.current
+    val systemUiController = rememberSystemUiController()
+    val useDarkIcons = (ColorUtils.calculateLuminance(colorScheme.onError.toArgb()) < 0.5)
+    val color = colorScheme.error
+    if (!view.isInEditMode) {
+        SideEffect {
+            systemUiController.setSystemBarsColor(
+                color = color,
+                darkIcons = useDarkIcons
+            )
+            systemUiController.setStatusBarColor(
+                color = color,
+                darkIcons = useDarkIcons
+            )
+            systemUiController.setNavigationBarColor(
+                color = color,
+                darkIcons = useDarkIcons
+            )
+            WindowCompat.getInsetsController((view.context as Activity).window, view).isAppearanceLightStatusBars = useDarkIcons
         }
     }
 

@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import fr.pirids.idsapp.ui.theme.IDSAppTheme
+import fr.pirids.idsapp.ui.theme.IDSAlertTheme
 
 /**
  * This activity is only used to display a fullscreen notification on the lock screen.
@@ -22,7 +22,7 @@ class AlertNotificationActivity : ComponentActivity() {
         }
 
         setContent {
-            IDSAppTheme {
+            IDSAlertTheme {
                 AlertNotificationView()
             }
         }
