@@ -82,7 +82,7 @@ fun IDSAppTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    var colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -90,6 +90,32 @@ fun IDSAppTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    // We avoid bad contrast
+    //TODO: handle this in a better way
+    val luminanceTolerance = 0.2
+    if(
+        (darkTheme && ColorUtils.calculateLuminance(colorScheme.primary.toArgb()) < ColorUtils.calculateLuminance(colorScheme.background.toArgb()) + luminanceTolerance)
+        ||
+        (!darkTheme && ColorUtils.calculateLuminance(colorScheme.primary.toArgb()) > ColorUtils.calculateLuminance(colorScheme.background.toArgb()) - luminanceTolerance)
+    ) {
+        colorScheme = colorScheme.copy(primary = colorScheme.onPrimary, onPrimary = colorScheme.primary)
+    }
+    if(
+        (darkTheme && ColorUtils.calculateLuminance(colorScheme.secondary.toArgb()) < ColorUtils.calculateLuminance(colorScheme.background.toArgb()) + luminanceTolerance)
+        ||
+        (!darkTheme && ColorUtils.calculateLuminance(colorScheme.secondary.toArgb()) > ColorUtils.calculateLuminance(colorScheme.background.toArgb()) - luminanceTolerance)
+    ) {
+        colorScheme = colorScheme.copy(secondary = colorScheme.onSecondary, onSecondary = colorScheme.secondary)
+    }
+    if(
+        (darkTheme && ColorUtils.calculateLuminance(colorScheme.tertiary.toArgb()) < ColorUtils.calculateLuminance(colorScheme.background.toArgb()) + luminanceTolerance)
+        ||
+        (!darkTheme && ColorUtils.calculateLuminance(colorScheme.tertiary.toArgb()) > ColorUtils.calculateLuminance(colorScheme.background.toArgb()) - luminanceTolerance)
+    ) {
+        colorScheme = colorScheme.copy(tertiary = colorScheme.onTertiary, onTertiary = colorScheme.tertiary)
+    }
+
     val view = LocalView.current
     val systemUiController = rememberSystemUiController()
     val useDarkIconsPrimary = (ColorUtils.calculateLuminance(colorScheme.onPrimary.toArgb()) < 0.5)
