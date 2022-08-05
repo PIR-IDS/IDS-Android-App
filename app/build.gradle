@@ -102,7 +102,7 @@ dependencies {
     // ------- DATABASE -------
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
-    implementation "net.zetetic:android-database-sqlcipher:4.5.1"
+    implementation 'net.zetetic:android-database-sqlcipher:4.5.2'
     implementation "androidx.room:room-runtime:$room_version"
     ksp "androidx.room:room-compiler:$room_version"
 
