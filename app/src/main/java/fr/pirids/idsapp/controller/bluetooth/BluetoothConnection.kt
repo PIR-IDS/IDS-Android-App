@@ -232,10 +232,14 @@ class BluetoothConnection(private val mContext: Context) {
         if(result.all { it.value }) {
             permissionsGranted = true
             scope.launch {
-                if(daemonMode)
-                    this@BluetoothConnection.searchForKnownDevices(resultLauncher, scope)
-                else
-                    this@BluetoothConnection.launchScan(resultLauncher, scope)
+                try {
+                    if(daemonMode)
+                        this@BluetoothConnection.searchForKnownDevices(resultLauncher, scope)
+                    else
+                        this@BluetoothConnection.launchScan(resultLauncher, scope)
+                } catch (e: Exception) {
+                    Log.e("BluetoothConnection", "Unable to start scan", e)
+                }
             }
             Log.i("BluetoothGattDiscoverServices", "Bluetooth permission granted")
         } else {
