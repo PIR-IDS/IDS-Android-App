@@ -4,7 +4,7 @@
     <string name="tab_text_services">My Services</string>
     <string name="tab_text_devices">My Probes</string>
     <string name="tab_text_network">My Network</string>
-    <string name="izly_description">izly desc</string>
+    <string name="izly_description">Izly by Crous is the payment service of Crous. Izly by Crous allows students to pay for Crous services on their campus.</string>
     <string name="add_service">Add a Service</string>
     <string name="add_device">Add a Probe</string>
     <string name="settings">Settings</string>

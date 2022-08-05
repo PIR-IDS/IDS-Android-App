@@ -5,7 +5,7 @@
     <string name="tab_text_services">Mes Services</string>
     <string name="tab_text_devices">Mes Sondes</string>
     <string name="tab_text_network">Mon Réseau</string>
-    <string name="izly_description">izly desc</string>
+    <string name="izly_description">Izly by Crous est le service de paiement des Crous. Izly by Crous permet aux étudiants de payer les services du Crous sur leur campus.</string>
     <string name="add_service">Ajouter un Service</string>
     <string name="add_device">Ajouter une Sonde</string>
     <string name="settings">Paramètres</string>

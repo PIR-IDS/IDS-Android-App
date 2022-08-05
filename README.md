@@ -47,6 +47,7 @@
            <li><a href="#documentation">Documentation</a></li>
         </ul>
       </ul>
+    <li><a href="#contribute">Contribute</a></li>
     <li><a href="#tree-structure">Tree Structure</a></li>
     <li><a href="#credits">Credits</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -102,6 +103,49 @@ _TODO_
 _TODO_
   
 ***
+
+<!-- CONTRIBUTE -->
+## Contribute
+
+You will find in this section how to add new services and devices to the project.
+
+<details>
+  <summary>Add a Service to the compatibility list</summary>
+
+To add a new service to the compatible ones, you need to add the necessary resources and then edit some files.
+
+### A. Resources
+
+1. Add an square icon for the service in the folder `app/src/main/res/drawable-nodpi` in PNG, for example `my_service_logo.png`.
+2. Add a string resource for the service description in the folder `app/src/main/res/values/strings.xml`, for example `my_service_description`. Do not forget to translate the string in all the languages supported by the app.
+
+### B. Sources
+
+1. Add an enumeration to ServiceId with a unique tag in `app/src/main/java/fr/pirids/idsapp/data/items/Service.kt`. Also add the service to the Service list with the associated devices that will be used to detect the behavioural anomalies.
+2. Add a way to handle the service credentials necessary to interact with the API in a new created file in `app/src/main/java/fr/pirids/idsapp/data/api/auth`, named `MyServiceAuth.kt`. This class has to inherit from `ApiAuth`. You will have to provide a way to instanciate this class each time a connection has to be made, notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/detection/Service.kt`.
+3. Add a way to handle the service data you get from the API in a new created file in `app/src/main/java/fr/pirids/idsapp/data/api/data`, named `MyServiceData.kt`. This class has to inherit from `ApiData`. You will have to provide a way to instanciate this class each time data has to be retrieved, notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/detection/Service.kt`, `app/src/main/java/fr/pirids/idsapp/ui/views/service/ServiceView.kt`, `app/src/main/java/fr/pirids/idsapp/controller/detection/Detection.kt`, `app/src/main/java/fr/pirids/idsapp/controller/daemon/ServiceDaemon.kt`.
+4. Create a class that will handle the connection to the service, which inherits from `ApiInterface` in a new created file in `app/src/main/java/fr/pirids/idsapp/controller/api`, named `MyServiceApi.kt`. You will have to provide a way to instanciate this class each time a connection has to be made, notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/detection/Service`, `app/src/main/java/fr/pirids/idsapp/controller/daemon/ServiceDaemon.kt`.
+5. Add the persistence of the credentials and the data retrieved by creating the entity and DAO linked to the new service. Create a new file in `app/src/main/java/fr/pirids/idsapp/data/model/entity/service` named `MyServiceAuth.kt`. Link a foreign key to the `ApiAuth` entity id. Create a new file in `app/src/main/java/fr/pirids/idsapp/data/model/entity/service` named `MyServiceData.kt`. Link a foreign key to the `ApiData` entity id. Register the newly created entities into the `app/src/main/java/fr/pirids/idsapp/data/model/AppDatabase.kt` file. Now create the DAO for the new service, following the same logic in the `app/src/main/java/fr/pirids/idsapp/data/model/dao` package. Call them `MyServiceAuthDao` and `MyServiceDataDao` and add their implementation to the `app/src/main/java/fr/pirids/idsapp/data/model/AppDatabase.kt` file. You will have to use the DAO notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/detection/Service`, `app/src/main/java/fr/pirids/idsapp/controller/daemon/ServiceDaemon.kt`, `app/src/main/java/fr/pirids/idsapp/controller/detection/Detection.kt`.
+
+</details>
+
+<details>
+  <summary>Add a BLE Device support</summary>
+
+To support a new BLE device, you need to add the necessary resources and then edit some files.
+
+### A. Resources
+
+1. Add an square icon for the device in the folder `app/src/main/res/drawable-nodpi` in PNG, for example `ids_device_name_logo.png`.
+2. Add a string resource for the device description in the folder `app/src/main/res/values/strings.xml`, for example `device_name_desc`. Also add a data name, for example `device_name_data`, an event message, for example `device_name_event_message` and an intrusion message, for example `device_name_intrusion`. Do not forget to translate all the strings in all the languages supported by the app.
+
+### B. Sources
+
+1. Add an enumeration to DeviceId with a unique tag in `app/src/main/java/fr/pirids/idsapp/data/items/Device.kt`. Also add the device to the Device list with the associated Bluetooth services that will be used to transmit the data. You can add the services with their characteristics in their respective files if they are still not added.
+3. Add a way to handle the service data you get from the device in a new created file in `app/src/main/java/fr/pirids/idsapp/data/device/data`, named `MyDeviceData.kt`. This class has to inherit from `DeviceData`, you can also add some Bluetooth characteristics you would want to store during runtime in there. You will have to provide a way to instanciate this class each time data has to be used, notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/view/menus/NotificationViewController.kt`, `app/src/main/java/fr/pirids/idsapp/ui/views/service/DeviceView.kt`, `app/src/main/java/fr/pirids/idsapp/controller/detection/Detection.kt`, `app/src/main/java/fr/pirids/idsapp/controller/daemon/DeviceDaemon.kt`, `app/src/main/java/fr/pirids/idsapp/controller/bluetooth/Device.kt`, `app/src/main/java/fr/pirids/idsapp/controller/bluetooth/BluetoothConnection.kt`. You will have to handle the BLE communication in `app/src/main/java/fr/pirids/idsapp/controller/bluetooth/BluetoothConnection.kt`.
+5. Add the persistence of the device data retrieved by creating the entity and DAO linked to the new device. Create a new file in `app/src/main/java/fr/pirids/idsapp/data/model/entity/device` named `MyDeviceData.kt`. Link a foreign key to the `DeviceData` entity id. Register the newly created entity into the `app/src/main/java/fr/pirids/idsapp/data/model/AppDatabase.kt` file. Now create the DAO for the new device, following the same logic in the `app/src/main/java/fr/pirids/idsapp/data/model/dao` package. Call it `MyDeviceDataDao` and add its implementation to the `app/src/main/java/fr/pirids/idsapp/data/model/AppDatabase.kt` file. You will have to use the DAO notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/daemon/DeviceDaemon.kt`, `app/src/main/java/fr/pirids/idsapp/controller/bluetooth/BluetoothConnection.kt`.
+
+</details>
 
 <!-- TREE STRUCTURE -->
 ## Tree Structure
