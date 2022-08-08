@@ -33,9 +33,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //TODO: test this on API 29 and 30, we want to keep the compatibility with them
-
         // We launch the background detection for the API < 31, otherwise it is done by the BluetoothCompanionService
+        //TODO: maybe we should launch it for all APIs as a fallback? (the BCS seems not completely stable)
         WorkManager.getInstance(applicationContext)
             .enqueueUniqueWork(
                 "idsapp_daemon",

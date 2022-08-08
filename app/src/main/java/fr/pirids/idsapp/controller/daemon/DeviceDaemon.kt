@@ -56,12 +56,14 @@ object DeviceDaemon {
         val bleBackground = BluetoothConnection(ctx)
         try {
             if(Build.VERSION.SDK_INT < 31) {
+                //FIXME: memory leak
                 bleBackground.registerBroadCast()
             }
             bleBackground.initSearch()
         } catch (e: Exception) {
             Log.e("DeviceDaemon", "Error while searching for devices", e)
             if(Build.VERSION.SDK_INT < 31) {
+                //FIXME: memory leak
                 bleBackground.unregisterBroadCast()
             }
         }

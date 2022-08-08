@@ -11,8 +11,10 @@ class DetectionWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(
     override suspend fun doWork(): Result =
         try {
             // We launch the background detection for the API < 31, otherwise it is done by the BluetoothCompanionService
+            //TODO: maybe we should launch it for all APIs as a fallback? (the BCS seems not completely stable)
             if(Build.VERSION.SDK_INT < 31) {
                 Initiator.init(applicationContext)
+                Initiator.handleServices(applicationContext)
                 Initiator.monitorServices(applicationContext)
 
                 // We repeat this background task periodically
@@ -21,6 +23,8 @@ class DetectionWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(
                 WorkManager.getInstance(applicationContext).enqueueUniqueWork(
                     "idsapp_daemon_detection", ExistingWorkPolicy.REPLACE,
                     OneTimeWorkRequestBuilder<DetectionWorker>()
+                        //TODO: check if the 15sec is not too short, because the handling and monitoring tasks
+                        // can take some time to complete
                         .setInitialDelay(Detection.CHECKING_DELAY_MILLIS, TimeUnit.MILLISECONDS)
                         .build()
                 )

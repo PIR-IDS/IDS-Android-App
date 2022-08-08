@@ -385,6 +385,8 @@ class BluetoothConnection(private val mContext: Context) {
             }
 
             // If we lost the bond with a device, we need to reconnect to it
+            //FIXME: this is not working as intended, sometimes the device still appears in the associated
+            // devices list, but it is not making a connection anymore, it's not triggering the BluetoothDeviceCompanion
             Device.knownDevices.value.filter { it.address !in macList }.map { bleDev ->
                 bleDev.device
                     ?.let { bond(it) }

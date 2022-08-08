@@ -19,7 +19,7 @@ android {
         applicationId "fr.pirids.idsapp"
         minSdk 29
         targetSdk 33
-        versionCode 3
+        versionCode 4
         versionName "1.0.0-rc2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
