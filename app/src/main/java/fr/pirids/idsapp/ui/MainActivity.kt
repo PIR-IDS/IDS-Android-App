@@ -34,6 +34,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // We launch the background detection for the API < 31, otherwise it is done by the BluetoothCompanionService
+        //FIXME: there are complications with some OEMs killing background tasks, see:
+        // - https://dontkillmyapp.com/
+        // - https://stackoverflow.com/a/53904589
         //TODO: maybe we should launch it for all APIs as a fallback? (the BCS seems not completely stable)
         WorkManager.getInstance(applicationContext)
             .enqueueUniqueWork(
