@@ -43,9 +43,7 @@
         <li><a href="#execution">Execution</a></li>
         <li><a href="#tests">Tests</a></li>
         <li><a href="#generation">Generation</a></li>
-        <ul>
-           <li><a href="#documentation">Documentation</a></li>
-        </ul>
+        <li><a href="#documentation">Documentation</a></li>
       </ul>
     <li><a href="#contribute">Contribute</a></li>
     <li><a href="#tree-structure">Tree Structure</a></li>
@@ -81,33 +79,77 @@ This code will be used in order to receive the anomalies detected by the Arduino
 ### Prerequisites
 
 * [Android Studio](https://developer.android.com/studio) is the preferred way to use this project.
+<details>
+  <summary>If you don't use Android Studio</summary>
+
+  * Install the [Command line tools for Android](https://developer.android.com/studio/index.html#command-tools) and move the content of `cmdline-tools/bin` into a newly created tree structure: `<android_sdk_path>/cmdline-tools/latest/bin/` where `<android_sdk_path>` is a path of your choice where the SDK will be installed (see: https://developer.android.com/studio/command-line/sdkmanager).
+    ```sh
+    cd <android_sdk_path>
+    mkdir -p cmdline-tools/latest
+    cp -r cmdline-tools/* cmdline-tools/latest/
+    ```
+  * Install the Android SDK with `sdkmanager`:
+    ```sh
+    cd <android_sdk_path>/cmdline-tools/latest/bin
+    sdkmanager "platform-tools" "platforms;android-33"
+    ```
+</details>
 
 ### Installation
 
-1. Clone the project
+1. Clone the project. **Then if you use Android Studio, open the project and skip to step 3.**
    ```sh
    git clone https://github.com/PIR-IDS/IDS-Android-App.git
    ```
-2. IDS Android App is now ready to run.
+2. *If you don't use Android Studio*: Create your `local.properties` file. Replace `<android_sdk_path>` with the path to your local Android SDK you installed with `sdkmanager`.
+   ```sh
+   echo "sdk.dir=<android_sdk_path>" > local.properties
+   ```
+3. IDS Android App is now ready to run.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
 ### Execution
 
-_TODO_
+Use the following script in the project root to install the app in debug mode **(with the Android device plugged)**:
+   ```sh
+   ./gradlew installDebug
+   ```
+You can also run the release version when it is signed with:
+   ```sh
+   ./gradlew installRelease
+   ```
 
 ### Tests
 
-_TODO_
+You can run the unit tests and the Android tests **(with the Android device plugged)** powered by JUnit with the following command:
+   ```sh
+   ./gradlew test
+   ./gradlew connectedAndroidTest
+   ```
 
 ### Generation
 
-_TODO_
+To generate all the APKs, launch the following script:
+   ```sh
+   ./gradlew build
+   ```
+The APKs are generated in the `app/build/outputs/apk` directory.
 
-#### Documentation
+You can also generate the AABs with the following script:
+   ```sh
+   ./gradlew bundle
+   ```
+The APKs are generated in the `app/build/outputs/bundle` directory.
 
-_TODO_
+### Documentation
+
+To generate all the Dokka documentation, launch the following script:
+   ```sh
+   ./gradlew dokkaHtml
+   ```
+The documentation is generated in the `app/build/dokka` directory.
 
 <!-- CONTRIBUTE -->
 ## Contribute
