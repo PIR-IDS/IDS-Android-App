@@ -101,8 +101,6 @@ _TODO_
 #### Documentation
 
 _TODO_
-  
-***
 
 <!-- CONTRIBUTE -->
 ## Contribute
@@ -146,6 +144,8 @@ To support a new BLE device, you need to add the necessary resources and then ed
 5. Add the persistence of the device data retrieved by creating the entity and DAO linked to the new device. Create a new file in `app/src/main/java/fr/pirids/idsapp/data/model/entity/device` named `MyDeviceData.kt`. Link a foreign key to the `DeviceData` entity id. Register the newly created entity into the `app/src/main/java/fr/pirids/idsapp/data/model/AppDatabase.kt` file. Now create the DAO for the new device, following the same logic in the `app/src/main/java/fr/pirids/idsapp/data/model/dao` package. Call it `MyDeviceDataDao` and add its implementation to the `app/src/main/java/fr/pirids/idsapp/data/model/AppDatabase.kt` file. You will have to use the DAO notably during the `when` statements in each of these files: `app/src/main/java/fr/pirids/idsapp/controller/daemon/DeviceDaemon.kt`, `app/src/main/java/fr/pirids/idsapp/controller/bluetooth/BluetoothConnection.kt`.
 
 </details>
+
+***
 
 <!-- TREE STRUCTURE -->
 ## Tree Structure
