@@ -62,6 +62,13 @@
 
 This code will be used in order to receive the anomalies detected by the Arduino and to check if an event is linked to a distant action.
 
+<p align="center">
+    <img src="https://user-images.githubusercontent.com/26198903/183397746-a4b756ff-0a04-4860-b5f5-d9b670533ae8.png" alt="Logo" width="24%">
+    <img src="https://user-images.githubusercontent.com/26198903/183397792-bd406f19-d944-4a71-82bd-4927cf24eb69.png" alt="Logo" width="24%">
+    <img src="https://user-images.githubusercontent.com/26198903/183397818-069b1ccc-ddb3-4f8e-b75d-0654b0a27d48.png" alt="Logo" width="24%">
+    <img src="https://user-images.githubusercontent.com/26198903/183397891-2ae35514-fbb9-48b9-b5f0-8e27e3cda6c1.png" alt="Logo" width="24%">
+</p>
+
 ### Built With
 * [Kotlin](https://kotlinlang.org/)
 * [Android](https://developer.android.com/)
