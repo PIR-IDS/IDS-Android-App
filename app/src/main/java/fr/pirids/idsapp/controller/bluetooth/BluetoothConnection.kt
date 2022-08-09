@@ -188,8 +188,6 @@ class BluetoothConnection(private val mContext: Context) {
             // We observe the device presence in order to trigger the connection even if the app is not in the foreground
             if (Build.VERSION.SDK_INT >= 31) {
                 deviceManager.startObservingDevicePresence(bleDevice.address)
-            } else {
-                //TODO: observe with another way
             }
 
             // Connect

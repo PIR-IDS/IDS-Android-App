@@ -8,7 +8,6 @@ package fr.pirids.idsapp.ui.views.device
 import android.app.Activity
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import fr.pirids.idsapp.R
@@ -50,7 +49,6 @@ import fr.pirids.idsapp.controller.bluetooth.BluetoothConnection
 import fr.pirids.idsapp.controller.bluetooth.Device
 import fr.pirids.idsapp.controller.view.device.AddDeviceViewController
 import fr.pirids.idsapp.controller.bluetooth.LaunchBluetooth
-import fr.pirids.idsapp.controller.view.device.DeviceViewController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

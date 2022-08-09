@@ -17,9 +17,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-/* ----------- HACK FOR CRYPTOGRAPHIC SECURITY, DERIVED FROM PreferenceDataStoreDelegate ------------ */
-
 /**
+ * HACK FOR CRYPTOGRAPHIC SECURITY, DERIVED FROM PreferenceDataStoreDelegate
  * Creates a property delegate for a single process DataStore. This should only be called once
  * in a file (at the top level), and all usages of the DataStore should use a reference the same
  * Instance. The receiver type for the property delegate must be an instance of [Context].
