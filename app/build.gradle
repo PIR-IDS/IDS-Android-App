@@ -5,6 +5,15 @@ plugins {
     id 'org.jetbrains.dokka'
 }
 
+def signedReleaseAvailable = false
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+
+if(keystorePropertiesFile.exists() && keystorePropertiesFile.isFile() && keystorePropertiesFile.canRead()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    signedReleaseAvailable = true
+}
+
 android {
     namespace 'fr.pirids.idsapp'
 
@@ -30,6 +39,17 @@ android {
         }
     }
 
+    if(signedReleaseAvailable) {
+        signingConfigs {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     testOptions {
         unitTests.all {
             useJUnitPlatform()
@@ -48,6 +68,9 @@ android {
             shrinkResources true
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if(signedReleaseAvailable) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
@@ -114,7 +137,7 @@ dependencies {
     // ------- DATABASE -------
 
     implementation "androidx.datastore:datastore-preferences:1.0.0"
-    implementation 'net.zetetic:android-database-sqlcipher:4.5.2'
+    implementation "net.zetetic:android-database-sqlcipher:4.5.2"
     implementation "androidx.room:room-runtime:$room_version"
     ksp "androidx.room:room-compiler:$room_version"
 

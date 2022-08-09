@@ -105,7 +105,11 @@ This code will be used in order to receive the anomalies detected by the Arduino
    ```sh
    echo "sdk.dir=<android_sdk_path>" > local.properties
    ```
-3. IDS Android App is now ready to run.
+3. *Optional*: If you want to test the release version of the app on your device, set up your `keystore.properties` file by copying `keystore.properties.template` and renaming it `keystore.properties`. Fill it with the necessary information, i.e. your local development release keys (see: https://developer.android.com/studio/build/building-cmdline#sign_cmdline and https://developer.android.com/studio/publish/app-signing#secure-shared-keystore).
+   ```sh
+   cp keystore.properties.template keystore.properties
+   ```
+4. IDS Android App is now ready to run.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -116,7 +120,7 @@ Use the following script in the project root to install the app in debug mode **
    ```sh
    ./gradlew installDebug
    ```
-You can also run the release version when it is signed with:
+You can also run the release version when the app is signed (see [Installation Step 3](#installation)) with:
    ```sh
    ./gradlew installRelease
    ```
@@ -141,7 +145,7 @@ You can also generate the AABs with the following script:
    ```sh
    ./gradlew bundle
    ```
-The APKs are generated in the `app/build/outputs/bundle` directory.
+The AABs are generated in the `app/build/outputs/bundle` directory.
 
 ### Documentation
 
