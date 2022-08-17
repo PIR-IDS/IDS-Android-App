@@ -6,6 +6,7 @@ import android.bluetooth.*
 import android.bluetooth.le.*
 import android.companion.AssociationRequest
 import android.companion.BluetoothLeDeviceFilter
+import android.companion.AssociationInfo
 import android.companion.CompanionDeviceManager
 import android.content.*
 import android.net.Uri
@@ -146,7 +147,9 @@ class BluetoothConnection(private val mContext: Context) {
         try {
             // The user chose to pair the app with a Bluetooth device.
             val deviceToPair: BluetoothDevice? = if (Build.VERSION.SDK_INT >= 33) {
-                (result.data?.getParcelableExtra(CompanionDeviceManager.EXTRA_ASSOCIATION, BluetoothDevice::class.java) as ScanResult?)?.device
+                result.data?.getParcelableExtra(CompanionDeviceManager.EXTRA_ASSOCIATION, AssociationInfo::class.java)?.deviceMacAddress?.let {
+                    (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter).getRemoteDevice(it.toString().uppercase())
+                }
             } else {
                 (result.data?.getParcelableExtra(CompanionDeviceManager.EXTRA_DEVICE) as ScanResult?)?.device
             }
@@ -183,7 +186,7 @@ class BluetoothConnection(private val mContext: Context) {
             val bleDevice = BluetoothDeviceIDS(device.name, device.address, getDeviceData(device), device)
 
             // Pair with the device.
-            device.createBond()
+            bleDevice.device!!.createBond()
 
             // We observe the device presence in order to trigger the connection even if the app is not in the foreground
             if (Build.VERSION.SDK_INT >= 31) {
