@@ -26,6 +26,7 @@ import fr.pirids.idsapp.controller.daemon.workers.*
 import fr.pirids.idsapp.controller.detection.NotificationHandler
 import fr.pirids.idsapp.controller.internet.InternetConnection
 import fr.pirids.idsapp.data.internet.InternetState
+import fr.pirids.idsapp.controller.detection.NotificationPermission
 
 class MainActivity : ComponentActivity() {
     private val ble = BluetoothConnection(this)
@@ -49,12 +50,15 @@ class MainActivity : ComponentActivity() {
 
         ble.registerBroadCast()
 
-        // We initialize the app
-        Initiator.init(this)
-        Initiator.handleServices(this)
-
         setContent {
             IDSAppTheme {
+                // We ask to enable notifications and then we initialize the app
+                NotificationPermission {
+                    // We initialize the app
+                    Initiator.init(applicationContext)
+                    Initiator.handleServices(applicationContext)
+                }
+
                 // Loading screen
                 AnimatedVisibility(visible = !Initiator.initialized.value) {
                     Surface(

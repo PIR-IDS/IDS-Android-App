@@ -18,11 +18,21 @@ import fr.pirids.idsapp.ui.MainActivity
 import fr.pirids.idsapp.ui.views.notifications.AlertNotificationActivity
 import kotlinx.coroutines.flow.first
 import kotlin.NoSuchElementException
+import android.os.Build
+import android.Manifest
 
 object NotificationHandler {
     private var notificationId = 0
     private const val idChannelIDS = "IDS_DETECTION"
     private const val idChannelStatus = "IDS_STATUS"
+
+    fun getNecessaryPermissions() : List<String> {
+        val permissions: MutableList<String> = mutableListOf()
+        if (Build.VERSION.SDK_INT >= 33) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        return permissions.toList()
+    }
 
     fun createNotificationChannels(context: Context) {
         val channelIDS = NotificationChannel(idChannelIDS, "IDS DETECTION", NotificationManager.IMPORTANCE_HIGH).apply {
