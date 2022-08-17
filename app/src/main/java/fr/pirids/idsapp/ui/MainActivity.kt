@@ -52,11 +52,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             IDSAppTheme {
-                // We ask to enable notifications and then we initialize the app
+                // We ask to enable notifications
                 NotificationPermission {
-                    // We initialize the app
-                    Initiator.init(applicationContext)
-                    Initiator.handleServices(applicationContext)
+                    if(!Initiator.initialized.value) {
+                        // We initialize the app
+                        Initiator.init(this@MainActivity)
+                        Initiator.handleServices(this@MainActivity)
+                    }
                 }
 
                 // Loading screen
