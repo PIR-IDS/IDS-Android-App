@@ -22,7 +22,7 @@ object Device {
     val knownDevices : MutableState<Set<BluetoothDeviceIDS>> = mutableStateOf(setOf())
     val connectedDevices : MutableState<Set<BluetoothDeviceIDS>> = mutableStateOf(setOf())
 
-    fun getBluetoothDeviceFromAddress(address: String) : BluetoothDeviceIDS? = knownDevices.value.find { it.address == address }
+    fun getBluetoothDeviceFromAddress(address: String) : BluetoothDeviceIDS? = knownDevices.value.find { it.address.uppercase() == address.uppercase() }
     fun getDeviceItemFromBluetoothDevice(bleDevice: BluetoothDeviceIDS): DeviceItem? = DeviceItem.list.find { it.name == bleDevice.name }
     fun getDeviceItemFromName(name: String): DeviceItem? = DeviceItem.list.find { it.name == name }
 
@@ -68,7 +68,7 @@ object Device {
      * We have to compare manually the content of the Set because the unicity of the Set is not based
      * on the address of the device even when the Comparator is based on it.
      */
-    private fun addToDevicesList(newDevice: BluetoothDeviceIDS, list: MutableState<Set<BluetoothDeviceIDS>>) : Boolean{
+    private fun addToDevicesList(newDevice: BluetoothDeviceIDS, list: MutableState<Set<BluetoothDeviceIDS>>) : Boolean {
         list.value.forEach {
             // If that's the same device, we don't add it
             if (BluetoothDeviceIDS.comparator.compare(it, newDevice) == 0) return@addToDevicesList false

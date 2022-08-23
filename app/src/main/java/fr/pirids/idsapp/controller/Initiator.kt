@@ -12,6 +12,7 @@ import kotlinx.coroutines.*
 
 object Initiator {
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val currentlyMonitoringServicesIndefinitely: MutableState<Boolean> = mutableStateOf(false)
     val initialized: MutableState<Boolean> = mutableStateOf(false)
 
     fun init(applicationContext: Context) {
@@ -56,10 +57,13 @@ object Initiator {
     }
 
     fun monitorServicesIndefinitely(applicationContext: Context) {
-        scope.launch {
-            while (true) {
-                Detection.monitorServices(applicationContext)
-                delay(Detection.CHECKING_DELAY_MILLIS)
+        if(!currentlyMonitoringServicesIndefinitely.value) {
+            currentlyMonitoringServicesIndefinitely.value = true
+            scope.launch {
+                while (true) {
+                    Detection.monitorServices(applicationContext)
+                    delay(Detection.CHECKING_DELAY_MILLIS)
+                }
             }
         }
     }

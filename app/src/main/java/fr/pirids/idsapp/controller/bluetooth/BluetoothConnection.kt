@@ -80,6 +80,12 @@ class BluetoothConnection(private val mContext: Context) {
                     }
                     BluetoothAdapter.STATE_TURNING_ON -> {}
                 }
+            } else if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                when (intent?.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)) {
+                    BluetoothDevice.BOND_BONDED -> {
+                        //TODO: do something there if we use bonding
+                    }
+                }
             }
         }
     }
@@ -91,7 +97,7 @@ class BluetoothConnection(private val mContext: Context) {
             .setScanFilter(
                 ScanFilter.Builder()
                     // Be sure to match the device selected by the user
-                    .setDeviceAddress(macAddress)
+                    .setDeviceAddress(macAddress.uppercase())
                     .build()
             )
             .build()
@@ -166,8 +172,8 @@ class BluetoothConnection(private val mContext: Context) {
     fun unpair(address: String) {
         val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
         if (Build.VERSION.SDK_INT >= 33) {
-            deviceManager.myAssociations.find { it.deviceMacAddress.toString() == address }?.let {
-                deviceManager.stopObservingDevicePresence(it.deviceMacAddress.toString())
+            deviceManager.myAssociations.find { it.deviceMacAddress.toString().uppercase() == address.uppercase() }?.let {
+                deviceManager.stopObservingDevicePresence(it.deviceMacAddress.toString().uppercase())
                 deviceManager.disassociate(it.id)
             }
         } else {
@@ -183,10 +189,20 @@ class BluetoothConnection(private val mContext: Context) {
     private fun bond(device: BluetoothDevice, onConnected: (Boolean) -> Unit = {}) {
         try {
             val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
-            val bleDevice = BluetoothDeviceIDS(device.name, device.address, getDeviceData(device), device)
+            val bleDevice = BluetoothDeviceIDS(device.name, device.address.uppercase(), getDeviceData(device), device)
+            val adapter = (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter)
 
-            // Pair with the device.
-            bleDevice.device!!.createBond()
+            //FIXME: we have a problem here. Sometimes on Android 12 and 13 (but mostly on 13) the CDM is not triggering the
+            // onDeviceAppeared callback when the device is nearby. So we have to create a bond to make it work. On Android 13
+            // the bond does not seem to work without a manual confirmation. However createBond() has to be observed by a BroadcastReceiver,
+            // but because we launch the connection with connect(bleDevice, onConnected), the device seems to become unreachable to finish the bonding.
+            // For now we will just create the bond everywhere except on Android 13, which will leads to some connection issues on it...
+            if (Build.VERSION.SDK_INT < 33) {
+                if(bleDevice.address !in adapter.bondedDevices.map { it.address.uppercase() }) {
+                    // Pair with the device.
+                    bleDevice.device!!.createBond()
+                }
+            }
 
             // We observe the device presence in order to trigger the connection even if the app is not in the foreground
             if (Build.VERSION.SDK_INT >= 31) {
@@ -201,6 +217,17 @@ class BluetoothConnection(private val mContext: Context) {
         } catch (e: Exception) {
             Log.e("BluetoothConnection", "Unable to bond with device", e)
             onConnected(false)
+        }
+    }
+
+    private fun unbond(device: BluetoothDevice) {
+        try {
+            //TODO: replace with public API when available to avoid to use reflection
+            device.javaClass.getMethod("removeBond").invoke(this)
+        } catch (e: SecurityException) {
+            Log.e("BluetoothConnection", "Unable to unbond with device", e)
+        } catch (e: Exception) {
+            Log.e("BluetoothConnection", "Unable to unbond with device", e)
         }
     }
 
@@ -364,8 +391,9 @@ class BluetoothConnection(private val mContext: Context) {
 
     fun connectFromAddress(macAddress: String) {
         try {
-            val deviceFound = Device.getBluetoothDeviceFromAddress(macAddress)
-            deviceFound!!.device = (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter).getRemoteDevice(deviceFound.address)
+            val device = (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter).getRemoteDevice(macAddress.uppercase())
+            val deviceFound = Device.getBluetoothDeviceFromAddress(macAddress.uppercase())
+            deviceFound!!.device = device
             connect(deviceFound)
         } catch (e: Exception) {
             Log.e("BluetoothGattDiscoverServices", "Error while connecting to device", e)
@@ -376,23 +404,23 @@ class BluetoothConnection(private val mContext: Context) {
         try {
             val deviceManager = mContext.getSystemService(Context.COMPANION_DEVICE_SERVICE) as CompanionDeviceManager
             val macList = if (Build.VERSION.SDK_INT >= 33) {
-                deviceManager.myAssociations.map { it.deviceMacAddress.toString() }
+                deviceManager.myAssociations.map { it.deviceMacAddress.toString().uppercase() }
             } else {
-                deviceManager.associations
+                deviceManager.associations.map { it.uppercase() }
             }
 
-            macList.filter { it !in Device.connectedDevices.value.map { d -> d.address } }.forEach { macAddress ->
-                connectFromAddress(macAddress)
+            macList.filter { it.uppercase() !in Device.connectedDevices.value.map { d -> d.address.uppercase() } }.forEach { macAddress ->
+                connectFromAddress(macAddress.uppercase())
             }
 
             // If we lost the bond with a device, we need to reconnect to it
             //FIXME: this is not working as intended, sometimes the device still appears in the associated
             // devices list, but it is not making a connection anymore, it's not triggering the BluetoothDeviceCompanion
-            Device.knownDevices.value.filter { it.address !in macList }.map { bleDev ->
+            Device.knownDevices.value.filter { it.address.uppercase() !in macList.map { addr -> addr.uppercase() } }.map { bleDev ->
                 bleDev.device
                     ?.let { bond(it) }
                     ?: run {
-                        val dev = (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter).getRemoteDevice(bleDev.address)
+                        val dev = (bluetoothAdapter ?: (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter).getRemoteDevice(bleDev.address.uppercase())
                         bond(dev)
                     }
             }
@@ -446,7 +474,6 @@ class BluetoothConnection(private val mContext: Context) {
                         when(newState) {
                             BluetoothProfile.STATE_CONNECTED -> {
                                 Log.w("BluetoothGattCallback", "Successfully connected to $deviceAddress")
-                                // TODO: Store a reference to BluetoothGatt
                                 // This triggers the onServicesDiscovered callback
                                 bluetoothGatt.discoverServices()
                             }
@@ -697,9 +724,26 @@ class BluetoothConnection(private val mContext: Context) {
             }
         }
 
-        // Connect to the device
         try {
-            bluetoothGatt = idsDevice.device?.connectGatt(mContext, false, gattCallback) ?: run { onConnected(false) ; throw Exception("Device null") }
+            // If already connected, we just execute the onConnected callback and the list adding
+            if(idsDevice.address.uppercase() in (mContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).getConnectedDevices(BluetoothProfile.GATT).map { it.address.uppercase() }) {
+                if(Device.addToConnectedDevices(idsDevice)) {
+                    val devItem = Device.getDeviceItemFromBluetoothDevice(idsDevice)
+                    defaultScope.launch {
+                        NotificationHandler.triggerNotification(
+                            context = mContext,
+                            title = mContext.resources.getString(R.string.device_connected),
+                            message = idsDevice.name + " [${idsDevice.address}] | " + mContext.resources.getString(R.string.device_connected),
+                            icon = devItem?.logo,
+                            uri = (NavRoutes.Device.deepLink + "/${devItem?.id?.ordinal ?: -1}?address=" + Uri.encode(idsDevice.address)).toUri(),
+                        )
+                    }
+                }
+                onConnected(true)
+            } else {
+                // Connect to the device
+                bluetoothGatt = idsDevice.device?.connectGatt(mContext, false, gattCallback) ?: run { onConnected(false) ; throw Exception("Device null") }
+            }
         } catch (e: SecurityException) {
             Log.e("BluetoothGattDiscoverServices", "Error while connecting", e)
             onConnected(false)
